@@ -1,0 +1,58 @@
+{
+  "project_info": {
+    "project_number": "724424918750",
+    "firebase_url": "https://blipped-project.firebaseio.com",
+    "project_id": "blipped-project",
+    "storage_bucket": "blipped-project.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:724424918750:android:f9f0a6c5d674ab8f",
+        "android_client_info": {
+          "package_name": "blippedcompany.blipped"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "724424918750-07p8fu6ronot57o4dkj63q6j5kaspjnt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "blippedcompany.blipped",
+            "certificate_hash": "de46baf1feb6fdc2e8a243d86db971496cc9b9e6"
+          }
+        },
+        {
+          "client_id": "724424918750-em1aml11mceaq8c3t9l7cn3uqch016mr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAe5Cb5erWHB5ef1DdYnSY6cw6Fjq_PCzQ"
+        },
+        {
+          "current_key": "AIzaSyC_ElRgxMIZJuyT6BB9s53IfuvhC-oQTIo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "724424918750-em1aml11mceaq8c3t9l7cn3uqch016mr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
