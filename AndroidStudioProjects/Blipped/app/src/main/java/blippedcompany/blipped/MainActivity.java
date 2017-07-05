@@ -36,7 +36,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,OnMapReadyCallback,GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
-    //Google Map Initialize
+    //Google Map Initialize x
     private GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
     LatLng coordinate;//Declare Coordinate
