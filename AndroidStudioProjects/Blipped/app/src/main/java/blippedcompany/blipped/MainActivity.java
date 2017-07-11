@@ -93,8 +93,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Location mLastKnownLocation;
 
     // Keys for storing activity state.
-    private static final String KEY_CAMERA_POSITION = "camera_position";
-    private static final String KEY_LOCATION = "location";
+
 
 
     //Firebase Authentication
