@@ -1,78 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+<android.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/blipdetailstextview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="17dp"
+        android:text="Add Blip Details"
+        android:textAlignment="center"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        tools:layout_editor_absoluteX="105dp"
+        tools:layout_editor_absoluteY="67dp" />
+
+    <TextView
+        android:id="@+id/blipnameText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Blip Name:"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        tools:layout_editor_absoluteX="33dp"
+        tools:layout_editor_absoluteY="138dp"
+        android:layout_alignBaseline="@+id/blipnameEt"
+        android:layout_alignBottom="@+id/blipnameEt"
+        android:layout_alignEnd="@+id/detailsText" />
+
+    <EditText
+        android:id="@+id/blipnameEt"
+        android:layout_width="190dp"
+        android:layout_height="wrap_content"
+
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:layout_below="@+id/blipdetailstextview"
+        android:layout_toEndOf="@+id/blipnameText" />
+
+    <TextView
+        android:id="@+id/detailsText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_alignBaseline="@+id/detailsEt"
+        android:layout_alignBottom="@+id/detailsEt"
+        android:layout_toStartOf="@+id/detailsEt"
+        android:text="Details:"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/detailsEt"
+        android:layout_width="190dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@+id/blipnameEt"
+        android:layout_marginEnd="21dp"
+        android:ems="10"
+        android:inputType="textMultiLine" />
+
+    <TextView
+        android:id="@+id/iconsText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_alignBottom="@+id/iconsSpinner"
+        android:layout_alignEnd="@+id/detailsText"
+        android:text="Icons:"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+
+    <Spinner
+        android:id="@+id/iconsSpinner"
+        android:layout_width="190dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@+id/detailsEt"
+        android:layout_marginTop="23dp" />
 
     <Button
         android:id="@+id/addblip_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="27dp"
         android:text="Create"
-        android:layout_below="@+id/detailsEt"
-        android:layout_toStartOf="@+id/detailsEt" />
+        android:layout_alignBaseline="@+id/cancelblip_button"
+        android:layout_alignBottom="@+id/cancelblip_button"
+        android:layout_alignStart="@+id/blipdetailstextview" />
 
     <Button
         android:id="@+id/cancelblip_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Cancel"
-        android:layout_alignBaseline="@+id/addblip_button"
-        android:layout_alignBottom="@+id/addblip_button"
-        android:layout_alignEnd="@+id/detailsEt"
-        android:layout_marginEnd="36dp" />
+        android:layout_marginTop="17dp"
+        android:layout_below="@+id/iconsSpinner"
+        android:layout_alignEnd="@+id/blipdetailstextview" />
 
-    <TextView
-        android:id="@+id/blipdetailstextview"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="30dp"
-        android:text="Add Blip Details"
-        android:textAlignment="center"
-        android:textSize="24sp"
-        android:textStyle="bold" />
-
-    <EditText
-        android:id="@+id/detailsEt"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="textMultiLine"
-        android:layout_alignTop="@+id/detailsText"
-        android:layout_alignStart="@+id/blipnameEt" />
-
-    <TextView
-        android:id="@+id/blipnameText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/blipdetailstextview"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="27dp"
-        android:text="Blip Name:"
-        android:textSize="18sp"
-        android:textStyle="bold" />
-
-    <EditText
-        android:id="@+id/blipnameEt"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/blipnameText"
-        android:layout_alignBottom="@+id/blipnameText"
-        android:layout_marginStart="16dp"
-        android:layout_toEndOf="@+id/blipnameText"
-        android:ems="10"
-        android:inputType="textPersonName" />
-
-    <TextView
-        android:id="@+id/detailsText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/blipnameText"
-        android:layout_below="@+id/blipnameEt"
-        android:layout_marginTop="21dp"
-        android:text="Details:"
-        android:textSize="18sp"
-        android:textStyle="bold" />
-</RelativeLayout>
+</android.widget.RelativeLayout>

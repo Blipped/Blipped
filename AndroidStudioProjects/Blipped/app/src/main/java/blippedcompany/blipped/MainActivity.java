@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -20,17 +19,23 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
-
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -40,9 +45,9 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -50,14 +55,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import static android.R.attr.data;
-import static android.R.attr.key;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
@@ -76,15 +74,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
     Marker markers = null;
-    String MarkerTitle;
     Double cursor_coordinate_latitude;
     Double cursor_coordinate_longitude;
     String userName;
     String BlipName ;
     String Details;
-    Map newBlipData = new HashMap();
     EditText mBlipName;
     EditText mDetails;
+    Spinner mySpinner;
+    String[] CustomBlips = {"Arts", "Transportation", "Business",
+            "Community", "Family & Education", "Fashion", "Media","Anime"};
+    String blipIcon;
 
 
 
@@ -114,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.sidebar);
 
         //Toolbar
@@ -129,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         //Action Button
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setImageResource(R.mipmap.ic_gps);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -137,6 +139,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         .setAction("Action", null).show();
             }
         });
+
         //Navigation Drawer
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);//Layout
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -164,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.setting_top_right, menu);
         return true;
     }
 
@@ -247,10 +250,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
                 View mView = getLayoutInflater().inflate(R.layout.enter_blip_details_popup,null);
+
                 mBlipName = mView.findViewById(R.id.blipnameEt);
                 mDetails = mView.findViewById(R.id.detailsEt);
                 Button mAddBlip = mView.findViewById(R.id.addblip_button);
                 Button mCancelBlip = mView.findViewById(R.id.cancelblip_button);
+                //DROP DOWN
+                mySpinner = mView.findViewById(R.id.iconsSpinner);
+                mySpinner.setAdapter(new MyCustomAdapter(MainActivity.this, R.layout.row, CustomBlips));
 
                 mBuilder.setView(mView);
                 final AlertDialog dialog = mBuilder.create();
@@ -260,12 +267,51 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     @Override
                     public void onClick(View view) {
                         BlipName = mBlipName.getText().toString();
+                        if(BlipName==""){
+                            BlipName="My Blip";
+                        }
                         Details = mDetails.getText().toString();
+                        String dropboxvalue = mySpinner.getSelectedItem().toString();
+                        Toast.makeText(MainActivity.this, dropboxvalue, Toast.LENGTH_SHORT).show();
+
+                        if (dropboxvalue=="Arts"){
+                            blipIcon="publicarts";
+                        }
+                        else if(dropboxvalue=="Transportation"){
+                            blipIcon="publicautoboatsair";
+                        }
+                        else if(dropboxvalue=="Business"){
+                            blipIcon="publicbusiness";
+                        }
+                        else if(dropboxvalue=="Community"){
+                            blipIcon="publiccommunity";
+                        }
+                        else if(dropboxvalue=="Family & Education"){
+                            blipIcon="publicfamilyneducation";
+                        }
+                        else if(dropboxvalue=="Fashion"){
+                            blipIcon="publicfashion";
+                        }
+                        else if(dropboxvalue=="Media"){
+                            blipIcon="publicfilmnmedia";
+                        }
+                        else if(dropboxvalue=="Anime"){
+                            blipIcon="anime";
+                        }
+
+                        else{
+                            blipIcon="ic_launcher_round";
+                        }
 
 
                         //Place Data
 
-                        Blips blips = new Blips(cursor_coordinate_latitude,cursor_coordinate_longitude,BlipName, userName,Details);
+                        Blips blips = new Blips(cursor_coordinate_latitude,
+                                                cursor_coordinate_longitude,
+                                                BlipName,
+                                                userName,
+                                                Details,
+                                                blipIcon);
                         Users.child(userName).child("Blips").push().setValue(blips);
                         Blipsref.child("public").push().setValue(blips);
 
@@ -284,7 +330,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 });
 
+                mMap.setOnInfoWindowLongClickListener(new GoogleMap.OnInfoWindowLongClickListener() {
+                    @Override
+                    public void onInfoWindowLongClick(Marker marker) {
 
+                        DeleteBlip(marker);
+
+                    }
+                });
 
 
 
@@ -292,56 +345,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
-
-
-        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
-            @Override
-            public void onInfoWindowClick(Marker marker) {
-
-
-                LatLng coordinatetobedeleted =marker.getPosition();
-                String x=Double.toString(coordinatetobedeleted.latitude);
-
-                Toast.makeText(MainActivity.this,x, Toast.LENGTH_SHORT).show();
-
-
-
-                BlipsPublic.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
-                        new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                                for (DataSnapshot child: dataSnapshot.getChildren()) {
-
-                                    Toast.makeText(MainActivity.this,"", Toast.LENGTH_SHORT).show();
-                                    child.getRef().removeValue();
-                                }
-                            }
-
-
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
-                                Log.w("TodoApp", "getUser:onCancelled", databaseError.toException());
-                            }
-                        });
-
-
-
-            }
-        });
-
-
 
 
     }
 
-    public void PlaceMarker(LatLng newBlipCoordinates, String newBlipName, String creator,String Details,Marker addmarkers) {
+    public void PlaceMarker(LatLng newBlipCoordinates, String newBlipName, String creator, String Details, Marker addmarkers, String blipIcon) {
 
       addmarkers = mMap.addMarker(new MarkerOptions() // Set Marker
                 .position(newBlipCoordinates)
                 .title(newBlipName)
-                .snippet(Details+"\n\n\n"+creator)
-                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.testicon)));
+                .snippet(creator)
+                .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipIcon,"mipmap", getPackageName() ))));
     }
 
     private void GoogleMapAPIConnect() {
@@ -450,10 +464,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String newBlipName= snapm.child("BlipName").getValue(String.class);
                     String creator= snapm.child("Creator").getValue(String.class);
                     String Details =snapm.child("Details").getValue(String.class);
+                    String blipIcon =snapm.child("Icon").getValue(String.class);
 
                     LatLng newBlipCoordinates = new LatLng(latitude,longitude);
 
-                    PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers);
+                    PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
 
                 }
 
@@ -481,6 +496,98 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
+    }
+
+   private void DeleteBlip(Marker marker){
+
+       LatLng coordinatetobedeleted =marker.getPosition();
+       String x=Double.toString(coordinatetobedeleted.latitude);
+
+       Toast.makeText(MainActivity.this,x, Toast.LENGTH_SHORT).show();
+
+       BlipsPublic.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
+               new ValueEventListener() {
+                   @Override
+                   public void onDataChange(DataSnapshot dataSnapshot) {
+
+                       for (DataSnapshot child: dataSnapshot.getChildren()) {
+                           child.getRef().removeValue();
+                           Toast.makeText(MainActivity.this,"Blip Deleted", Toast.LENGTH_SHORT).show();
+                       }
+                   }
+
+
+                   @Override
+                   public void onCancelled(DatabaseError databaseError) {
+                       Log.w("TodoApp", "getUser:onCancelled", databaseError.toException());
+                   }
+               });
+
+   }
+
+    public class MyCustomAdapter extends ArrayAdapter<String>{
+
+        public MyCustomAdapter(Context context, int textViewResourceId,
+                               String[] objects) {
+            super(context, textViewResourceId, objects);
+// TODO Auto-generated constructor stub
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView,
+                                    ViewGroup parent) {
+// TODO Auto-generated method stub
+            return getCustomView(position, convertView, parent);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+// TODO Auto-generated method stub
+            return getCustomView(position, convertView, parent);
+        }
+
+        public View getCustomView(int position, View convertView, ViewGroup parent) {
+// TODO Auto-generated method stub
+//return super.getView(position, convertView, parent);
+
+            LayoutInflater inflater=getLayoutInflater();
+            View row=inflater.inflate(R.layout.row, parent, false);
+            TextView label=(TextView)row.findViewById(R.id.weekofday);
+            label.setText(CustomBlips[position]);
+
+            ImageView icon=(ImageView)row.findViewById(R.id.icon);
+
+            if (CustomBlips[position]=="Arts"){
+                icon.setImageResource(R.mipmap.publicarts);
+            }
+            else if(CustomBlips[position]=="Transportation"){
+                icon.setImageResource(R.mipmap.publicautoboatsair);
+            }
+            else if(CustomBlips[position]=="Business"){
+                icon.setImageResource(R.mipmap.publicbusiness);
+            }
+            else if(CustomBlips[position]=="Community"){
+                icon.setImageResource(R.mipmap.publiccommunity);
+            }
+            else if(CustomBlips[position]=="Family & Education"){
+                icon.setImageResource(R.mipmap.publicfamilyneducation);
+            }
+            else if(CustomBlips[position]=="Fashion"){
+                icon.setImageResource(R.mipmap.publicfashion);
+            }
+            else if(CustomBlips[position]=="Media"){
+                icon.setImageResource(R.mipmap.publicfilmnmedia);
+            }
+            else if(CustomBlips[position]=="Anime"){
+                icon.setImageResource(R.mipmap.anime);
+            }
+
+            else{
+                icon.setImageResource(R.mipmap.ic_launcher_round);
+            }
+
+            return row;
+        }
     }
 
 
