@@ -459,6 +459,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 for (DataSnapshot snapm: dataSnapshot.getChildren()) {
 
+
+
                     Double latitude = snapm.child("latitude").getValue(Double.class);
                     Double longitude = snapm.child("longitude").getValue(Double.class);
                     String newBlipName= snapm.child("BlipName").getValue(String.class);
@@ -500,7 +502,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
    private void DeleteBlip(Marker marker){
 
-       LatLng coordinatetobedeleted =marker.getPosition();
+       final LatLng coordinatetobedeleted =marker.getPosition();
        String x=Double.toString(coordinatetobedeleted.latitude);
 
        Toast.makeText(MainActivity.this,x, Toast.LENGTH_SHORT).show();
@@ -510,9 +512,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                    @Override
                    public void onDataChange(DataSnapshot dataSnapshot) {
 
-                       for (DataSnapshot child: dataSnapshot.getChildren()) {
-                           child.getRef().removeValue();
-                           Toast.makeText(MainActivity.this,"Blip Deleted", Toast.LENGTH_SHORT).show();
+                       for (DataSnapshot datacollected: dataSnapshot.getChildren()) {
+                                  //We add this because firebase queries sucks
+                                 if( datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude){
+                                     datacollected.getRef().removeValue();
+                                     Toast.makeText(MainActivity.this,"Blip Deleted", Toast.LENGTH_SHORT).show();
+                                 }
+
+
                        }
                    }
 
