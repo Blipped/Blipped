@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View view) {
                 getDeviceLocation();
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "Replace with your owns action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
