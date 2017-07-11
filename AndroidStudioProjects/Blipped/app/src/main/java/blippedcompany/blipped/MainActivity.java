@@ -17,6 +17,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -106,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DatabaseReference Users = database.getReference("users");
     DatabaseReference Blipsref = database.getReference("blips");
     DatabaseReference BlipsPublic = database.getReference("blips").child("public");
-    DatabaseReference BlipsPublicCoordinates = database.getReference("blips").child("public").child("coordinate");
+
 
 
 
@@ -149,6 +150,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //Navigation View
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);//Layout
         navigationView.setNavigationItemSelectedListener(this);
+
+
+        //Search Box
+
+
+
+
     }
 
     @Override
@@ -205,9 +213,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             finish();
             Intent nextscreen = new Intent(this, LoginActivity.class);
             startActivity(nextscreen);
-
-        } else if (id == R.id.app_bar_search) {
-
 
         }
 

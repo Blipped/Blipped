@@ -6,14 +6,6 @@
     android:layout_height="match_parent"
     tools:context="blippedcompany.blipped.MainActivity">
 
-    <android.support.constraint.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="57dp"
-        tools:layout_editor_absoluteY="0dp"
-        tools:layout_editor_absoluteX="0dp">
-
-    </android.support.constraint.ConstraintLayout>
-
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -26,25 +18,11 @@
         android:id="@+id/include2"
         layout="@layout/contraintlayout_with_map"
         android:layout_width="match_parent"
-        android:layout_height="567dp" />
-
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
-        app:popupTheme="@style/AppTheme.PopupOverlay" />
-
-    <SearchView
-        android:id="@+id/searchBox"
-        android:layout_width="280dp"
-        android:layout_height="58dp"
-        android:layout_marginBottom="5dp"
-        android:layout_marginEnd="50dp"
-        android:layout_marginStart="50dp"
-        android:layout_marginTop="2dp"
-        tools:layout_editor_absoluteX="62dp"
-        tools:layout_editor_absoluteY="8dp" />
+        android:layout_height="match_parent"
+        android:layout_marginBottom="0dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="1dp"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
@@ -56,5 +34,36 @@
         app:layout_anchor="@+id/include2"
         app:layout_anchorGravity="bottom|left"
         app:srcCompat="@android:drawable/ic_menu_compass" />
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        app:popupTheme="@style/AppTheme.PopupOverlay" />
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="57dp"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="0dp">
+
+        <SearchView
+            android:id="@+id/searchBox"
+            android:layout_width="0dp"
+            android:layout_height="41dp"
+            android:layout_marginBottom="0dp"
+            android:layout_marginEnd="50dp"
+            android:layout_marginStart="50dp"
+            android:layout_marginTop="0dp"
+            android:queryHint="Search hers"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:layout_constraintLeft_creator="1"
+            tools:layout_constraintRight_creator="1"
+            tools:layout_constraintTop_creator="1" />
+    </android.support.constraint.ConstraintLayout>
 
 </android.support.design.widget.CoordinatorLayout>

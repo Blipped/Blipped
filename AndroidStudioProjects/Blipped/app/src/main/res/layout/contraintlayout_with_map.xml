@@ -20,10 +20,11 @@
         map:layout_constraintLeft_toLeftOf="parent"
         map:layout_constraintRight_toRightOf="parent"
         map:layout_constraintTop_toTopOf="parent"
-        map:layout_constraintVertical_bias="0.03"
+        map:layout_constraintVertical_bias="0.0"
         tools:context="blippedcompany.blipped.MapsActivity"
         tools:layout="@layout/activity_maps"
         tools:layout_constraintLeft_creator="1"
-        tools:layout_constraintRight_creator="1" />
+        tools:layout_constraintRight_creator="1"
+        android:layout_marginTop="55dp" />
 
 </android.support.constraint.ConstraintLayout>
