@@ -72,6 +72,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final int DEFAULT_ZOOM = 17;
     LatLng coordinate;//Declare Coordinate
     LatLng cursor_coordinate;
+    SearchView search;
+    String query;
 
     //Variables
     private static final String TAG = "MainActivity";
@@ -90,15 +92,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             "Community", "Family & Education", "Fashion", "Media","Anime"};
     String blipIcon;
 
-
-
     // The geographical location where the device is currently located. That is, the last-known
     // location retrieved by the Fused Location Provider.
     private Location mLastKnownLocation;
-
-    // Keys for storing activity state.
-
-
 
     //Firebase Authentication
     FirebaseAuth mAuth = FirebaseAuth.getInstance();
@@ -112,13 +108,80 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DatabaseReference BlipsPublic = database.getReference("blips").child("public");
 
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.sidebar);
+        DeclareThings();
+
+        search = (SearchView) findViewById(R.id.searchView);
+  
+        search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+
+                return false;
+            }
+
+               @Override
+               public boolean onQueryTextChange(final String query) {
+                   mMap.clear();
+
+
+                               BlipsPublic.orderByChild("BlipName").addListenerForSingleValueEvent(new ValueEventListener() {
+
+
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                                        for (DataSnapshot snapm : dataSnapshot.getChildren()) {
+
+
+                                            Double latitude = snapm.child("latitude").getValue(Double.class);
+                                            Double longitude = snapm.child("longitude").getValue(Double.class);
+                                            String newBlipName= snapm.child("BlipName").getValue(String.class);
+                                            String creator= snapm.child("Creator").getValue(String.class);
+                                            String Details =snapm.child("Details").getValue(String.class);
+                                            String blipIcon =snapm.child("Icon").getValue(String.class);
+
+                                            LatLng newBlipCoordinates = new LatLng(latitude,longitude);
+
+                                            if(newBlipName.toUpperCase().startsWith(   query.toUpperCase()  )    )
+                                            {
+                                                Toast.makeText(MainActivity.this, query, Toast.LENGTH_SHORT).show();
+                                                PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+
+                                            }
+
+
+                                        }
+                                    }
+
+                                   @Override
+                                   public void onCancelled(DatabaseError databaseError) {
+
+                                   }
+
+
+
+                                });
+             return false;
+            }
+
+
+
+
+
+        });
+
+
+
+
+
+    }
+
+    public void DeclareThings(){
 
         //Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);//TOOLBAR
@@ -153,90 +216,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);//Layout
         navigationView.setNavigationItemSelectedListener(this);
 
-
-
-        //Search Box
-        SearchView search =(SearchView) findViewById(R.id.searchView);
-
-
-
-
     }
 
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-
-            super.onBackPressed();
-            mAuth.signOut();
-            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
-
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.setting_top_right, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_camera) {
-            Toast.makeText(MainActivity.this, "Sign out", Toast.LENGTH_SHORT).show();
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_signout) {
-            mAuth.signOut();
-            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
-            finish();
-            Intent nextscreen = new Intent(this, LoginActivity.class);
-            startActivity(nextscreen);
-
-        }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
-
-
-
-    /**
-     * Google Maps Functions
-     *
-     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -317,11 +298,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         //Place Data
 
                         Blips blips = new Blips(cursor_coordinate_latitude,
-                                                cursor_coordinate_longitude,
-                                                BlipName,
-                                                userName,
-                                                Details,
-                                                blipIcon);
+                                cursor_coordinate_longitude,
+                                BlipName,
+                                userName,
+                                Details,
+                                blipIcon);
                         Users.child(userName).child("Blips").push().setValue(blips);
                         Blipsref.child("public").push().setValue(blips);
 
@@ -340,14 +321,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 });
 
-                mMap.setOnInfoWindowLongClickListener(new GoogleMap.OnInfoWindowLongClickListener() {
-                    @Override
-                    public void onInfoWindowLongClick(Marker marker) {
 
-                        DeleteBlip(marker);
-
-                    }
-                });
 
 
 
@@ -357,7 +331,168 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
+        //When map is infolong clicked
+        mMap.setOnInfoWindowLongClickListener(new GoogleMap.OnInfoWindowLongClickListener() {
+            @Override
+            public void onInfoWindowLongClick(Marker marker) {
+                Toast.makeText(MainActivity.this, "INFOWINDOWLONGCLICKED", Toast.LENGTH_SHORT).show();
+                final LatLng coordinatetobedeleted =marker.getPosition();
+                String x=Double.toString(coordinatetobedeleted.latitude);
+
+                Toast.makeText(MainActivity.this,x, Toast.LENGTH_SHORT).show();
+
+                BlipsPublic.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
+                        new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                                for (DataSnapshot datacollected: dataSnapshot.getChildren()) {
+                                    //We add this because firebase queries sucks
+                                    if( datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude){
+                                        datacollected.getRef().removeValue();
+                                        Toast.makeText(MainActivity.this,"Blip Deleted", Toast.LENGTH_SHORT).show();
+                                    }
+
+
+                                }
+                            }
+
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                                Log.w("TodoApp", "getUser:onCancelled", databaseError.toException());
+                            }
+                        });
+
+
+            }
+        });
+
+
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.setting_top_right, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_camera) {
+            Toast.makeText(MainActivity.this, "Sign out", Toast.LENGTH_SHORT).show();
+            // Handle the camera action
+        } else if (id == R.id.nav_gallery) {
+
+        } else if (id == R.id.nav_slideshow) {
+
+        } else if (id == R.id.nav_manage) {
+
+        } else if (id == R.id.nav_share) {
+
+        } else if (id == R.id.nav_signout) {
+            mAuth.signOut();
+            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
+            finish();
+            Intent nextscreen = new Intent(this, LoginActivity.class);
+            startActivity(nextscreen);
+
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    public class MyCustomAdapter extends ArrayAdapter<String>{
+
+        public MyCustomAdapter(Context context, int textViewResourceId,
+                               String[] objects) {
+            super(context, textViewResourceId, objects);
+// TODO Auto-generated constructor stub
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView,
+                                    ViewGroup parent) {
+// TODO Auto-generated method stub
+            return getCustomView(position, convertView, parent);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+// TODO Auto-generated method stub
+            return getCustomView(position, convertView, parent);
+        }
+
+        public View getCustomView(int position, View convertView, ViewGroup parent) {
+// TODO Auto-generated method stub
+//return super.getView(position, convertView, parent);
+
+            LayoutInflater inflater=getLayoutInflater();
+            View row=inflater.inflate(R.layout.row, parent, false);
+            TextView label=(TextView)row.findViewById(R.id.weekofday);
+            label.setText(CustomBlips[position]);
+
+            ImageView icon=(ImageView)row.findViewById(R.id.icon);
+
+            if (CustomBlips[position]=="Arts"){
+                icon.setImageResource(R.mipmap.publicarts);
+            }
+            else if(CustomBlips[position]=="Transportation"){
+                icon.setImageResource(R.mipmap.publicautoboatsair);
+            }
+            else if(CustomBlips[position]=="Business"){
+                icon.setImageResource(R.mipmap.publicbusiness);
+            }
+            else if(CustomBlips[position]=="Community"){
+                icon.setImageResource(R.mipmap.publiccommunity);
+            }
+            else if(CustomBlips[position]=="Family & Education"){
+                icon.setImageResource(R.mipmap.publicfamilyneducation);
+            }
+            else if(CustomBlips[position]=="Fashion"){
+                icon.setImageResource(R.mipmap.publicfashion);
+            }
+            else if(CustomBlips[position]=="Media"){
+                icon.setImageResource(R.mipmap.publicfilmnmedia);
+            }
+            else if(CustomBlips[position]=="Anime"){
+                icon.setImageResource(R.mipmap.anime);
+            }
+
+            else{
+                icon.setImageResource(R.mipmap.ic_launcher_round);
+            }
+
+            return row;
+        }
+    }
+
+
+
 
     public void PlaceMarker(LatLng newBlipCoordinates, String newBlipName, String creator, String Details, Marker addmarkers, String blipIcon) {
 
@@ -367,6 +502,82 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .snippet(creator)
                 .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipIcon,"mipmap", getPackageName() ))));
     }
+
+    private void ShowBlips() {
+
+        Blipsref.addChildEventListener(new ChildEventListener() {
+
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+
+                for (DataSnapshot snapm: dataSnapshot.getChildren()) {
+
+
+
+                    Double latitude = snapm.child("latitude").getValue(Double.class);
+                    Double longitude = snapm.child("longitude").getValue(Double.class);
+                    String newBlipName= snapm.child("BlipName").getValue(String.class);
+                    String creator= snapm.child("Creator").getValue(String.class);
+                    String Details =snapm.child("Details").getValue(String.class);
+                    String blipIcon =snapm.child("Icon").getValue(String.class);
+
+                    LatLng newBlipCoordinates = new LatLng(latitude,longitude);
+
+                    PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+
+                }
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
+                mMap.clear();//Clear Map
+                ShowBlips();//Go back load all blips again
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                              mMap.clear();//Clear Map
+                              ShowBlips();//Go back load all blips again
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void DeleteBlip(Marker marker){
+
+
+   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private void GoogleMapAPIConnect() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -454,158 +665,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         mMap.setMyLocationEnabled(true);
 
-        }
+    }
 
     private static String removecom(String str) {
         return str.substring(0, str.length() - 4);
     }
 
-    private void ShowBlips() {
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
 
-        Blipsref.addChildEventListener(new ChildEventListener() {
+            super.onBackPressed();
+            mAuth.signOut();
+            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
 
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-
-                for (DataSnapshot snapm: dataSnapshot.getChildren()) {
-
-
-
-                    Double latitude = snapm.child("latitude").getValue(Double.class);
-                    Double longitude = snapm.child("longitude").getValue(Double.class);
-                    String newBlipName= snapm.child("BlipName").getValue(String.class);
-                    String creator= snapm.child("Creator").getValue(String.class);
-                    String Details =snapm.child("Details").getValue(String.class);
-                    String blipIcon =snapm.child("Icon").getValue(String.class);
-
-                    LatLng newBlipCoordinates = new LatLng(latitude,longitude);
-
-                    PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-
-                }
-
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
-                mMap.clear();//Clear Map
-                ShowBlips();//Go back load all blips again
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-                              mMap.clear();//Clear Map
-                              ShowBlips();//Go back load all blips again
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
-
-   private void DeleteBlip(Marker marker){
-
-       final LatLng coordinatetobedeleted =marker.getPosition();
-       String x=Double.toString(coordinatetobedeleted.latitude);
-
-       Toast.makeText(MainActivity.this,x, Toast.LENGTH_SHORT).show();
-
-       BlipsPublic.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
-               new ValueEventListener() {
-                   @Override
-                   public void onDataChange(DataSnapshot dataSnapshot) {
-
-                       for (DataSnapshot datacollected: dataSnapshot.getChildren()) {
-                                  //We add this because firebase queries sucks
-                                 if( datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude){
-                                     datacollected.getRef().removeValue();
-                                     Toast.makeText(MainActivity.this,"Blip Deleted", Toast.LENGTH_SHORT).show();
-                                 }
-
-
-                       }
-                   }
-
-
-                   @Override
-                   public void onCancelled(DatabaseError databaseError) {
-                       Log.w("TodoApp", "getUser:onCancelled", databaseError.toException());
-                   }
-               });
-
-   }
-
-    public class MyCustomAdapter extends ArrayAdapter<String>{
-
-        public MyCustomAdapter(Context context, int textViewResourceId,
-                               String[] objects) {
-            super(context, textViewResourceId, objects);
-// TODO Auto-generated constructor stub
-        }
-
-        @Override
-        public View getDropDownView(int position, View convertView,
-                                    ViewGroup parent) {
-// TODO Auto-generated method stub
-            return getCustomView(position, convertView, parent);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-// TODO Auto-generated method stub
-            return getCustomView(position, convertView, parent);
-        }
-
-        public View getCustomView(int position, View convertView, ViewGroup parent) {
-// TODO Auto-generated method stub
-//return super.getView(position, convertView, parent);
-
-            LayoutInflater inflater=getLayoutInflater();
-            View row=inflater.inflate(R.layout.row, parent, false);
-            TextView label=(TextView)row.findViewById(R.id.weekofday);
-            label.setText(CustomBlips[position]);
-
-            ImageView icon=(ImageView)row.findViewById(R.id.icon);
-
-            if (CustomBlips[position]=="Arts"){
-                icon.setImageResource(R.mipmap.publicarts);
-            }
-            else if(CustomBlips[position]=="Transportation"){
-                icon.setImageResource(R.mipmap.publicautoboatsair);
-            }
-            else if(CustomBlips[position]=="Business"){
-                icon.setImageResource(R.mipmap.publicbusiness);
-            }
-            else if(CustomBlips[position]=="Community"){
-                icon.setImageResource(R.mipmap.publiccommunity);
-            }
-            else if(CustomBlips[position]=="Family & Education"){
-                icon.setImageResource(R.mipmap.publicfamilyneducation);
-            }
-            else if(CustomBlips[position]=="Fashion"){
-                icon.setImageResource(R.mipmap.publicfashion);
-            }
-            else if(CustomBlips[position]=="Media"){
-                icon.setImageResource(R.mipmap.publicfilmnmedia);
-            }
-            else if(CustomBlips[position]=="Anime"){
-                icon.setImageResource(R.mipmap.anime);
-            }
-
-            else{
-                icon.setImageResource(R.mipmap.ic_launcher_round);
-            }
-
-            return row;
         }
     }
+
 
 
 
