@@ -56,6 +56,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 
@@ -118,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.sidebar);
 
         //Toolbar
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);//TOOLBAR
+        Toolbar toolbar = (Toolbar) findViewById(R.id.app_bar);//TOOLBAR
         setSupportActionBar(toolbar);
 
         //Map Fragment
@@ -149,10 +150,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         //Navigation View
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);//Layout
-        navigationView.setNavigationItemSelectedListener(this);
+
 
 
         //Search Box
+        SearchView search =(SearchView)findViewById(R.id.searchView);
+
+
+
 
 
 
@@ -230,17 +235,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
-
+        CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(new LatLng(14.5955772, 120.9880854), 17);// Zoom w/ 17
+        mMap.animateCamera(yourLocation); /// Zoom
 
         userName=removecom(userID.getEmail());
 
         ShowBlips();
-
-
-        CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(new LatLng(14.5955772, 120.9880854), 17);// Zoom w/ 17
-        mMap.animateCamera(yourLocation); /// Zoom
-
-
 
         // WHen map is long clicked
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
