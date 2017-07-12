@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DeclareThings();
 
         search = (SearchView) findViewById(R.id.searchView);
-  
+
         search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
