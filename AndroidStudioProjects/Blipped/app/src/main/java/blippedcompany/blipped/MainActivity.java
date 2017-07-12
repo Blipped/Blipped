@@ -17,7 +17,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,6 +32,9 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.app.SearchManager;
+import android.widget.SearchView;
+import android.widget.SearchView.OnQueryTextListener;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -119,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.sidebar);
 
         //Toolbar
-        Toolbar toolbar = (Toolbar) findViewById(R.id.app_bar);//TOOLBAR
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);//TOOLBAR
         setSupportActionBar(toolbar);
 
         //Map Fragment
@@ -143,21 +145,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         //Navigation Drawer
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);//Layout
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
         //Navigation View
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);//Layout
+        navigationView.setNavigationItemSelectedListener(this);
 
 
 
         //Search Box
-        SearchView search =(SearchView)findViewById(R.id.searchView);
-
-
-
+        SearchView search =(SearchView) findViewById(R.id.searchView);
 
 
 
@@ -172,6 +171,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else {
 
             super.onBackPressed();
+            mAuth.signOut();
+            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
 
         }
     }
@@ -198,12 +199,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return super.onOptionsItemSelected(item);
     }
 
+    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
+
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
         if (id == R.id.nav_camera) {
+            Toast.makeText(MainActivity.this, "Sign out", Toast.LENGTH_SHORT).show();
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
 
@@ -214,18 +218,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_signout) {
-            FirebaseAuth.getInstance().signOut();
+            mAuth.signOut();
+            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
             finish();
             Intent nextscreen = new Intent(this, LoginActivity.class);
             startActivity(nextscreen);
 
         }
 
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
+
 
     /**
      * Google Maps Functions

@@ -30,4 +30,6 @@
     <string name="title_activity_maps">Map</string>
     <string name="auth_faled">Login Failed</string>
     <string name="auth_failed">Failed</string>
+    <string name="title_activity_mmmm">mmmm</string>
+    <string name="title_activity_main2">Main2Activity</string>
 </resources>

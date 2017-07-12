@@ -98,21 +98,4 @@
         </LinearLayout>
     </ScrollView>
 
-    <TextView
-        android:id="@+id/detail"
-        style=""
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAlignment="center"
-        android:textColor="@android:color/background_light"
-        tools:text="Firebase User ID: 123456789abc" />
-
-    <TextView
-        android:id="@+id/status"
-        style=""
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/signed_out"
-        android:textAlignment="center"
-        android:textColor="@android:color/background_light" />
 </LinearLayout>

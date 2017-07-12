@@ -88,9 +88,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // Views
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
-
-
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        mPasswordView = (EditText) findViewById(R.id.password);
+
         Account[] accounts = AccountManager.get(this).getAccounts();
         Set<String> emailSet = new HashSet<String>();
         for (Account account : accounts) {
@@ -99,14 +99,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             }
         }
         mEmailView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, new ArrayList<String>(emailSet)));
-
-
-
-
-        mPasswordView = (EditText) findViewById(R.id.password);
-        mStatusTextView = ( TextView) findViewById(R.id.status);
-        mDetailTextView = ( TextView) findViewById(R.id.detail);
-
 
         //Buttons
         Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
@@ -128,7 +120,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        updateUI(currentUser);
+
     }
     // [END on_start_check_user]
 
@@ -148,15 +140,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "createUserWithEmail:success");
+                            Toast.makeText(LoginActivity.this, "Register sucessful", Toast.LENGTH_SHORT).show();
                             FirebaseUser user = mAuth.getCurrentUser();
-                            updateUI(user);
+                            sendVerificationEmail(user);
+
 
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "createUserWithEmail:failure", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
-                            updateUI(null);
+
                         }
 
                         // [START_EXCLUDE]
@@ -184,9 +178,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "signInWithEmail:success");
+                            Toast.makeText(LoginActivity.this, "Sign in successful", Toast.LENGTH_SHORT).show();
                             FirebaseUser user = mAuth.getCurrentUser();
-                            updateUI(user);
+
                             proceed();
 
 
@@ -196,7 +190,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                             Log.w(TAG, "signInWithEmail:failure", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
-                            updateUI(null);
+
                         }
 
                         // [START_EXCLUDE]
@@ -211,7 +205,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     public void signOut(FirebaseUser user) {
         mAuth.signOut();
-        updateUI(null);
+        Toast.makeText(this, "Signed Out", Toast.LENGTH_SHORT).show();
     }
 
     private void proceed(){
@@ -258,22 +252,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         return valid;
     }
 
-    public void updateUI(FirebaseUser user) {
-       showProgress(false);
-        if (user != null) {
-            mStatusTextView.setText(getString(R.string.emailpassword_status_fmt,
-                    user.getEmail(), user.isEmailVerified()));
-            mDetailTextView.setText(getString(R.string.firebase_status_fmt, user.getUid()));
-
-
-        } else if(user==null) {
-            mStatusTextView.setText(R.string.signed_out);
-            mDetailTextView.setText(null);
-
-
-        }
-    }
-
 
     public void onClick(View v) {
         int i = v.getId();
@@ -285,9 +263,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         //else if (i == R.id.sign_out_button) {
         //   signOut();
        // }
-       // else if (i == R.id.verify_email_button) {
-       //     sendEmailVerification();
-       // }
+
     }
 
     private boolean isEmailValid(String email) {
@@ -350,6 +326,36 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
+    }
+    private void sendVerificationEmail(FirebaseUser user)
+    {
+
+        user.sendEmailVerification()
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            // email sent
+
+
+                            // after email is sent just logout the user and finish this activity
+                            FirebaseAuth.getInstance().signOut();
+                            startActivity(new Intent(LoginActivity.this, LoginActivity.class));
+                            finish();
+                        }
+                        else
+                        {
+                            // email not sent, so display message and restart the activity or do whatever you wish to do
+
+                            //restart this activity
+                            overridePendingTransition(0, 0);
+                            finish();
+                            overridePendingTransition(0, 0);
+                            startActivity(getIntent());
+
+                        }
+                    }
+                });
     }
 }
 
