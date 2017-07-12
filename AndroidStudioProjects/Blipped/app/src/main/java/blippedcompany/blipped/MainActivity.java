@@ -18,6 +18,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -60,6 +61,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+
+import static android.R.id.closeButton;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
@@ -117,6 +120,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         search = (SearchView) findViewById(R.id.searchView);
 
+
         search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -173,6 +177,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
+        });
+
+
+        search.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
         });
 
 
@@ -258,57 +272,50 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     @Override
                     public void onClick(View view) {
                         BlipName = mBlipName.getText().toString();
-                        if(BlipName==""){
-                            BlipName="My Blip";
-                        }
-                        Details = mDetails.getText().toString();
-                        String dropboxvalue = mySpinner.getSelectedItem().toString();
-                        Toast.makeText(MainActivity.this, dropboxvalue, Toast.LENGTH_SHORT).show();
 
-                        if (dropboxvalue=="Arts"){
-                            blipIcon="publicarts";
-                        }
-                        else if(dropboxvalue=="Transportation"){
-                            blipIcon="publicautoboatsair";
-                        }
-                        else if(dropboxvalue=="Business"){
-                            blipIcon="publicbusiness";
-                        }
-                        else if(dropboxvalue=="Community"){
-                            blipIcon="publiccommunity";
-                        }
-                        else if(dropboxvalue=="Family & Education"){
-                            blipIcon="publicfamilyneducation";
-                        }
-                        else if(dropboxvalue=="Fashion"){
-                            blipIcon="publicfashion";
-                        }
-                        else if(dropboxvalue=="Media"){
-                            blipIcon="publicfilmnmedia";
-                        }
-                        else if(dropboxvalue=="Anime"){
-                            blipIcon="anime";
-                        }
-
-                        else{
-                            blipIcon="ic_launcher_round";
-                        }
+                        if(validateForm()) {
 
 
-                        //Place Data
+                            Details = mDetails.getText().toString();
+                            String dropboxvalue = mySpinner.getSelectedItem().toString();
+                            Toast.makeText(MainActivity.this, dropboxvalue, Toast.LENGTH_SHORT).show();
 
-                        Blips blips = new Blips(cursor_coordinate_latitude,
-                                cursor_coordinate_longitude,
-                                BlipName,
-                                userName,
-                                Details,
-                                blipIcon);
-                        Users.child(userName).child("Blips").push().setValue(blips);
-                        Blipsref.child("public").push().setValue(blips);
+                            if (dropboxvalue == "Arts") {
+                                blipIcon = "publicarts";
+                            } else if (dropboxvalue == "Transportation") {
+                                blipIcon = "publicautoboatsair";
+                            } else if (dropboxvalue == "Business") {
+                                blipIcon = "publicbusiness";
+                            } else if (dropboxvalue == "Community") {
+                                blipIcon = "publiccommunity";
+                            } else if (dropboxvalue == "Family & Education") {
+                                blipIcon = "publicfamilyneducation";
+                            } else if (dropboxvalue == "Fashion") {
+                                blipIcon = "publicfashion";
+                            } else if (dropboxvalue == "Media") {
+                                blipIcon = "publicfilmnmedia";
+                            } else if (dropboxvalue == "Anime") {
+                                blipIcon = "anime";
+                            } else {
+                                blipIcon = "ic_launcher_round";
+                            }
 
-                        dialog.cancel();
-                        mMap.clear();
-                        ShowBlips();
+
+                            //Place Data
+
+                            Blips blips = new Blips(cursor_coordinate_latitude,
+                                    cursor_coordinate_longitude,
+                                    BlipName,
+                                    userName,
+                                    Details,
+                                    blipIcon);
+                            Users.child(userName).child("Blips").push().setValue(blips);
+                            Blipsref.child("public").push().setValue(blips);
+
+                            dialog.cancel();
+                            mMap.clear();
+                            ShowBlips();
+                        }
 
                     }
                 });
@@ -335,11 +342,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.setOnInfoWindowLongClickListener(new GoogleMap.OnInfoWindowLongClickListener() {
             @Override
             public void onInfoWindowLongClick(Marker marker) {
-                Toast.makeText(MainActivity.this, "INFOWINDOWLONGCLICKED", Toast.LENGTH_SHORT).show();
+
                 final LatLng coordinatetobedeleted =marker.getPosition();
                 String x=Double.toString(coordinatetobedeleted.latitude);
 
-                Toast.makeText(MainActivity.this,x, Toast.LENGTH_SHORT).show();
 
                 BlipsPublic.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
                         new ValueEventListener() {
@@ -531,14 +537,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
-                mMap.clear();//Clear Map
-                ShowBlips();//Go back load all blips again
+                if(!search.isIconified()){
+                    Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
+                }
+                else {
+
+                    mMap.clear();//Clear Map
+                    ShowBlips();//Go back load all blips again
+                }
             }
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                              mMap.clear();//Clear Map
-                              ShowBlips();//Go back load all blips again
+                if(!search.isIconified()){
+                    Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    mMap.clear();//Clear Map
+                    ShowBlips();//Go back load all blips again
+                }
             }
 
             @Override
@@ -560,24 +577,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
+    private boolean validateForm() {
+        boolean valid = true;
+
+
+        if (TextUtils.isEmpty(BlipName)) {
+            mBlipName.setError("Required.");
+            valid = false;
+        } else {
+            mBlipName.setError(null);
+        }
 
 
 
+        return valid;
+    }
+    private boolean isBlipNameValid(String password) {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return password.length() > 4;
+    }
 
     private void GoogleMapAPIConnect() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
