@@ -13,18 +13,49 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="0dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         map:layout_constraintBottom_toBottomOf="parent"
         map:layout_constraintHorizontal_bias="0.0"
         map:layout_constraintLeft_toLeftOf="parent"
         map:layout_constraintRight_toRightOf="parent"
         map:layout_constraintTop_toTopOf="parent"
-        map:layout_constraintVertical_bias="0.0"
+        map:layout_constraintVertical_bias="1.0"
         tools:context="blippedcompany.blipped.MapsActivity"
         tools:layout="@layout/activity_maps"
         tools:layout_constraintLeft_creator="1"
-        tools:layout_constraintRight_creator="1" />
+        tools:layout_constraintRight_creator="1"
+        tools:layout_constraintTop_creator="1"
+        tools:layout_constraintBottom_creator="1" />
+
+
+    <CheckBox
+        android:id="@+id/checkboxPublic"
+        android:layout_width="88dp"
+        android:layout_height="wrap_content"
+        android:text="Public"
+        android:visibility="visible"
+        app:layout_anchor="@+id/include2"
+        android:layout_marginRight="8dp"
+        app:layout_constraintRight_toRightOf="parent"
+        tools:layout_constraintTop_creator="1"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="11dp"
+        app:layout_constraintTop_toBottomOf="@+id/checkboxPrivate" />
+
+    <CheckBox
+        android:id="@+id/checkboxPrivate"
+        android:layout_width="88dp"
+        android:layout_height="wrap_content"
+        android:text="Private"
+        android:visibility="visible"
+        app:layout_anchor="@+id/include2"
+        android:layout_marginRight="8dp"
+        app:layout_constraintRight_toRightOf="parent"
+        tools:layout_constraintTop_creator="1"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintTop_toTopOf="@+id/map" />
+
+
 
 </android.support.constraint.ConstraintLayout>

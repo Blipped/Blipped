@@ -8,7 +8,7 @@
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="55dp"
         android:background="@color/colorPrimary"
         android:theme="@style/AppTheme.AppBarOverlay">
 
@@ -23,12 +23,25 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginStart="0dp"
-                android:queryHint="Search" />
+                android:queryHint="Search">
+
+            </SearchView>
 
         </android.support.v7.widget.Toolbar>
 
-
     </android.support.design.widget.AppBarLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|right"
+        android:layout_marginBottom="16dp"
+        android:layout_marginLeft="16dp"
+        android:visibility="visible"
+        app:layout_anchor="@+id/include2"
+        app:layout_anchorGravity="bottom|left"
+        app:srcCompat="@android:drawable/ic_menu_compass" />
 
     <include
         android:id="@+id/include2"
@@ -38,19 +51,8 @@
         android:layout_marginBottom="0dp"
         android:layout_marginEnd="0dp"
         android:layout_marginStart="0dp"
-        android:layout_marginTop="56dp"
+        android:layout_marginTop="54dp"
         android:layout_weight="1" />
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|right"
-        android:layout_marginBottom="16dp"
-        android:layout_marginLeft="16dp"
-        app:layout_anchor="@+id/include2"
-        app:layout_anchorGravity="bottom|left"
-        app:srcCompat="@android:drawable/ic_menu_compass" />
 
 
 </android.support.design.widget.CoordinatorLayout>

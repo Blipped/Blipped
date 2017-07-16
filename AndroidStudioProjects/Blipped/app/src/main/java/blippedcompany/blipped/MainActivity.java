@@ -7,6 +7,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -19,6 +20,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -28,8 +30,11 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -62,6 +67,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 import static android.R.id.closeButton;
 
 
@@ -77,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     LatLng cursor_coordinate;
     SearchView search;
     String query;
+    CheckBox publiccheckbox;
+    CheckBox privatecheckbox;
 
     //Variables
     private static final String TAG = "MainActivity";
@@ -91,8 +102,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     EditText mBlipName;
     EditText mDetails;
     Spinner mySpinner;
+    RadioButton publicradio;
+    RadioButton privateradio;
+
+
     String[] CustomBlips = {"Arts", "Transportation", "Business",
-            "Community", "Family & Education", "Fashion", "Media","Anime"};
+            "Community", "Family & Education", "Fashion", "Media","Food","Health","Holiday","Music","Sports","Travel"};
+
     String blipIcon;
 
     // The geographical location where the device is currently located. That is, the last-known
@@ -175,14 +191,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-
-
         });
+
+        publiccheckbox = (CheckBox)findViewById(R.id.checkboxPublic);
+        privatecheckbox = (CheckBox)findViewById(R.id.checkboxPrivate);
+
+       //CHECK BOX LISTEER
 
 
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 mMap.clear();
                 ShowBlips();
                 //handle click
@@ -214,7 +234,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Calendar c = Calendar.getInstance();
+                String year =String.valueOf(c.get(Calendar.YEAR));
+                String month =String.valueOf(c.get(Calendar.MONTH));
+                String day =String.valueOf(c.get(Calendar.DATE));
+
+                Toast.makeText(MainActivity.this,month+"/"+day+"/"+year, Toast.LENGTH_SHORT).show();
+
                 getDeviceLocation();
+
                 Snackbar.make(view, "Replace with your owns action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
@@ -229,6 +257,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //Navigation View
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);//Layout
         navigationView.setNavigationItemSelectedListener(this);
+
 
     }
 
@@ -260,9 +289,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mDetails = mView.findViewById(R.id.detailsEt);
                 Button mAddBlip = mView.findViewById(R.id.addblip_button);
                 Button mCancelBlip = mView.findViewById(R.id.cancelblip_button);
-                //DROP DOWN
+                publicradio = mView.findViewById(R.id.publicRadio);
+                privateradio = mView.findViewById(R.id.privateRadio);
+
+
+                RadioGroup radioGroup = (RadioGroup) mView.findViewById(R.id.groupRadio);
+                radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener()
+                {
+                    @Override
+                    public void onCheckedChanged(RadioGroup group, int checkedId) {
+                        if(publicradio.isChecked()){
+                            privateradio.setChecked(false);
+                            mySpinner.setAdapter(new MyCustomAdapterPublic(MainActivity.this, R.layout.row, CustomBlips));//Change to Public Spinnes
+
+                        }
+                       else if(privateradio.isChecked()){
+                            publicradio.setChecked(false);
+                            mySpinner.setAdapter(new MyCustomAdapterPrivate(MainActivity.this, R.layout.row, CustomBlips));//Change to Private Spinner
+
+                        }
+
+                        // checkedId is the RadioButton selected
+                    }
+                });
                 mySpinner = mView.findViewById(R.id.iconsSpinner);
-                mySpinner.setAdapter(new MyCustomAdapter(MainActivity.this, R.layout.row, CustomBlips));
+
+
+
 
                 mBuilder.setView(mView);
                 final AlertDialog dialog = mBuilder.create();
@@ -273,48 +326,151 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     public void onClick(View view) {
                         BlipName = mBlipName.getText().toString();
 
-                        if(validateForm()) {
+                        if(publicradio.isChecked()) {
+
+                                            if (validateForm()) {
 
 
-                            Details = mDetails.getText().toString();
-                            String dropboxvalue = mySpinner.getSelectedItem().toString();
-                            Toast.makeText(MainActivity.this, dropboxvalue, Toast.LENGTH_SHORT).show();
 
-                            if (dropboxvalue == "Arts") {
-                                blipIcon = "publicarts";
-                            } else if (dropboxvalue == "Transportation") {
-                                blipIcon = "publicautoboatsair";
-                            } else if (dropboxvalue == "Business") {
-                                blipIcon = "publicbusiness";
-                            } else if (dropboxvalue == "Community") {
-                                blipIcon = "publiccommunity";
-                            } else if (dropboxvalue == "Family & Education") {
-                                blipIcon = "publicfamilyneducation";
-                            } else if (dropboxvalue == "Fashion") {
-                                blipIcon = "publicfashion";
-                            } else if (dropboxvalue == "Media") {
-                                blipIcon = "publicfilmnmedia";
-                            } else if (dropboxvalue == "Anime") {
-                                blipIcon = "anime";
-                            } else {
-                                blipIcon = "ic_launcher_round";
+
+
+                                                Details = mDetails.getText().toString();
+                                                String dropboxvalue = mySpinner.getSelectedItem().toString();
+                                                Toast.makeText(MainActivity.this, dropboxvalue, Toast.LENGTH_SHORT).show();
+
+                                                if (dropboxvalue == "Arts") {
+                                                    blipIcon = "public_art";
+                                                } else if (dropboxvalue == "Transportation") {
+                                                    blipIcon = "public_autoboatsair";
+
+                                                } else if (dropboxvalue == "Business") {
+                                                    blipIcon = "public_business";
+
+                                                } else if (dropboxvalue == "Community") {
+                                                    blipIcon = "public_community";
+
+                                                } else if (dropboxvalue == "Family") {
+                                                    blipIcon = "public_family";
+
+                                                } else if (dropboxvalue == "Fashion") {
+                                                    blipIcon = "public_fashion";
+
+                                                } else if (dropboxvalue == "Media") {
+                                                    blipIcon = "public_filmandmedia";
+
+                                                } else if (dropboxvalue == "Travel") {
+                                                    blipIcon = "public_travelandoutdoor";
+
+                                                } else if (dropboxvalue == "Food") {
+                                                    blipIcon = "public_foodanddrinks";
+
+                                                } else if (dropboxvalue == "Health") {
+                                                    blipIcon = "public_health";
+
+                                                } else if (dropboxvalue == "Holiday") {
+                                                    blipIcon = "public_holidaysandcelebrations";
+
+                                                } else if (dropboxvalue == "Music") {
+                                                    blipIcon = "public_music";
+
+                                                } else if (dropboxvalue == "Sports") {
+                                                    blipIcon = "public_sportsandfitness";
+
+                                                } else {
+                                                    blipIcon = "ic_launcher_round";
+                                                }
+
+
+                                                //Place Data
+
+                                                Blips blips = new Blips(cursor_coordinate_latitude,
+                                                        cursor_coordinate_longitude,
+                                                        BlipName,
+                                                        userName,
+                                                        Details,
+                                                        blipIcon);
+                                                Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
+                                                Blipsref.child("public").push().setValue(blips);//Add to public blips
+
+                                                dialog.cancel();
+                                                mMap.clear();
+                                                ShowBlips();
+                                            }
+                        }
+
+
+                        else if(privateradio.isChecked()){
+                            if (validateForm()) {
+
+
+                                Details = mDetails.getText().toString();
+                                String dropboxvalue = mySpinner.getSelectedItem().toString();
+                                Toast.makeText(MainActivity.this, dropboxvalue, Toast.LENGTH_SHORT).show();
+
+                                if (dropboxvalue == "Arts") {
+                                    blipIcon = "private_art";
+                                } else if (dropboxvalue == "Transportation") {
+                                    blipIcon = "private_autoboatsair";
+
+                                } else if (dropboxvalue == "Business") {
+                                    blipIcon = "private_business";
+
+                                } else if (dropboxvalue == "Community") {
+                                    blipIcon = "private_community";
+
+                                } else if (dropboxvalue == "Family") {
+                                    blipIcon = "private_family";
+
+                                } else if (dropboxvalue == "Fashion") {
+                                    blipIcon = "private_fashion";
+
+                                } else if (dropboxvalue == "Media") {
+                                    blipIcon = "private_filmandmedia";
+
+                                } else if (dropboxvalue == "Travel") {
+                                    blipIcon = "private_travelandoutdoor";
+
+                                } else if (dropboxvalue == "Food") {
+                                    blipIcon = "private_foodanddrinks";
+
+                                } else if (dropboxvalue == "Health") {
+                                    blipIcon = "private_health";
+
+                                } else if (dropboxvalue == "Holiday") {
+                                    blipIcon = "private_holidaysandcelebrations";
+
+                                } else if (dropboxvalue == "Music") {
+                                    blipIcon = "private_music";
+
+                                } else if (dropboxvalue == "Sports") {
+                                    blipIcon = "private_sportsandfitness";
+
+                                } else {
+                                    blipIcon = "ic_launcher_round";
+                                }
+
+
+                                //Place Data
+
+                                Blips blips = new Blips(cursor_coordinate_latitude,
+                                        cursor_coordinate_longitude,
+                                        BlipName,
+                                        userName,
+                                        Details,
+                                        blipIcon);
+                                Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
+
+                                Blipsref.child("private").push().setValue(blips);//Add to private blips
+
+                                dialog.cancel();
+                                mMap.clear();
+                                ShowBlips();
+
+
                             }
 
 
-                            //Place Data
 
-                            Blips blips = new Blips(cursor_coordinate_latitude,
-                                    cursor_coordinate_longitude,
-                                    BlipName,
-                                    userName,
-                                    Details,
-                                    blipIcon);
-                            Users.child(userName).child("Blips").push().setValue(blips);
-                            Blipsref.child("public").push().setValue(blips);
-
-                            dialog.cancel();
-                            mMap.clear();
-                            ShowBlips();
                         }
 
                     }
@@ -351,6 +507,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
+
+
 
                                 for (DataSnapshot datacollected: dataSnapshot.getChildren()) {
                                     //We add this because firebase queries sucks
@@ -432,9 +590,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    public class MyCustomAdapter extends ArrayAdapter<String>{
+    public class MyCustomAdapterPublic extends ArrayAdapter<String>{
 
-        public MyCustomAdapter(Context context, int textViewResourceId,
+        public MyCustomAdapterPublic(Context context, int textViewResourceId,
                                String[] objects) {
             super(context, textViewResourceId, objects);
 // TODO Auto-generated constructor stub
@@ -464,29 +622,45 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             ImageView icon=(ImageView)row.findViewById(R.id.icon);
 
-            if (CustomBlips[position]=="Arts"){
-                icon.setImageResource(R.mipmap.publicarts);
+
+            if (CustomBlips[position]=="Arts" ){
+                icon.setImageResource(R.mipmap.public_art);
             }
             else if(CustomBlips[position]=="Transportation"){
-                icon.setImageResource(R.mipmap.publicautoboatsair);
+                icon.setImageResource(R.mipmap.public_autoboatsair);
             }
             else if(CustomBlips[position]=="Business"){
-                icon.setImageResource(R.mipmap.publicbusiness);
+                icon.setImageResource(R.mipmap.public_business);
             }
             else if(CustomBlips[position]=="Community"){
-                icon.setImageResource(R.mipmap.publiccommunity);
+                icon.setImageResource(R.mipmap.public_community);
             }
             else if(CustomBlips[position]=="Family & Education"){
-                icon.setImageResource(R.mipmap.publicfamilyneducation);
+                icon.setImageResource(R.mipmap.public_family);
             }
             else if(CustomBlips[position]=="Fashion"){
-                icon.setImageResource(R.mipmap.publicfashion);
+                icon.setImageResource(R.mipmap.public_fashion);
             }
             else if(CustomBlips[position]=="Media"){
-                icon.setImageResource(R.mipmap.publicfilmnmedia);
+                icon.setImageResource(R.mipmap.public_filmandmedia);
             }
-            else if(CustomBlips[position]=="Anime"){
-                icon.setImageResource(R.mipmap.anime);
+            else if(CustomBlips[position]=="Food"){
+                icon.setImageResource(R.mipmap.public_foodanddrinks);
+            }
+            else if(CustomBlips[position]=="Health"){
+                icon.setImageResource(R.mipmap.public_health);
+            }
+            else if(CustomBlips[position]=="Holiday"){
+                icon.setImageResource(R.mipmap.public_holidaysandcelebrations);
+            }
+            else if(CustomBlips[position]=="Music"){
+                icon.setImageResource(R.mipmap.public_music);
+            }
+            else if(CustomBlips[position]=="Sports"){
+                icon.setImageResource(R.mipmap.public_sportsandfitness);
+            }
+            else if(CustomBlips[position]=="Travel"){
+                icon.setImageResource(R.mipmap.public_travelandoutdoor);
             }
 
             else{
@@ -497,7 +671,86 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    public class MyCustomAdapterPrivate extends ArrayAdapter<String>{
 
+        public MyCustomAdapterPrivate(Context context, int textViewResourceId,
+                                     String[] objects) {
+            super(context, textViewResourceId, objects);
+// TODO Auto-generated constructor stub
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView,
+                                    ViewGroup parent) {
+// TODO Auto-generated method stub
+            return getCustomView(position, convertView, parent);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+// TODO Auto-generated method stub
+            return getCustomView(position, convertView, parent);
+        }
+
+        public View getCustomView(int position, View convertView, ViewGroup parent) {
+// TODO Auto-generated method stub
+//return super.getView(position, convertView, parent);
+
+            LayoutInflater inflater=getLayoutInflater();
+            View row=inflater.inflate(R.layout.row, parent, false);
+            TextView label=(TextView)row.findViewById(R.id.weekofday);
+            label.setText(CustomBlips[position]);
+
+            ImageView icon=(ImageView)row.findViewById(R.id.icon);
+
+
+            if (CustomBlips[position]=="Arts" ){
+                icon.setImageResource(R.mipmap.private_art);
+            }
+            else if(CustomBlips[position]=="Transportation"){
+                icon.setImageResource(R.mipmap.private_autoboatsair);
+            }
+            else if(CustomBlips[position]=="Business"){
+                icon.setImageResource(R.mipmap.private_business);
+            }
+            else if(CustomBlips[position]=="Community"){
+                icon.setImageResource(R.mipmap.private_community);
+            }
+            else if(CustomBlips[position]=="Family & Education"){
+                icon.setImageResource(R.mipmap.private_family);
+            }
+            else if(CustomBlips[position]=="Fashion"){
+                icon.setImageResource(R.mipmap.private_fashion);
+            }
+            else if(CustomBlips[position]=="Media"){
+                icon.setImageResource(R.mipmap.private_filmandmedia);
+            }
+            else if(CustomBlips[position]=="Food"){
+                icon.setImageResource(R.mipmap.private_foodanddrinks);
+            }
+            else if(CustomBlips[position]=="Health"){
+                icon.setImageResource(R.mipmap.private_health);
+            }
+            else if(CustomBlips[position]=="Holiday"){
+                icon.setImageResource(R.mipmap.private_holidaysandcelebrations);
+            }
+            else if(CustomBlips[position]=="Music"){
+                icon.setImageResource(R.mipmap.private_music);
+            }
+            else if(CustomBlips[position]=="Sports"){
+                icon.setImageResource(R.mipmap.private_sportsandfitness);
+            }
+            else if(CustomBlips[position]=="Travel"){
+                icon.setImageResource(R.mipmap.private_travelandoutdoor);
+            }
+
+            else{
+                icon.setImageResource(R.mipmap.ic_launcher_round);
+            }
+
+            return row;
+        }
+    }
 
 
     public void PlaceMarker(LatLng newBlipCoordinates, String newBlipName, String creator, String Details, Marker addmarkers, String blipIcon) {
@@ -518,18 +771,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 for (DataSnapshot snapm: dataSnapshot.getChildren()) {
 
+                        Double latitude = snapm.child("latitude").getValue(Double.class);
+                        Double longitude = snapm.child("longitude").getValue(Double.class);
+                        String newBlipName= snapm.child("BlipName").getValue(String.class);
+                        String creator= snapm.child("Creator").getValue(String.class);
+                        String Details =snapm.child("Details").getValue(String.class);
+                        String blipIcon =snapm.child("Icon").getValue(String.class);
+
+                        LatLng newBlipCoordinates = new LatLng(latitude,longitude);
 
 
-                    Double latitude = snapm.child("latitude").getValue(Double.class);
-                    Double longitude = snapm.child("longitude").getValue(Double.class);
-                    String newBlipName= snapm.child("BlipName").getValue(String.class);
-                    String creator= snapm.child("Creator").getValue(String.class);
-                    String Details =snapm.child("Details").getValue(String.class);
-                    String blipIcon =snapm.child("Icon").getValue(String.class);
+                    if(publiccheckbox.isChecked()){
+                        PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
 
-                    LatLng newBlipCoordinates = new LatLng(latitude,longitude);
+                    }
+                    if(privatecheckbox.isChecked() &&  userName==creator ){  //Check if current username and creator is the same and if pBox check
+                        PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
 
-                    PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                    }
+
+
+
 
                 }
 
@@ -570,13 +832,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
-    private void DeleteBlip(Marker marker){
-
-
-   }
-
-
-
     private boolean validateForm() {
         boolean valid = true;
 
@@ -592,6 +847,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         return valid;
     }
+
     private boolean isBlipNameValid(String password) {
 
         return password.length() > 4;
