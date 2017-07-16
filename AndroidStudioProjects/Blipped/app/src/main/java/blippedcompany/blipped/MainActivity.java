@@ -104,6 +104,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Spinner mySpinner;
     RadioButton publicradio;
     RadioButton privateradio;
+    
 
 
     String[] CustomBlips = {"Arts", "Transportation", "Business",
@@ -125,6 +126,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DatabaseReference Users = database.getReference("users");
     DatabaseReference Blipsref = database.getReference("blips");
     DatabaseReference BlipsPublic = database.getReference("blips").child("public");
+    DatabaseReference BlipsPrivate = database.getReference("blips").child("private");
 
 
     @Override
@@ -147,56 +149,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                @Override
                public boolean onQueryTextChange(final String query) {
                    mMap.clear();
-
-
-                               BlipsPublic.orderByChild("BlipName").addListenerForSingleValueEvent(new ValueEventListener() {
-
-
-                                    @Override
-                                    public void onDataChange(DataSnapshot dataSnapshot) {
-
-                                        for (DataSnapshot snapm : dataSnapshot.getChildren()) {
-
-
-                                            Double latitude = snapm.child("latitude").getValue(Double.class);
-                                            Double longitude = snapm.child("longitude").getValue(Double.class);
-                                            String newBlipName= snapm.child("BlipName").getValue(String.class);
-                                            String creator= snapm.child("Creator").getValue(String.class);
-                                            String Details =snapm.child("Details").getValue(String.class);
-                                            String blipIcon =snapm.child("Icon").getValue(String.class);
-
-                                            LatLng newBlipCoordinates = new LatLng(latitude,longitude);
-
-                                            if(newBlipName.toUpperCase().startsWith(   query.toUpperCase()  )    )
-                                            {
-                                                Toast.makeText(MainActivity.this, query, Toast.LENGTH_SHORT).show();
-                                                PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-
-                                            }
-
-
-                                        }
-                                    }
-
-                                   @Override
-                                   public void onCancelled(DatabaseError databaseError) {
-
-                                   }
-
-
-
-                                });
-             return false;
+                   blipsupdateontextchange(query);
+                   return false;
             }
 
 
 
         });
 
-        publiccheckbox = (CheckBox)findViewById(R.id.checkboxPublic);
-        privatecheckbox = (CheckBox)findViewById(R.id.checkboxPrivate);
 
-       //CHECK BOX LISTEER
+
+
 
 
         search.setOnClickListener(new View.OnClickListener() {
@@ -270,6 +233,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         userName=removecom(userID.getEmail());
 
+
+        publiccheckbox = (CheckBox)findViewById(R.id.checkboxPublic);
+        privatecheckbox = (CheckBox)findViewById(R.id.checkboxPrivate);
+        checkboxlisteners();
         ShowBlips();
 
         // WHen map is long clicked
@@ -329,10 +296,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         if(publicradio.isChecked()) {
 
                                             if (validateForm()) {
-
-
-
-
 
                                                 Details = mDetails.getText().toString();
                                                 String dropboxvalue = mySpinner.getSelectedItem().toString();
@@ -504,6 +467,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                 BlipsPublic.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
+                        new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+
+
+
+                                for (DataSnapshot datacollected: dataSnapshot.getChildren()) {
+                                    //We add this because firebase queries sucks
+                                    if( datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude){
+                                        datacollected.getRef().removeValue();
+                                        Toast.makeText(MainActivity.this,"Blip Deleted", Toast.LENGTH_SHORT).show();
+                                    }
+
+
+                                }
+                            }
+
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                                Log.w("TodoApp", "getUser:onCancelled", databaseError.toException());
+                            }
+                        });
+
+
+                BlipsPrivate.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
                         new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -781,15 +770,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         LatLng newBlipCoordinates = new LatLng(latitude,longitude);
 
 
-                    if(publiccheckbox.isChecked()){
+                    if(privatecheckbox.isChecked() &&  blipIcon.toLowerCase().contains("private".toLowerCase()) && creator.toLowerCase().contains(userName.toLowerCase()) ){
+                        Toast.makeText(MainActivity.this, "private", Toast.LENGTH_SHORT).show();
                         PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
 
                     }
-                    if(privatecheckbox.isChecked() &&  userName==creator ){  //Check if current username and creator is the same and if pBox check
+
+
+                    if(publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase()) )  {
+                          Toast.makeText(MainActivity.this, "public", Toast.LENGTH_SHORT).show();
                         PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
 
                     }
-
 
 
 
@@ -959,9 +951,107 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    public void blipsupdateontextchange(final String query){
+        mMap.clear();
+
+        BlipsPublic.orderByChild("BlipName").addListenerForSingleValueEvent(new ValueEventListener() {
+
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot snapm : dataSnapshot.getChildren()) {
+
+                    Double latitude = snapm.child("latitude").getValue(Double.class);
+                    Double longitude = snapm.child("longitude").getValue(Double.class);
+                    String newBlipName= snapm.child("BlipName").getValue(String.class);
+                    String creator= snapm.child("Creator").getValue(String.class);
+                    String Details =snapm.child("Details").getValue(String.class);
+                    String blipIcon =snapm.child("Icon").getValue(String.class);
+
+                    LatLng newBlipCoordinates = new LatLng(latitude,longitude);
+
+                    if(newBlipName.toUpperCase().startsWith(   query.toUpperCase()  )    )
+                    {
+                        Toast.makeText(MainActivity.this, query, Toast.LENGTH_SHORT).show();
+                        PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+
+                    }
+
+
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
 
 
 
+        });
+
+        BlipsPrivate.orderByChild("BlipName").addListenerForSingleValueEvent(new ValueEventListener() {
+
+
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot snapm : dataSnapshot.getChildren()) {
+
+
+                    Double latitude = snapm.child("latitude").getValue(Double.class);
+                    Double longitude = snapm.child("longitude").getValue(Double.class);
+                    String newBlipName= snapm.child("BlipName").getValue(String.class);
+                    String creator= snapm.child("Creator").getValue(String.class);
+                    String Details =snapm.child("Details").getValue(String.class);
+                    String blipIcon =snapm.child("Icon").getValue(String.class);
+
+                    LatLng newBlipCoordinates = new LatLng(latitude,longitude);
+
+                    if(newBlipName.toUpperCase().startsWith(query.toUpperCase()) && creator.toLowerCase().contains(userName.toLowerCase())   )
+                    {
+                        Toast.makeText(MainActivity.this, query, Toast.LENGTH_SHORT).show();
+                        PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+
+                    }
+
+
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+
+
+
+        });
+    }
+
+    public void checkboxlisteners(){
+        publiccheckbox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        privatecheckbox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+    }
 }
 
 
