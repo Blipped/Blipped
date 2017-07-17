@@ -16,11 +16,11 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         map:layout_constraintBottom_toBottomOf="parent"
-        map:layout_constraintHorizontal_bias="0.0"
+        map:layout_constraintHorizontal_bias="1.0"
         map:layout_constraintLeft_toLeftOf="parent"
         map:layout_constraintRight_toRightOf="parent"
         map:layout_constraintTop_toTopOf="parent"
-        map:layout_constraintVertical_bias="1.0"
+        map:layout_constraintVertical_bias="0.0"
         tools:context="blippedcompany.blipped.MapsActivity"
         tools:layout="@layout/activity_maps"
         tools:layout_constraintLeft_creator="1"
@@ -28,40 +28,6 @@
         tools:layout_constraintTop_creator="1"
         tools:layout_constraintBottom_creator="1" />
 
-
-    <CheckBox
-        android:id="@+id/checkboxPublic"
-        android:layout_width="88dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="84dp"
-        android:checked="true"
-        android:text="Public"
-        android:textColor="@android:color/background_light"
-        android:visibility="visible"
-        app:layout_anchor="@+id/include2"
-        tools:layout_constraintTop_creator="1"
-        tools:layout_constraintRight_creator="1"
-        android:layout_marginStart="88dp"
-        app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginTop="16dp"
-        tools:layout_constraintLeft_creator="1"
-        app:layout_constraintLeft_toLeftOf="@+id/checkboxPrivate"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <CheckBox
-        android:id="@+id/checkboxPrivate"
-        android:layout_width="88dp"
-        android:layout_height="wrap_content"
-        android:checked="true"
-        android:text="Private"
-        android:textColor="@android:color/background_light"
-        android:visibility="visible"
-        app:layout_anchor="@+id/include2"
-        android:layout_marginStart="124dp"
-        app:layout_constraintBaseline_toBaselineOf="@+id/checkboxPublic"
-        tools:layout_constraintBaseline_creator="1"
-        tools:layout_constraintLeft_creator="1"
-        app:layout_constraintLeft_toLeftOf="parent" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
@@ -79,6 +45,205 @@
         tools:layout_constraintBottom_creator="1"
         tools:layout_constraintLeft_creator="1" />
 
+    <ScrollView
+        android:id="@+id/filterscroll"
+        android:layout_width="98dp"
+        android:layout_height="144dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="111dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_constraintRight_creator="1"
+        tools:layout_constraintTop_creator="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <CheckBox
+                android:id="@+id/checkboxPrivate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Private"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="280dp"
+                tools:layout_editor_absoluteY="89dp" />
+
+            <CheckBox
+                android:id="@+id/checkboxPublic"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Public"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="268dp"
+                tools:layout_editor_absoluteY="140dp" />
+
+            <CheckBox
+                android:id="@+id/checkboxArts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Arts"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="280dp"
+                tools:layout_editor_absoluteY="89dp" />
+
+            <CheckBox
+                android:id="@+id/checkboxTransportation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Transportaton"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="268dp"
+                tools:layout_editor_absoluteY="140dp" />
+
+            <CheckBox
+                android:id="@+id/checkboxBusiness"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Business"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="280dp"
+                tools:layout_editor_absoluteY="89dp" />
+
+            <CheckBox
+                android:id="@+id/checkboxCommunity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Community"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="268dp"
+                tools:layout_editor_absoluteY="140dp" />
+
+            <CheckBox
+                android:id="@+id/checkboxFamily"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Family"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="280dp"
+                tools:layout_editor_absoluteY="89dp" />
+
+            <CheckBox
+                android:id="@+id/checkboxFashion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Fashion"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="268dp"
+                tools:layout_editor_absoluteY="140dp" />
+
+            <CheckBox
+                android:id="@+id/checkboxMedia"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Media"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="280dp"
+                tools:layout_editor_absoluteY="89dp" />
+
+            <CheckBox
+                android:id="@+id/checkboxTravel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Travel"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="268dp"
+                tools:layout_editor_absoluteY="140dp" />
+
+            <CheckBox
+                android:id="@+id/checkboxFood"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Food"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="280dp"
+                tools:layout_editor_absoluteY="89dp" />
+
+            <CheckBox
+                android:id="@+id/checkboxHealth"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Health"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="268dp"
+                tools:layout_editor_absoluteY="140dp" />
+
+            <CheckBox
+                android:id="@+id/checkboxHoliday"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Holiday"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="268dp"
+                tools:layout_editor_absoluteY="140dp" />
+
+            <CheckBox
+                android:id="@+id/checkboxMusic"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Music"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="268dp"
+                tools:layout_editor_absoluteY="140dp" />
+
+            <CheckBox
+                android:id="@+id/checkboxSports"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Sports"
+                android:textColor="@android:color/background_light"
+                android:visibility="visible"
+                app:layout_anchor="@+id/include2"
+                tools:layout_editor_absoluteX="268dp"
+                tools:layout_editor_absoluteY="140dp" />
+
+
+        </LinearLayout>
+    </ScrollView>
 
 
 </android.support.constraint.ConstraintLayout>

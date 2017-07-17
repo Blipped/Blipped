@@ -33,6 +33,7 @@ import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -102,6 +103,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Spinner mySpinner;
     CheckBox publiccheckbox;
     CheckBox privatecheckbox;
+    CheckBox checkboxArts ;
+    CheckBox checkboxBusiness ;
+    CheckBox checkboxCommunity;
+    CheckBox checkboxFamily ;
+    CheckBox checkboxFashion ;
+    CheckBox checkboxFood;
+    CheckBox checkboxHealth;
+    CheckBox checkboxMedia;
+    CheckBox checkboxSports;
+    CheckBox checkboxTransportation;
+    CheckBox checkboxHoliday;
+    CheckBox checkboxTravel;
+    CheckBox checkboxMusic;
     RadioButton publicradio;
     RadioButton privateradio;
     String[] CustomBlips = {"Arts", "Transportation", "Business",
@@ -225,8 +239,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         userName=removecom(userID.getEmail());
 
 
-        publiccheckbox = (CheckBox)findViewById(R.id.checkboxPublic);
-        privatecheckbox = (CheckBox)findViewById(R.id.checkboxPrivate);
+         publiccheckbox = (CheckBox)findViewById(R.id.checkboxPublic);
+         privatecheckbox = (CheckBox)findViewById(R.id.checkboxPrivate);
+         checkboxMusic = (CheckBox)findViewById(R.id.checkboxMusic);
+         checkboxArts = (CheckBox)findViewById(R.id.checkboxArts);
+         checkboxBusiness = (CheckBox)findViewById(R.id.checkboxBusiness);
+         checkboxCommunity= (CheckBox)findViewById(R.id.checkboxCommunity);
+         checkboxFamily = (CheckBox)findViewById(R.id.checkboxFamily);
+         checkboxFashion = (CheckBox)findViewById(R.id.checkboxFashion);
+         checkboxFood = (CheckBox)findViewById(R.id.checkboxFood);
+         checkboxHealth = (CheckBox)findViewById(R.id.checkboxHealth);
+         checkboxMedia = (CheckBox)findViewById(R.id.checkboxMedia);
+         checkboxSports = (CheckBox)findViewById(R.id.checkboxSports);
+         checkboxTransportation = (CheckBox)findViewById(R.id.checkboxTransportation);
+         checkboxHoliday = (CheckBox)findViewById(R.id.checkboxHoliday);
+         checkboxTravel = (CheckBox)findViewById(R.id.checkboxTravel);
+         ScrollView filter =(ScrollView) findViewById(R.id.filterscroll);
+
+
+
+
         checkboxlisteners();
         ShowBlips();
 
@@ -753,33 +785,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         String dropboxvalue = mySpinner.getSelectedItem().toString();
 
 
-                        if (dropboxvalue == "Arts") {
+                        if (dropboxvalue == "Arts") {//
                             blipIcon = "private_art";
-                        } else if (dropboxvalue == "Transportation") {
+                        } else if (dropboxvalue == "Transportation") {//
                             blipIcon = "private_autoboatsair";
 
-                        } else if (dropboxvalue == "Business") {
+                        } else if (dropboxvalue == "Business") {//
                             blipIcon = "private_business";
 
-                        } else if (dropboxvalue == "Community") {
+                        } else if (dropboxvalue == "Community") {//
                             blipIcon = "private_community";
 
-                        } else if (dropboxvalue == "Family") {
+                        } else if (dropboxvalue == "Family") {//
                             blipIcon = "private_family";
 
-                        } else if (dropboxvalue == "Fashion") {
+                        } else if (dropboxvalue == "Fashion") {//
                             blipIcon = "private_fashion";
 
-                        } else if (dropboxvalue == "Media") {
+                        } else if (dropboxvalue == "Media") {//
                             blipIcon = "private_filmandmedia";
 
-                        } else if (dropboxvalue == "Travel") {
+                        } else if (dropboxvalue == "Travel") {//
                             blipIcon = "private_travelandoutdoor";
 
-                        } else if (dropboxvalue == "Food") {
+                        } else if (dropboxvalue == "Food") {//
                             blipIcon = "private_foodanddrinks";
 
-                        } else if (dropboxvalue == "Health") {
+                        } else if (dropboxvalue == "Health") {//
                             blipIcon = "private_health";
 
                         } else if (dropboxvalue == "Holiday") {
@@ -913,14 +945,91 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     if(privatecheckbox.isChecked() &&  blipIcon.toLowerCase().contains("private".toLowerCase()) && creator.toLowerCase().contains(userName.toLowerCase()) ){
 
-                        PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        if(checkboxArts.isChecked() &&  blipIcon.toLowerCase().contains("art".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxBusiness.isChecked() &&  blipIcon.toLowerCase().contains("business".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxCommunity.isChecked() &&  blipIcon.toLowerCase().contains("community".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxFamily.isChecked() &&  blipIcon.toLowerCase().contains("family".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxFashion.isChecked() &&  blipIcon.toLowerCase().contains("fashion".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxFood.isChecked() &&  blipIcon.toLowerCase().contains("food".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxHealth.isChecked() &&  blipIcon.toLowerCase().contains("health".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxHoliday.isChecked() &&  blipIcon.toLowerCase().contains("holiday".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxMedia.isChecked() &&  blipIcon.toLowerCase().contains("media".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxTransportation.isChecked() &&  blipIcon.toLowerCase().contains("auto".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxTravel.isChecked() &&  blipIcon.toLowerCase().contains("travel".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxSports.isChecked() &&  blipIcon.toLowerCase().contains("sports".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxMusic.isChecked() &&  blipIcon.toLowerCase().contains("music".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+
 
                     }
 
 
                     if(publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase()) )  {
+                        if(checkboxArts.isChecked() &&  blipIcon.toLowerCase().contains("art".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxBusiness.isChecked() &&  blipIcon.toLowerCase().contains("business".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxCommunity.isChecked() &&  blipIcon.toLowerCase().contains("community".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxFamily.isChecked() &&  blipIcon.toLowerCase().contains("family".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxFashion.isChecked() &&  blipIcon.toLowerCase().contains("fashion".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxFood.isChecked() &&  blipIcon.toLowerCase().contains("food".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxHealth.isChecked() &&  blipIcon.toLowerCase().contains("health".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxHoliday.isChecked() &&  blipIcon.toLowerCase().contains("holiday".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxMedia.isChecked() &&  blipIcon.toLowerCase().contains("media".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxTransportation.isChecked() &&  blipIcon.toLowerCase().contains("auto".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxTravel.isChecked() &&  blipIcon.toLowerCase().contains("travel".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxSports.isChecked() &&  blipIcon.toLowerCase().contains("sports".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxMusic.isChecked() &&  blipIcon.toLowerCase().contains("music".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
 
-                        PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
 
                     }
 
@@ -1214,6 +1323,131 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 //handle click
             }
         });
+
+        checkboxArts.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+        checkboxTravel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        checkboxSports.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        checkboxTransportation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+        checkboxMedia.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        checkboxHoliday.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        checkboxHealth.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+       checkboxSports.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        checkboxFood.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        checkboxCommunity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+        checkboxBusiness.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+        checkboxFashion.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+        checkboxMusic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
     }
 
 
