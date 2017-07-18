@@ -66,6 +66,7 @@ import com.google.firebase.database.ValueEventListener;
 
 
 import java.util.ArrayList;
+import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
@@ -268,16 +269,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onMapLongClick(LatLng point) {
-                      AddBlip(point);
+
+                AddBlip(point);
             }
         });
 
 
         //When map is infolong clicked
+        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+
+                EditBlip(marker);
+            }
+        });
+
         mMap.setOnInfoWindowLongClickListener(new GoogleMap.OnInfoWindowLongClickListener() {
             @Override
             public void onInfoWindowLongClick(Marker marker) {
-                    DeleteBlip(marker);
+
+                DeleteBlip(marker);
             }
         });
 
@@ -363,8 +374,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 friendrequestemail=friendemail.getText().toString();
                 if( validateAddFriend()){
                     friendrequestemail=removecom(friendemail.getText().toString());
-
-
                             Users.addChildEventListener(new ChildEventListener() {
                                 @Override
                                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -401,9 +410,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                                 }
                             });
-
-
-
 
                 }
 
@@ -727,7 +733,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         } else if (dropboxvalue == "Community") {
                             blipIcon = "public_community";
 
-                        } else if (dropboxvalue == "Family") {
+                        } else if (dropboxvalue == "Family & Education") {
                             blipIcon = "public_family";
 
                         } else if (dropboxvalue == "Fashion") {
@@ -796,7 +802,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         } else if (dropboxvalue == "Community") {//
                             blipIcon = "private_community";
 
-                        } else if (dropboxvalue == "Family") {//
+                        } else if (dropboxvalue == "Family & Education") {//
                             blipIcon = "private_family";
 
                         } else if (dropboxvalue == "Fashion") {//
@@ -865,8 +871,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void DeleteBlip(Marker marker){
         final LatLng coordinatetobedeleted =marker.getPosition();
-        String x=Double.toString(coordinatetobedeleted.latitude);
-
 
         BlipsPublic.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
                 new ValueEventListener() {
@@ -1447,11 +1451,229 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 //handle click
             }
         });
+        checkboxFamily.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
 
     }
 
 
+    public void EditBlip(final Marker marker){
+        DeleteBlip(marker);
+        final LatLng coordinatetobeupdated =marker.getPosition();
 
+        cursor_coordinate = new LatLng(coordinatetobeupdated.latitude, coordinatetobeupdated.longitude);// Set current click location to marker
+        cursor_coordinate_latitude= coordinatetobeupdated.latitude;
+        cursor_coordinate_longitude= coordinatetobeupdated.longitude;
+
+        AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
+        View mBlipAddView = getLayoutInflater().inflate(R.layout.edit_blip_details_popup,null);
+
+        mBlipName = mBlipAddView.findViewById(R.id.blipnameEt);
+        mDetails = mBlipAddView.findViewById(R.id.detailsEt);
+        Button mAddBlip = mBlipAddView.findViewById(R.id.addblip_button);
+        Button mCancelBlip = mBlipAddView.findViewById(R.id.cancelblip_button);
+        publicradio = mBlipAddView.findViewById(R.id.publicRadio);
+        privateradio = mBlipAddView.findViewById(R.id.privateRadio);
+        mySpinner = mBlipAddView.findViewById(R.id.iconsSpinner);
+
+
+
+        RadioGroup radioGroup = (RadioGroup) mBlipAddView.findViewById(R.id.groupRadio);
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener()
+        {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if(publicradio.isChecked()){
+                    privateradio.setChecked(false);
+                    mySpinner.setAdapter(new MyCustomAdapterPublic(MainActivity.this, R.layout.row, CustomBlips));//Change to Public Spinnes
+
+                }
+                else if(privateradio.isChecked()){
+                    publicradio.setChecked(false);
+                    mySpinner.setAdapter(new MyCustomAdapterPrivate(MainActivity.this, R.layout.row, CustomBlips));//Change to Private Spinner
+
+                }
+
+                // checkedId is the RadioButton selected
+            }
+        });
+
+
+
+
+        mBuilder.setView(mBlipAddView);
+        final AlertDialog dialog = mBuilder.create();
+        dialog.show();
+
+        mAddBlip.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                BlipName = mBlipName.getText().toString();
+
+                if(publicradio.isChecked()) {
+
+                    if (validateForm()) {
+
+                        Details = mDetails.getText().toString();
+                        String dropboxvalue = mySpinner.getSelectedItem().toString();
+
+
+                        if (dropboxvalue == "Arts") {
+                            blipIcon = "public_art";
+                        } else if (dropboxvalue == "Transportation") {
+                            blipIcon = "public_autoboatsair";
+
+                        } else if (dropboxvalue == "Business") {
+                            blipIcon = "public_business";
+
+                        } else if (dropboxvalue == "Community") {
+                            blipIcon = "public_community";
+
+                        } else if (dropboxvalue == "Family & Education") {
+                            blipIcon = "public_family";
+
+                        } else if (dropboxvalue == "Fashion") {
+                            blipIcon = "public_fashion";
+
+                        } else if (dropboxvalue == "Media") {
+                            blipIcon = "public_filmandmedia";
+
+                        } else if (dropboxvalue == "Travel") {
+                            blipIcon = "public_travelandoutdoor";
+
+                        } else if (dropboxvalue == "Food") {
+                            blipIcon = "public_foodanddrinks";
+
+                        } else if (dropboxvalue == "Health") {
+                            blipIcon = "public_health";
+
+                        } else if (dropboxvalue == "Holiday") {
+                            blipIcon = "public_holidaysandcelebrations";
+
+                        } else if (dropboxvalue == "Music") {
+                            blipIcon = "public_music";
+
+                        } else if (dropboxvalue == "Sports") {
+                            blipIcon = "public_sportsandfitness";
+
+                        } else {
+                            blipIcon = "ic_launcher_round";
+                        }
+
+
+                        //Place Data
+
+                        Blips blips = new Blips(cursor_coordinate_latitude,
+                                cursor_coordinate_longitude,
+                                BlipName,
+                                userName,
+                                Details,
+                                blipIcon);
+                        Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
+                        Blipsref.child("public").push().setValue(blips);//Add to public blips
+
+                        dialog.cancel();
+                        mMap.clear();
+                        ShowBlips();
+                    }
+                }
+
+
+                else if(privateradio.isChecked()){
+                    if (validateForm()) {
+
+
+                        Details = mDetails.getText().toString();
+                        String dropboxvalue = mySpinner.getSelectedItem().toString();
+
+
+                        if (dropboxvalue == "Arts") {//
+                            blipIcon = "private_art";
+                        } else if (dropboxvalue == "Transportation") {//
+                            blipIcon = "private_autoboatsair";
+
+                        } else if (dropboxvalue == "Business") {//
+                            blipIcon = "private_business";
+
+                        } else if (dropboxvalue == "Community") {//
+                            blipIcon = "private_community";
+
+                        } else if (dropboxvalue == "Family & Education") {//
+                            blipIcon = "private_family";
+
+                        } else if (dropboxvalue == "Fashion") {//
+                            blipIcon = "private_fashion";
+
+                        } else if (dropboxvalue == "Media") {//
+                            blipIcon = "private_filmandmedia";
+
+                        } else if (dropboxvalue == "Travel") {//
+                            blipIcon = "private_travelandoutdoor";
+
+                        } else if (dropboxvalue == "Food") {//
+                            blipIcon = "private_foodanddrinks";
+
+                        } else if (dropboxvalue == "Health") {//
+                            blipIcon = "private_health";
+
+                        } else if (dropboxvalue == "Holiday") {
+                            blipIcon = "private_holidaysandcelebrations";
+
+                        } else if (dropboxvalue == "Music") {
+                            blipIcon = "private_music";
+
+                        } else if (dropboxvalue == "Sports") {
+                            blipIcon = "private_sportsandfitness";
+
+                        } else {
+                            blipIcon = "ic_launcher_round";
+                        }
+
+
+                        //Place Data
+
+                        Blips blips = new Blips(cursor_coordinate_latitude,
+                                cursor_coordinate_longitude,
+                                BlipName,
+                                userName,
+                                Details,
+                                blipIcon);
+                        Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
+
+                        Blipsref.child("private").push().setValue(blips);//Add to private blips
+
+                        dialog.cancel();
+                        mMap.clear();
+                        ShowBlips();
+
+
+                    }
+
+
+
+                }
+
+            }
+        });
+
+        mCancelBlip.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.cancel();
+
+            }
+        });
+
+
+
+    }
 
 
 
