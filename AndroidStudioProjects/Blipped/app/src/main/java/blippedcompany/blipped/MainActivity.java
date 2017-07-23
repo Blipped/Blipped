@@ -67,6 +67,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Objects;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
@@ -140,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DatabaseReference Blipsref = database.getReference("blips");
     DatabaseReference BlipsPublic = database.getReference("blips").child("public");
     DatabaseReference BlipsPrivate = database.getReference("blips").child("private");
+    DatabaseReference UsersEmailFriends;
 
 
 
@@ -228,74 +230,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
-
-
-        mMap = googleMap;
-        getDeviceLocation();
-
-        googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
-
-
-        userName=removecom(userID.getEmail());
-
-
-         publiccheckbox = (CheckBox)findViewById(R.id.checkboxPublic);
-         privatecheckbox = (CheckBox)findViewById(R.id.checkboxPrivate);
-         checkboxMusic = (CheckBox)findViewById(R.id.checkboxMusic);
-         checkboxArts = (CheckBox)findViewById(R.id.checkboxArts);
-         checkboxBusiness = (CheckBox)findViewById(R.id.checkboxBusiness);
-         checkboxCommunity= (CheckBox)findViewById(R.id.checkboxCommunity);
-         checkboxFamily = (CheckBox)findViewById(R.id.checkboxFamily);
-         checkboxFashion = (CheckBox)findViewById(R.id.checkboxFashion);
-         checkboxFood = (CheckBox)findViewById(R.id.checkboxFood);
-         checkboxHealth = (CheckBox)findViewById(R.id.checkboxHealth);
-         checkboxMedia = (CheckBox)findViewById(R.id.checkboxMedia);
-         checkboxSports = (CheckBox)findViewById(R.id.checkboxSports);
-         checkboxTransportation = (CheckBox)findViewById(R.id.checkboxTransportation);
-         checkboxHoliday = (CheckBox)findViewById(R.id.checkboxHoliday);
-         checkboxTravel = (CheckBox)findViewById(R.id.checkboxTravel);
-         ScrollView filter =(ScrollView) findViewById(R.id.filterscroll);
-
-
-
-
-        checkboxlisteners();
-        ShowBlips();
-
-        // WHen map is long clicked
-        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
-
-
-            @Override
-            public void onMapLongClick(LatLng point) {
-
-                AddBlip(point);
-            }
-        });
-
-
-        //When map is infolong clicked
-        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
-            @Override
-            public void onInfoWindowClick(Marker marker) {
-
-                EditBlip(marker);
-            }
-        });
-
-        mMap.setOnInfoWindowLongClickListener(new GoogleMap.OnInfoWindowLongClickListener() {
-            @Override
-            public void onInfoWindowLongClick(Marker marker) {
-
-                DeleteBlip(marker);
-            }
-        });
-
-
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.setting_top_right, menu);
@@ -355,304 +289,122 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    private void SendFriendRequest() {
-
-        AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
-        View mFriendAddView = getLayoutInflater().inflate(R.layout.add_friend,null);
-
-        friendemail = mFriendAddView.findViewById(R.id.add_friend_et);
-        Button AddFriend = mFriendAddView.findViewById(R.id.add_friend_btn);
-        Button CancelFriend = mFriendAddView.findViewById(R.id.cancel_friend_btn);
-        mBuilder.setView(mFriendAddView);
-        final AlertDialog dialog = mBuilder.create();
-        dialog.show();
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
 
 
-        AddFriend.setOnClickListener(new View.OnClickListener() {
+        mMap = googleMap;
+        googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
+        getDeviceLocation();
+
+
+         userName=removecom(userID.getEmail());
+         publiccheckbox = (CheckBox)findViewById(R.id.checkboxPublic);
+         privatecheckbox = (CheckBox)findViewById(R.id.checkboxPrivate);
+         checkboxMusic = (CheckBox)findViewById(R.id.checkboxMusic);
+         checkboxArts = (CheckBox)findViewById(R.id.checkboxArts);
+         checkboxBusiness = (CheckBox)findViewById(R.id.checkboxBusiness);
+         checkboxCommunity= (CheckBox)findViewById(R.id.checkboxCommunity);
+         checkboxFamily = (CheckBox)findViewById(R.id.checkboxFamily);
+         checkboxFashion = (CheckBox)findViewById(R.id.checkboxFashion);
+         checkboxFood = (CheckBox)findViewById(R.id.checkboxFood);
+         checkboxHealth = (CheckBox)findViewById(R.id.checkboxHealth);
+         checkboxMedia = (CheckBox)findViewById(R.id.checkboxMedia);
+         checkboxSports = (CheckBox)findViewById(R.id.checkboxSports);
+         checkboxTransportation = (CheckBox)findViewById(R.id.checkboxTransportation);
+         checkboxHoliday = (CheckBox)findViewById(R.id.checkboxHoliday);
+         checkboxTravel = (CheckBox)findViewById(R.id.checkboxTravel);
+         ScrollView filter =(ScrollView) findViewById(R.id.filterscroll);
+
+
+        checkboxlisteners();
+        ShowBlips();
+
+        // WHen map is long clicked
+        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+
+
             @Override
-            public void onClick(View view) {
-                friendrequestemail=friendemail.getText().toString();
-                if( validateAddFriend()){
-                    friendrequestemail=removecom(friendemail.getText().toString());
-                            Users.addChildEventListener(new ChildEventListener() {
-                                @Override
-                                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            public void onMapLongClick(LatLng point) {
 
-                                    if (dataSnapshot.hasChild(friendrequestemail)) {
-
-                                        Users.child(friendrequestemail).child("FriendRequests").push().setValue(userName);// Add to user's blips
-                                        dialog.cancel();
-
-                                    }
-                                    else{
-                                        Toast.makeText(MainActivity.this, "User does not exist", Toast.LENGTH_SHORT).show();
-                                        friendemail.setText(null);
-                                    }
-                                }
-
-                                @Override
-                                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-                                }
-
-                                @Override
-                                public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-                                }
-
-                                @Override
-                                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-                                }
-
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-
-                                }
-                            });
-
-                }
-
-
-
+                AddBlip(point);
             }
         });
 
-        CancelFriend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dialog.cancel();
 
+        //When map is infolong clicked
+        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+
+                EditBlip(marker);
+            }
+        });
+
+        mMap.setOnInfoWindowLongClickListener(new GoogleMap.OnInfoWindowLongClickListener() {
+            @Override
+            public void onInfoWindowLongClick(Marker marker) {
+
+                DeleteBlip(marker);
             }
         });
 
 
     }
+    private void GoogleMapAPIConnect() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this /* FragmentActivity */,
+                        this /* OnConnectionFailedListener */)
+                .addConnectionCallbacks(this)
+                .addApi(LocationServices.API)
+                .addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API)
+                .build();
+        mGoogleApiClient.connect();
 
-    public class MyCustomAdapterPublic extends ArrayAdapter<String>{
+    }
+    public void getDeviceLocation() {
 
-        public MyCustomAdapterPublic(Context context, int textViewResourceId,
-                               String[] objects) {
-            super(context, textViewResourceId, objects);
-// TODO Auto-generated constructor stub
+        /*
+         * Request location permission, so that we can get the location of the
+         * device. The result of the permission request is handled by a callback,
+         * onRequestPermissionsResult.
+         */
+        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            mLocationPermissionGranted = true;
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        }
+        /*
+         * Get the best and most recent location of the device, which may be null in rare
+         * cases when a location is not available.
+         */
+        if (mLocationPermissionGranted) {
+            mLastKnownLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         }
 
-        @Override
-        public View getDropDownView(int position, View convertView,
-                                    ViewGroup parent) {
-// TODO Auto-generated method stub
-            return getCustomView(position, convertView, parent);
+        // Set the map's camera position to the current location of the device.
+        if (mCameraPosition != null) {
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(mCameraPosition));
+        } else if (mLastKnownLocation != null) {
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                    new LatLng(mLastKnownLocation.getLatitude(),
+                            mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
+        } else {
+            Log.d(TAG, "Current location is null. Using defaults.");
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
+            mMap.getUiSettings().setMyLocationButtonEnabled(true);
+            mMap.setMyLocationEnabled(true);
         }
 
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-// TODO Auto-generated method stub
-            return getCustomView(position, convertView, parent);
-        }
-
-        public View getCustomView(int position, View convertView, ViewGroup parent) {
-// TODO Auto-generated method stub
-//return super.getView(position, convertView, parent);
-
-            LayoutInflater inflater=getLayoutInflater();
-            View row=inflater.inflate(R.layout.row, parent, false);
-            TextView label=(TextView)row.findViewById(R.id.weekofday);
-            label.setText(CustomBlips[position]);
-
-            ImageView icon=(ImageView)row.findViewById(R.id.icon);
 
 
-            if (CustomBlips[position]=="Arts" ){
-                icon.setImageResource(R.mipmap.public_art);
-            }
-            else if(CustomBlips[position]=="Transportation"){
-                icon.setImageResource(R.mipmap.public_autoboatsair);
-            }
-            else if(CustomBlips[position]=="Business"){
-                icon.setImageResource(R.mipmap.public_business);
-            }
-            else if(CustomBlips[position]=="Community"){
-                icon.setImageResource(R.mipmap.public_community);
-            }
-            else if(CustomBlips[position]=="Family & Education"){
-                icon.setImageResource(R.mipmap.public_family);
-            }
-            else if(CustomBlips[position]=="Fashion"){
-                icon.setImageResource(R.mipmap.public_fashion);
-            }
-            else if(CustomBlips[position]=="Media"){
-                icon.setImageResource(R.mipmap.public_filmandmedia);
-            }
-            else if(CustomBlips[position]=="Food"){
-                icon.setImageResource(R.mipmap.public_foodanddrinks);
-            }
-            else if(CustomBlips[position]=="Health"){
-                icon.setImageResource(R.mipmap.public_health);
-            }
-            else if(CustomBlips[position]=="Holiday"){
-                icon.setImageResource(R.mipmap.public_holidaysandcelebrations);
-            }
-            else if(CustomBlips[position]=="Music"){
-                icon.setImageResource(R.mipmap.public_music);
-            }
-            else if(CustomBlips[position]=="Sports"){
-                icon.setImageResource(R.mipmap.public_sportsandfitness);
-            }
-            else if(CustomBlips[position]=="Travel"){
-                icon.setImageResource(R.mipmap.public_travelandoutdoor);
-            }
-
-            else{
-                icon.setImageResource(R.mipmap.ic_launcher_round);
-            }
-
-            return row;
-        }
     }
 
-    public class MyCustomAdapterPrivate extends ArrayAdapter<String>{
-
-        public MyCustomAdapterPrivate(Context context, int textViewResourceId,
-                                     String[] objects) {
-            super(context, textViewResourceId, objects);
-// TODO Auto-generated constructor stub
-        }
-
-        @Override
-        public View getDropDownView(int position, View convertView,
-                                    ViewGroup parent) {
-// TODO Auto-generated method stub
-            return getCustomView(position, convertView, parent);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-// TODO Auto-generated method stub
-            return getCustomView(position, convertView, parent);
-        }
-
-        public View getCustomView(int position, View convertView, ViewGroup parent) {
-// TODO Auto-generated method stub
-//return super.getView(position, convertView, parent);
-
-            LayoutInflater inflater=getLayoutInflater();
-            View row=inflater.inflate(R.layout.row, parent, false);
-            TextView label=(TextView)row.findViewById(R.id.weekofday);
-            label.setText(CustomBlips[position]);
-
-            ImageView icon=(ImageView)row.findViewById(R.id.icon);
-
-
-            if (CustomBlips[position]=="Arts" ){
-                icon.setImageResource(R.mipmap.private_art);
-            }
-            else if(CustomBlips[position]=="Transportation"){
-                icon.setImageResource(R.mipmap.private_autoboatsair);
-            }
-            else if(CustomBlips[position]=="Business"){
-                icon.setImageResource(R.mipmap.private_business);
-            }
-            else if(CustomBlips[position]=="Community"){
-                icon.setImageResource(R.mipmap.private_community);
-            }
-            else if(CustomBlips[position]=="Family & Education"){
-                icon.setImageResource(R.mipmap.private_family);
-            }
-            else if(CustomBlips[position]=="Fashion"){
-                icon.setImageResource(R.mipmap.private_fashion);
-            }
-            else if(CustomBlips[position]=="Media"){
-                icon.setImageResource(R.mipmap.private_filmandmedia);
-            }
-            else if(CustomBlips[position]=="Food"){
-                icon.setImageResource(R.mipmap.private_foodanddrinks);
-            }
-            else if(CustomBlips[position]=="Health"){
-                icon.setImageResource(R.mipmap.private_health);
-            }
-            else if(CustomBlips[position]=="Holiday"){
-                icon.setImageResource(R.mipmap.private_holidaysandcelebrations);
-            }
-            else if(CustomBlips[position]=="Music"){
-                icon.setImageResource(R.mipmap.private_music);
-            }
-            else if(CustomBlips[position]=="Sports"){
-                icon.setImageResource(R.mipmap.private_sportsandfitness);
-            }
-            else if(CustomBlips[position]=="Travel"){
-                icon.setImageResource(R.mipmap.private_travelandoutdoor);
-            }
-
-            else{
-                icon.setImageResource(R.mipmap.ic_launcher_round);
-            }
-
-            return row;
-        }
-    }
-
-    public class MyCustomAdapter extends BaseAdapter implements ListAdapter {
-        private ArrayList<String> list = new ArrayList<String>();
-        private Context context;
-
-
-
-        public MyCustomAdapter(ArrayList<String> list, Context context) {
-            this.list = list;
-            this.context = context;
-        }
-
-        @Override
-        public int getCount() {
-            return list.size();
-        }
-
-        @Override
-        public Object getItem(int pos) {
-            return list.get(pos);
-        }
-
-        @Override
-        public long getItemId(int pos) {
-            return 0;
-            //just return 0 if your list items do not have an Id variable.
-        }
-
-        @Override
-        public View getView(final int position, View convertView, ViewGroup parent) {
-            View view = convertView;
-            if (view == null) {
-                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                view = inflater.inflate(R.layout.notif_layout, null);
-            }
-
-            //Handle TextView and display string from your list
-            TextView listItemText = (TextView)view.findViewById(R.id.list_item_string);
-            listItemText.setText(list.get(position));
-
-            //Handle buttons and add onClickListeners
-            Button deleteBtn = (Button)view.findViewById(R.id.delete_btn);
-            Button addBtn = (Button)view.findViewById(R.id.add_btn);
-
-            deleteBtn.setOnClickListener(new View.OnClickListener(){
-                @Override
-                public void onClick(View v) {
-                    //do something
-                    list.remove(position); //or some other task
-                    notifyDataSetChanged();
-                }
-            });
-            addBtn.setOnClickListener(new View.OnClickListener(){
-                @Override
-                public void onClick(View v) {
-                    //do something
-                    notifyDataSetChanged();
-                }
-            });
-
-            return view;
-        }
-    }
 
 
     public void PlaceMarker(LatLng newBlipCoordinates, String newBlipName, String creator, String Details, Marker addmarkers, String blipIcon) {
@@ -868,7 +620,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
     }
-
     public void DeleteBlip(Marker marker){
         final LatLng coordinatetobedeleted =marker.getPosition();
 
@@ -927,543 +678,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 });
 
     }
-
-    private void ShowBlips() {
-
-        Blipsref.addChildEventListener(new ChildEventListener() {
-
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-
-                for (DataSnapshot snapm: dataSnapshot.getChildren()) {
-
-                        Double latitude = snapm.child("latitude").getValue(Double.class);
-                        Double longitude = snapm.child("longitude").getValue(Double.class);
-                        String newBlipName= snapm.child("BlipName").getValue(String.class);
-                        String creator= snapm.child("Creator").getValue(String.class);
-                        String Details =snapm.child("Details").getValue(String.class);
-                        String blipIcon =snapm.child("Icon").getValue(String.class);
-
-                        LatLng newBlipCoordinates = new LatLng(latitude,longitude);
-
-
-                    if(privatecheckbox.isChecked() &&  blipIcon.toLowerCase().contains("private".toLowerCase()) && creator.toLowerCase().contains(userName.toLowerCase()) ){
-
-                        if(checkboxArts.isChecked() &&  blipIcon.toLowerCase().contains("art".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxBusiness.isChecked() &&  blipIcon.toLowerCase().contains("business".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxCommunity.isChecked() &&  blipIcon.toLowerCase().contains("community".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxFamily.isChecked() &&  blipIcon.toLowerCase().contains("family".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxFashion.isChecked() &&  blipIcon.toLowerCase().contains("fashion".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxFood.isChecked() &&  blipIcon.toLowerCase().contains("food".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxHealth.isChecked() &&  blipIcon.toLowerCase().contains("health".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxHoliday.isChecked() &&  blipIcon.toLowerCase().contains("holiday".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxMedia.isChecked() &&  blipIcon.toLowerCase().contains("media".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxTransportation.isChecked() &&  blipIcon.toLowerCase().contains("auto".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxTravel.isChecked() &&  blipIcon.toLowerCase().contains("travel".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxSports.isChecked() &&  blipIcon.toLowerCase().contains("sports".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxMusic.isChecked() &&  blipIcon.toLowerCase().contains("music".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-
-
-                    }
-
-
-                    if(publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase()) )  {
-                        if(checkboxArts.isChecked() &&  blipIcon.toLowerCase().contains("art".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxBusiness.isChecked() &&  blipIcon.toLowerCase().contains("business".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxCommunity.isChecked() &&  blipIcon.toLowerCase().contains("community".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxFamily.isChecked() &&  blipIcon.toLowerCase().contains("family".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxFashion.isChecked() &&  blipIcon.toLowerCase().contains("fashion".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxFood.isChecked() &&  blipIcon.toLowerCase().contains("food".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxHealth.isChecked() &&  blipIcon.toLowerCase().contains("health".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxHoliday.isChecked() &&  blipIcon.toLowerCase().contains("holiday".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxMedia.isChecked() &&  blipIcon.toLowerCase().contains("media".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxTransportation.isChecked() &&  blipIcon.toLowerCase().contains("auto".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxTravel.isChecked() &&  blipIcon.toLowerCase().contains("travel".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxSports.isChecked() &&  blipIcon.toLowerCase().contains("sports".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-                        if(checkboxMusic.isChecked() &&  blipIcon.toLowerCase().contains("music".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-                        }
-
-
-                    }
-
-
-
-                }
-
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
-                if(!search.isIconified()){
-                    Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
-                }
-                else {
-
-                    mMap.clear();//Clear Map
-                    ShowBlips();//Go back load all blips again
-                }
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-                if(!search.isIconified()){
-                    Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    mMap.clear();//Clear Map
-                    ShowBlips();//Go back load all blips again
-                }
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
-
-    private boolean validateForm() {
-        boolean valid = true;
-
-
-        if (TextUtils.isEmpty(BlipName)) {
-            mBlipName.setError("Required.");
-            valid = false;
-        } else {
-            mBlipName.setError(null);
-        }
-
-
-
-        return valid;
-    }
-
-    private boolean validateAddFriend(){
-        boolean valid = true;
-
-
-        if (TextUtils.isEmpty(friendrequestemail)  ){
-           friendemail.setError("Required.");
-            valid = false;
-        } else {
-           friendemail.setError(null);
-        }
-
-
-
-        return valid;
-
-    }
-
-    private void GoogleMapAPIConnect() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this /* FragmentActivity */,
-                        this /* OnConnectionFailedListener */)
-                .addConnectionCallbacks(this)
-                .addApi(LocationServices.API)
-                .addApi(Places.GEO_DATA_API)
-                .addApi(Places.PLACE_DETECTION_API)
-                .build();
-        mGoogleApiClient.connect();
-
-    }
-
-    public void getDeviceLocation() {
-
-        /*
-         * Request location permission, so that we can get the location of the
-         * device. The result of the permission request is handled by a callback,
-         * onRequestPermissionsResult.
-         */
-        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            mLocationPermissionGranted = true;
-        } else {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-        }
-        /*
-         * Get the best and most recent location of the device, which may be null in rare
-         * cases when a location is not available.
-         */
-        if (mLocationPermissionGranted) {
-            mLastKnownLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        }
-
-        // Set the map's camera position to the current location of the device.
-        if (mCameraPosition != null) {
-            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(mCameraPosition));
-        } else if (mLastKnownLocation != null) {
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                    new LatLng(mLastKnownLocation.getLatitude(),
-                            mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
-        } else {
-            Log.d(TAG, "Current location is null. Using defaults.");
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
-            mMap.getUiSettings().setMyLocationButtonEnabled(true);
-            mMap.setMyLocationEnabled(true);
-        }
-
-
-
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
-
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-
-
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        else {
-            // Permission was denied. Display an error message.
-        }
-        mMap.setMyLocationEnabled(true);
-
-    }
-
-    private static String removecom(String str) {
-        if(str==null){
-            return null;
-        }
-        else{
-            return str.substring(0, str.length() - 4);
-        }
-
-    }
-
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-
-            super.onBackPressed();
-            mAuth.signOut();
-            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
-
-        }
-    }
-
-    public void blipsupdateontextchange(final String query){
-        mMap.clear();
-
-        BlipsPublic.orderByChild("BlipName").addListenerForSingleValueEvent(new ValueEventListener() {
-
-
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                for (DataSnapshot snapm : dataSnapshot.getChildren()) {
-
-                    Double latitude = snapm.child("latitude").getValue(Double.class);
-                    Double longitude = snapm.child("longitude").getValue(Double.class);
-                    String newBlipName= snapm.child("BlipName").getValue(String.class);
-                    String creator= snapm.child("Creator").getValue(String.class);
-                    String Details =snapm.child("Details").getValue(String.class);
-                    String blipIcon =snapm.child("Icon").getValue(String.class);
-
-                    LatLng newBlipCoordinates = new LatLng(latitude,longitude);
-
-                    if(newBlipName.toUpperCase().startsWith(   query.toUpperCase()  )    )
-                    {
-
-                        PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-
-                    }
-
-
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-
-
-
-        });
-
-        BlipsPrivate.orderByChild("BlipName").addListenerForSingleValueEvent(new ValueEventListener() {
-
-
-
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                for (DataSnapshot snapm : dataSnapshot.getChildren()) {
-
-
-                    Double latitude = snapm.child("latitude").getValue(Double.class);
-                    Double longitude = snapm.child("longitude").getValue(Double.class);
-                    String newBlipName= snapm.child("BlipName").getValue(String.class);
-                    String creator= snapm.child("Creator").getValue(String.class);
-                    String Details =snapm.child("Details").getValue(String.class);
-                    String blipIcon =snapm.child("Icon").getValue(String.class);
-
-                    LatLng newBlipCoordinates = new LatLng(latitude,longitude);
-
-                    if(newBlipName.toUpperCase().startsWith(query.toUpperCase()) && creator.toLowerCase().contains(userName.toLowerCase())   )
-                    {
-
-                        PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-
-                    }
-
-
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-
-
-
-        });
-    }
-
-    public void checkboxlisteners(){
-        publiccheckbox.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-
-        privatecheckbox.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-
-        checkboxArts.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-        checkboxTravel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-
-        checkboxSports.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-
-        checkboxTransportation.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-        checkboxMedia.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-
-        checkboxHoliday.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-
-        checkboxHealth.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-       checkboxSports.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-
-        checkboxFood.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-
-            }
-        });
-
-        checkboxCommunity.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-        checkboxBusiness.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-        checkboxFashion.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-        checkboxMusic.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-        checkboxFamily.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mMap.clear();
-                ShowBlips();
-                //handle click
-            }
-        });
-
-    }
-
-
     public void EditBlip(final Marker marker){
         DeleteBlip(marker);
         final LatLng coordinatetobeupdated =marker.getPosition();
@@ -1674,6 +888,772 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
+    private void ShowBlips() {
+
+        Blipsref.addChildEventListener(new ChildEventListener() {
+
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+
+                for (DataSnapshot snapm: dataSnapshot.getChildren()) {
+
+                        Double latitude = snapm.child("latitude").getValue(Double.class);
+                        Double longitude = snapm.child("longitude").getValue(Double.class);
+                        String newBlipName= snapm.child("BlipName").getValue(String.class);
+                        String creator= snapm.child("Creator").getValue(String.class);
+                        String Details =snapm.child("Details").getValue(String.class);
+                        String blipIcon =snapm.child("Icon").getValue(String.class);
+
+                        LatLng newBlipCoordinates = new LatLng(latitude,longitude);
+
+
+                    if(privatecheckbox.isChecked() &&  blipIcon.toLowerCase().contains("private".toLowerCase()) && creator.toLowerCase().contains(userName.toLowerCase()) ){
+
+                        if(checkboxArts.isChecked() &&  blipIcon.toLowerCase().contains("art".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxBusiness.isChecked() &&  blipIcon.toLowerCase().contains("business".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxCommunity.isChecked() &&  blipIcon.toLowerCase().contains("community".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxFamily.isChecked() &&  blipIcon.toLowerCase().contains("family".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxFashion.isChecked() &&  blipIcon.toLowerCase().contains("fashion".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxFood.isChecked() &&  blipIcon.toLowerCase().contains("food".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxHealth.isChecked() &&  blipIcon.toLowerCase().contains("health".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxHoliday.isChecked() &&  blipIcon.toLowerCase().contains("holiday".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxMedia.isChecked() &&  blipIcon.toLowerCase().contains("media".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxTransportation.isChecked() &&  blipIcon.toLowerCase().contains("auto".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxTravel.isChecked() &&  blipIcon.toLowerCase().contains("travel".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxSports.isChecked() &&  blipIcon.toLowerCase().contains("sports".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxMusic.isChecked() &&  blipIcon.toLowerCase().contains("music".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+
+
+                    }
+
+
+                    if(publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase()) )  {
+                        if(checkboxArts.isChecked() &&  blipIcon.toLowerCase().contains("art".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxBusiness.isChecked() &&  blipIcon.toLowerCase().contains("business".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxCommunity.isChecked() &&  blipIcon.toLowerCase().contains("community".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxFamily.isChecked() &&  blipIcon.toLowerCase().contains("family".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxFashion.isChecked() &&  blipIcon.toLowerCase().contains("fashion".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxFood.isChecked() &&  blipIcon.toLowerCase().contains("food".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxHealth.isChecked() &&  blipIcon.toLowerCase().contains("health".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxHoliday.isChecked() &&  blipIcon.toLowerCase().contains("holiday".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxMedia.isChecked() &&  blipIcon.toLowerCase().contains("media".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxTransportation.isChecked() &&  blipIcon.toLowerCase().contains("auto".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxTravel.isChecked() &&  blipIcon.toLowerCase().contains("travel".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxSports.isChecked() &&  blipIcon.toLowerCase().contains("sports".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+                        if(checkboxMusic.isChecked() &&  blipIcon.toLowerCase().contains("music".toLowerCase())  ){
+                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        }
+
+
+                    }
+
+
+
+                }
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
+                if(!search.isIconified()){
+                    Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
+                }
+                else {
+
+                    mMap.clear();//Clear Map
+                    ShowBlips();//Go back load all blips again
+                }
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                if(!search.isIconified()){
+                    Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    mMap.clear();//Clear Map
+                    ShowBlips();//Go back load all blips again
+                }
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+
+    public class MyCustomAdapterPublic extends ArrayAdapter<String>{
+
+        public MyCustomAdapterPublic(Context context, int textViewResourceId,
+                                     String[] objects) {
+            super(context, textViewResourceId, objects);
+// TODO Auto-generated constructor stub
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView,
+                                    ViewGroup parent) {
+// TODO Auto-generated method stub
+            return getCustomView(position, convertView, parent);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+// TODO Auto-generated method stub
+            return getCustomView(position, convertView, parent);
+        }
+
+        public View getCustomView(int position, View convertView, ViewGroup parent) {
+
+//return super.getView(position, convertView, parent);
+
+            LayoutInflater inflater=getLayoutInflater();
+            View row=inflater.inflate(R.layout.row, parent, false);
+            TextView label=(TextView)row.findViewById(R.id.weekofday);
+            label.setText(CustomBlips[position]);
+
+            ImageView icon=(ImageView)row.findViewById(R.id.icon);
+
+
+            if (CustomBlips[position]=="Arts" ){
+                icon.setImageResource(R.mipmap.public_art);
+            }
+            else if(CustomBlips[position]=="Transportation"){
+                icon.setImageResource(R.mipmap.public_autoboatsair);
+            }
+            else if(CustomBlips[position]=="Business"){
+                icon.setImageResource(R.mipmap.public_business);
+            }
+            else if(CustomBlips[position]=="Community"){
+                icon.setImageResource(R.mipmap.public_community);
+            }
+            else if(CustomBlips[position]=="Family & Education"){
+                icon.setImageResource(R.mipmap.public_family);
+            }
+            else if(CustomBlips[position]=="Fashion"){
+                icon.setImageResource(R.mipmap.public_fashion);
+            }
+            else if(CustomBlips[position]=="Media"){
+                icon.setImageResource(R.mipmap.public_filmandmedia);
+            }
+            else if(CustomBlips[position]=="Food"){
+                icon.setImageResource(R.mipmap.public_foodanddrinks);
+            }
+            else if(CustomBlips[position]=="Health"){
+                icon.setImageResource(R.mipmap.public_health);
+            }
+            else if(Objects.equals(CustomBlips[position], "Holiday")){
+                icon.setImageResource(R.mipmap.public_holidaysandcelebrations);
+            }
+            else if(CustomBlips[position]=="Music"){
+                icon.setImageResource(R.mipmap.public_music);
+            }
+            else if(CustomBlips[position]=="Sports"){
+                icon.setImageResource(R.mipmap.public_sportsandfitness);
+            }
+            else if(CustomBlips[position]=="Travel"){
+                icon.setImageResource(R.mipmap.public_travelandoutdoor);
+            }
+
+            else{
+                icon.setImageResource(R.mipmap.ic_launcher_round);
+            }
+
+            return row;
+        }
+    }
+    public class MyCustomAdapterPrivate extends ArrayAdapter<String>{
+
+        public MyCustomAdapterPrivate(Context context, int textViewResourceId,
+                                      String[] objects) {
+            super(context, textViewResourceId, objects);
+// TODO Auto-generated constructor stub
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView,
+                                    ViewGroup parent) {
+// TODO Auto-generated method stub
+            return getCustomView(position, convertView, parent);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+// TODO Auto-generated method stub
+            return getCustomView(position, convertView, parent);
+        }
+
+        public View getCustomView(int position, View convertView, ViewGroup parent) {
+// TODO Auto-generated method stub
+//return super.getView(position, convertView, parent);
+
+            LayoutInflater inflater=getLayoutInflater();
+            View row=inflater.inflate(R.layout.row, parent, false);
+            TextView label=(TextView)row.findViewById(R.id.weekofday);
+            label.setText(CustomBlips[position]);
+
+            ImageView icon=(ImageView)row.findViewById(R.id.icon);
+
+
+            if (CustomBlips[position]=="Arts" ){
+                icon.setImageResource(R.mipmap.private_art);
+            }
+            else if(CustomBlips[position]=="Transportation"){
+                icon.setImageResource(R.mipmap.private_autoboatsair);
+            }
+            else if(CustomBlips[position]=="Business"){
+                icon.setImageResource(R.mipmap.private_business);
+            }
+            else if(CustomBlips[position]=="Community"){
+                icon.setImageResource(R.mipmap.private_community);
+            }
+            else if(CustomBlips[position]=="Family & Education"){
+                icon.setImageResource(R.mipmap.private_family);
+            }
+            else if(CustomBlips[position]=="Fashion"){
+                icon.setImageResource(R.mipmap.private_fashion);
+            }
+            else if(CustomBlips[position]=="Media"){
+                icon.setImageResource(R.mipmap.private_filmandmedia);
+            }
+            else if(CustomBlips[position]=="Food"){
+                icon.setImageResource(R.mipmap.private_foodanddrinks);
+            }
+            else if(CustomBlips[position]=="Health"){
+                icon.setImageResource(R.mipmap.private_health);
+            }
+            else if(CustomBlips[position]=="Holiday"){
+                icon.setImageResource(R.mipmap.private_holidaysandcelebrations);
+            }
+            else if(CustomBlips[position]=="Music"){
+                icon.setImageResource(R.mipmap.private_music);
+            }
+            else if(CustomBlips[position]=="Sports"){
+                icon.setImageResource(R.mipmap.private_sportsandfitness);
+            }
+            else if(CustomBlips[position]=="Travel"){
+                icon.setImageResource(R.mipmap.private_travelandoutdoor);
+            }
+
+            else{
+                icon.setImageResource(R.mipmap.ic_launcher_round);
+            }
+
+            return row;
+        }
+    }
+    public class MyCustomAdapter extends BaseAdapter implements ListAdapter {
+        private ArrayList<String> list = new ArrayList<String>();
+        private Context context;
+
+
+
+        public MyCustomAdapter(ArrayList<String> list, Context context) {
+            this.list = list;
+            this.context = context;
+        }
+
+        @Override
+        public int getCount() {
+            return list.size();
+        }
+
+        @Override
+        public Object getItem(int pos) {
+            return list.get(pos);
+        }
+
+        @Override
+        public long getItemId(int pos) {
+            return 0;
+            //just return 0 if your list items do not have an Id variable.
+        }
+
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            View view = convertView;
+            if (view == null) {
+                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                view = inflater.inflate(R.layout.notif_layout, null);
+            }
+
+            //Handle TextView and display string from your list
+            TextView listItemText = (TextView)view.findViewById(R.id.list_item_string);
+            listItemText.setText(list.get(position));
+
+            //Handle buttons and add onClickListeners
+            Button deleteBtn = (Button)view.findViewById(R.id.delete_btn);
+            Button addBtn = (Button)view.findViewById(R.id.add_btn);
+
+            deleteBtn.setOnClickListener(new View.OnClickListener(){
+                @Override
+                public void onClick(View v) {
+                    //do something
+                    list.remove(position); //or some other task
+                    notifyDataSetChanged();
+                }
+            });
+            addBtn.setOnClickListener(new View.OnClickListener(){
+                @Override
+                public void onClick(View v) {
+                    //do something
+                    notifyDataSetChanged();
+                }
+            });
+
+            return view;
+        }
+    }
+    private boolean validateForm() {
+        boolean valid = true;
+
+
+        if (TextUtils.isEmpty(BlipName)) {
+            mBlipName.setError("Required.");
+            valid = false;
+        } else {
+            mBlipName.setError(null);
+        }
+
+
+
+        return valid;
+    }
+    private boolean validateAddFriend(){
+        boolean valid = true;
+
+
+        if (TextUtils.isEmpty(friendrequestemail)  ){
+           friendemail.setError("Required.");
+            valid = false;
+        } else {
+           friendemail.setError(null);
+        }
+
+
+
+        return valid;
+
+    }
+    private static String removecom(String str) {
+        if(str==null){
+            return null;
+        }
+        else{
+            return str.substring(0, str.length() - 4);
+        }
+
+    }
+    public void blipsupdateontextchange(final String query){
+        mMap.clear();
+
+        BlipsPublic.orderByChild("BlipName").addListenerForSingleValueEvent(new ValueEventListener() {
+
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot snapm : dataSnapshot.getChildren()) {
+
+                    Double latitude = snapm.child("latitude").getValue(Double.class);
+                    Double longitude = snapm.child("longitude").getValue(Double.class);
+                    String newBlipName= snapm.child("BlipName").getValue(String.class);
+                    String creator= snapm.child("Creator").getValue(String.class);
+                    String Details =snapm.child("Details").getValue(String.class);
+                    String blipIcon =snapm.child("Icon").getValue(String.class);
+
+                    LatLng newBlipCoordinates = new LatLng(latitude,longitude);
+
+                    if(newBlipName.toUpperCase().startsWith(   query.toUpperCase()  )    )
+                    {
+
+                        PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+
+                    }
+
+
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+
+
+
+        });
+
+        BlipsPrivate.orderByChild("BlipName").addListenerForSingleValueEvent(new ValueEventListener() {
+
+
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot snapm : dataSnapshot.getChildren()) {
+
+
+                    Double latitude = snapm.child("latitude").getValue(Double.class);
+                    Double longitude = snapm.child("longitude").getValue(Double.class);
+                    String newBlipName= snapm.child("BlipName").getValue(String.class);
+                    String creator= snapm.child("Creator").getValue(String.class);
+                    String Details =snapm.child("Details").getValue(String.class);
+                    String blipIcon =snapm.child("Icon").getValue(String.class);
+
+                    LatLng newBlipCoordinates = new LatLng(latitude,longitude);
+
+                    if(newBlipName.toUpperCase().startsWith(query.toUpperCase()) && creator.toLowerCase().contains(userName.toLowerCase())   )
+                    {
+
+                        PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+
+                    }
+
+
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+
+
+
+        });
+    }
+    public void checkboxlisteners(){
+        publiccheckbox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        privatecheckbox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        checkboxArts.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+        checkboxTravel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        checkboxSports.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        checkboxTransportation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+        checkboxMedia.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        checkboxHoliday.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        checkboxHealth.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+       checkboxSports.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        checkboxFood.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+        checkboxCommunity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+        checkboxBusiness.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+        checkboxFashion.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+        checkboxMusic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+        checkboxFamily.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mMap.clear();
+                ShowBlips();
+                //handle click
+            }
+        });
+
+    }
+
+    private void SendFriendRequest() {
+
+        AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
+        View mFriendAddView = getLayoutInflater().inflate(R.layout.add_friend,null);
+
+        friendemail = mFriendAddView.findViewById(R.id.add_friend_et);
+        Button AddFriend = mFriendAddView.findViewById(R.id.add_friend_btn);
+        Button CancelFriend = mFriendAddView.findViewById(R.id.cancel_friend_btn);
+        mBuilder.setView(mFriendAddView);
+        final AlertDialog dialog = mBuilder.create();
+        dialog.show();
+
+
+        AddFriend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                friendrequestemail=friendemail.getText().toString();
+                if( validateAddFriend()){
+                    friendrequestemail=removecom(friendemail.getText().toString());
+                    Users.addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                            if (dataSnapshot.hasChild(friendrequestemail)) {
+
+                                Users.child(friendrequestemail).child("FriendRequests").push().child("userName").setValue(userName);// Add to user's blips
+                                dialog.cancel();
+
+                            }
+                            else{
+                                Toast.makeText(MainActivity.this, "User does not exist", Toast.LENGTH_SHORT).show();
+                                friendemail.setText(null);
+                            }
+                        }
+
+                        @Override
+                        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                        }
+
+                        @Override
+                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+
+                }
+
+
+
+            }
+        });
+
+        CancelFriend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.cancel();
+
+            }
+        });
+
+
+    }
+    public void ShowFriendRequest(){
+    UsersEmailFriends = database.getReference("users").child(userName).child("Friends");
+
+         UsersEmailFriends.addChildEventListener(new ChildEventListener() {
+
+             @Override
+             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+
+                 for (DataSnapshot snapm: dataSnapshot.getChildren()) {
+
+                     // TODO
+                     double hello = snapm.child("FriendRequests").getValue(Double.class);
+
+                 }
+
+             }
+
+             @Override
+             public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
+                 if(!search.isIconified()){
+                     Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
+                 }
+                 else {
+
+                     mMap.clear();//Clear Map
+                     ShowBlips();//Go back load all blips again
+                 }
+             }
+
+             @Override
+             public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+             }
+
+             @Override
+             public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+             }
+
+             @Override
+             public void onCancelled(DatabaseError databaseError) {
+
+             }
+         });
+ }
 
 
 
@@ -1709,9 +1689,56 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 
 
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        else {
+            // Permission was denied. Display an error message.
+        }
+        mMap.setMyLocationEnabled(true);
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+
+            super.onBackPressed();
+            mAuth.signOut();
+            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
+
+        }
+    }
 
 
 
