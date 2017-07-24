@@ -67,6 +67,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Objects;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
@@ -145,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -187,7 +189,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
-
     public void DeclareThings(){
 
         //Toolbar
@@ -227,14 +228,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.setting_top_right, menu);
         return true;
     }
-
     @Override//
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -253,6 +252,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
+
     public boolean onNavigationItemSelected(MenuItem item) {
 
         // Handle navigation view item clicks here.
@@ -465,6 +465,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onClick(View view) {
                 BlipName = mBlipName.getText().toString();
 
+
                 if(publicradio.isChecked()) {
 
                     if (validateForm()) {
@@ -542,6 +543,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         String dropboxvalue = mySpinner.getSelectedItem().toString();
 
 
+                        Details = mDetails.getText().toString();
+                        String dropboxvalue = mySpinner.getSelectedItem().toString();
+
+
                         if (dropboxvalue == "Arts") {//
                             blipIcon = "private_art";
                         } else if (dropboxvalue == "Transportation") {//
@@ -595,11 +600,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 blipIcon);
                         Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
 
+
                         Blipsref.child("private").push().setValue(blips);//Add to private blips
 
                         dialog.cancel();
                         mMap.clear();
                         ShowBlips();
+
 
 
                     }
@@ -622,10 +629,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void DeleteBlip(Marker marker){
         final LatLng coordinatetobedeleted =marker.getPosition();
 
+
         BlipsPublic.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
+
 
 
 
@@ -655,6 +664,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
+
 
 
 
@@ -1060,6 +1070,208 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         public View getCustomView(int position, View convertView, ViewGroup parent) {
+
+//return super.getView(position, convertView, parent);
+
+            LayoutInflater inflater=getLayoutInflater();
+            View row=inflater.inflate(R.layout.row, parent, false);
+            TextView label=(TextView)row.findViewById(R.id.weekofday);
+            label.setText(CustomBlips[position]);
+
+            ImageView icon=(ImageView)row.findViewById(R.id.icon);
+
+
+            if (CustomBlips[position]=="Arts" ){
+                icon.setImageResource(R.mipmap.public_art);
+            }
+            else if(CustomBlips[position]=="Transportation"){
+                icon.setImageResource(R.mipmap.public_autoboatsair);
+            }
+            else if(CustomBlips[position]=="Business"){
+                icon.setImageResource(R.mipmap.public_business);
+            }
+            else if(CustomBlips[position]=="Community"){
+                icon.setImageResource(R.mipmap.public_community);
+            }
+            else if(CustomBlips[position]=="Family & Education"){
+                icon.setImageResource(R.mipmap.public_family);
+            }
+            else if(CustomBlips[position]=="Fashion"){
+                icon.setImageResource(R.mipmap.public_fashion);
+            }
+            else if(CustomBlips[position]=="Media"){
+                icon.setImageResource(R.mipmap.public_filmandmedia);
+            }
+            else if(CustomBlips[position]=="Food"){
+                icon.setImageResource(R.mipmap.public_foodanddrinks);
+            }
+            else if(CustomBlips[position]=="Health"){
+                icon.setImageResource(R.mipmap.public_health);
+            }
+            else if(Objects.equals(CustomBlips[position], "Holiday")){
+                icon.setImageResource(R.mipmap.public_holidaysandcelebrations);
+            }
+            else if(CustomBlips[position]=="Music"){
+                icon.setImageResource(R.mipmap.public_music);
+            }
+            else if(CustomBlips[position]=="Sports"){
+                icon.setImageResource(R.mipmap.public_sportsandfitness);
+            }
+            else if(CustomBlips[position]=="Travel"){
+                icon.setImageResource(R.mipmap.public_travelandoutdoor);
+            }
+
+            else{
+                icon.setImageResource(R.mipmap.ic_launcher_round);
+            }
+
+            return row;
+        }
+    }
+    public class MyCustomAdapterPrivate extends ArrayAdapter<String>{
+
+        public MyCustomAdapterPrivate(Context context, int textViewResourceId,
+                                      String[] objects) {
+            super(context, textViewResourceId, objects);
+// TODO Auto-generated constructor stub
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView,
+                                    ViewGroup parent) {
+// TODO Auto-generated method stub
+            return getCustomView(position, convertView, parent);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+// TODO Auto-generated method stub
+            return getCustomView(position, convertView, parent);
+        }
+
+        public View getCustomView(int position, View convertView, ViewGroup parent) {
+// TODO Auto-generated method stub
+//return super.getView(position, convertView, parent);
+
+            LayoutInflater inflater=getLayoutInflater();
+            View row=inflater.inflate(R.layout.row, parent, false);
+            TextView label=(TextView)row.findViewById(R.id.weekofday);
+            label.setText(CustomBlips[position]);
+
+            ImageView icon=(ImageView)row.findViewById(R.id.icon);
+
+
+            if (CustomBlips[position]=="Arts" ){
+                icon.setImageResource(R.mipmap.private_art);
+            }
+
+            else if(CustomBlips[position]=="Transportation"){
+                icon.setImageResource(R.mipmap.private_autoboatsair);
+            }
+            else if(CustomBlips[position]=="Business"){
+                icon.setImageResource(R.mipmap.private_business);
+            }
+            else if(CustomBlips[position]=="Community"){
+                icon.setImageResource(R.mipmap.private_community);
+            }
+            else if(CustomBlips[position]=="Family & Education"){
+                icon.setImageResource(R.mipmap.private_family);
+            }
+            else if(CustomBlips[position]=="Fashion"){
+                icon.setImageResource(R.mipmap.private_fashion);
+            }
+            else if(CustomBlips[position]=="Media"){
+                icon.setImageResource(R.mipmap.private_filmandmedia);
+            }
+            else if(CustomBlips[position]=="Food"){
+                icon.setImageResource(R.mipmap.private_foodanddrinks);
+            }
+            else if(CustomBlips[position]=="Health"){
+                icon.setImageResource(R.mipmap.private_health);
+            }
+            else if(CustomBlips[position]=="Holiday"){
+                icon.setImageResource(R.mipmap.private_holidaysandcelebrations);
+            }
+            else if(CustomBlips[position]=="Music"){
+                icon.setImageResource(R.mipmap.private_music);
+            }
+            else if(CustomBlips[position]=="Sports"){
+                icon.setImageResource(R.mipmap.private_sportsandfitness);
+            }
+            else if(CustomBlips[position]=="Travel"){
+                icon.setImageResource(R.mipmap.private_travelandoutdoor);
+            }
+
+            else{
+                icon.setImageResource(R.mipmap.ic_launcher_round);
+            }
+
+            return row;
+        }
+    }
+
+
+
+
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
+                if(!search.isIconified()){
+                    Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
+                }
+                else {
+
+                    mMap.clear();//Clear Map
+                    ShowBlips();//Go back load all blips again
+                }
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                if(!search.isIconified()){
+                    Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    mMap.clear();//Clear Map
+                    ShowBlips();//Go back load all blips again
+                }
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+
+    public class MyCustomAdapterPublic extends ArrayAdapter<String>{
+
+        public MyCustomAdapterPublic(Context context, int textViewResourceId,
+                                     String[] objects) {
+            super(context, textViewResourceId, objects);
+// TODO Auto-generated constructor stub
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView,
+                                    ViewGroup parent) {
+// TODO Auto-generated method stub
+            return getCustomView(position, convertView, parent);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+// TODO Auto-generated method stub
+            return getCustomView(position, convertView, parent);
+        }
+
+        public View getCustomView(int position, View convertView, ViewGroup parent) {
 // TODO Auto-generated method stub
 //return super.getView(position, convertView, parent);
 
@@ -1120,6 +1332,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     public class MyCustomAdapterPrivate extends ArrayAdapter<String>{
 
+
         public MyCustomAdapterPrivate(Context context, int textViewResourceId,
                                       String[] objects) {
             super(context, textViewResourceId, objects);
@@ -1139,9 +1352,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return getCustomView(position, convertView, parent);
         }
 
+
         public View getCustomView(int position, View convertView, ViewGroup parent) {
 // TODO Auto-generated method stub
 //return super.getView(position, convertView, parent);
+
 
             LayoutInflater inflater=getLayoutInflater();
             View row=inflater.inflate(R.layout.row, parent, false);
@@ -1198,6 +1413,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return row;
         }
     }
+
     public class MyCustomAdapter extends BaseAdapter implements ListAdapter {
         private ArrayList<String> list = new ArrayList<String>();
         private Context context;
@@ -1291,6 +1507,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return valid;
 
     }
+
     private static String removecom(String str) {
         if(str==null){
             return null;
@@ -1551,37 +1768,48 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         AddFriend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                friendrequestemail=friendemail.getText().toString();
+
+                friendrequestemail=removecom(friendemail.getText().toString());
                 if( validateAddFriend()){
+
                     friendrequestemail=removecom(friendemail.getText().toString());
-                    Users.addChildEventListener(new ChildEventListener() {
+
+                    Users.addListenerForSingleValueEvent(new  ValueEventListener() {
+
+
                         @Override
-                        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+
+
 
                             if (dataSnapshot.hasChild(friendrequestemail)) {
 
-                                Users.child(friendrequestemail).child("FriendRequests").push().child("userName").setValue(userName);// Add to user's blips
-                                dialog.cancel();
+                                if (dataSnapshot.child(friendrequestemail).child("FriendRequests").hasChild(userName)) {
+
+                                    Toast.makeText(MainActivity.this, "Friend Request Already Sent", Toast.LENGTH_SHORT).show();
+
+
+                                }
+
+                                else {
+                                    Users.child(friendrequestemail).child("FriendRequests").push().child(userName).setValue(1);// Add to user's blips
+                                    Toast.makeText(MainActivity.this, "Friend Request Sent", Toast.LENGTH_SHORT).show();
+                                    dialog.cancel();
+
+
+                                }
+
 
                             }
+
+
+
                             else{
                                 Toast.makeText(MainActivity.this, "User does not exist", Toast.LENGTH_SHORT).show();
                                 friendemail.setText(null);
+
+
                             }
-                        }
-
-                        @Override
-                        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-                        }
-
-                        @Override
-                        public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-                        }
-
-                        @Override
-                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
 
                         }
 
@@ -1592,9 +1820,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     });
 
                 }
-
-
-
             }
         });
 
@@ -1603,89 +1828,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onClick(View view) {
                 dialog.cancel();
 
-            }
-        });
+
+
 
 
     }
-    public void ShowFriendRequest(){
-    UsersEmailFriends = database.getReference("users").child(userName).child("Friends");
-
-         UsersEmailFriends.addChildEventListener(new ChildEventListener() {
-
-             @Override
-             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-
-                 for (DataSnapshot snapm: dataSnapshot.getChildren()) {
-
-
-                     double hello = snapm.child("FriendRequests").getValue(Double.class);
-
-                 }
-
-             }
-
-             @Override
-             public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
-                 if(!search.isIconified()){
-                     Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
-                 }
-                 else {
-
-                     mMap.clear();//Clear Map
-                     ShowBlips();//Go back load all blips again
-                 }
-             }
-
-             @Override
-             public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-             }
-
-             @Override
-             public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-             }
-
-             @Override
-             public void onCancelled(DatabaseError databaseError) {
-
-             }
-         });
- }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     @Override
@@ -1693,17 +1840,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
 
     }
-
     @Override
     public void onConnectionSuspended(int i) {
         Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show();
     }
-
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 
@@ -1722,6 +1866,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // Permission was denied. Display an error message.
         }
         mMap.setMyLocationEnabled(true);
+
+    }
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+
+            super.onBackPressed();
+            mAuth.signOut();
+            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
+
+        }
 
     }
 
