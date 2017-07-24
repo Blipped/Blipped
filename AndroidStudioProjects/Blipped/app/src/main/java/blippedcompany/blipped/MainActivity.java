@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DatabaseReference Blipsref = database.getReference("blips");
     DatabaseReference BlipsPublic = database.getReference("blips").child("public");
     DatabaseReference BlipsPrivate = database.getReference("blips").child("private");
-    DatabaseReference UsersEmailFriends;
+
 
 
 
@@ -188,7 +188,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
-
     public void DeclareThings(){
 
         //Toolbar
@@ -228,14 +227,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.setting_top_right, menu);
         return true;
     }
-
     @Override//
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -1516,7 +1513,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 }
 
                                 else {
-                                    Users.child(friendrequestemail).child("FriendRequests").child(userName).child("email").setValue(userName);// Add to user's blips
+                                    Users.child(friendrequestemail).child("FriendRequests").push().child(userName).setValue(1);// Add to user's blips
                                     Toast.makeText(MainActivity.this, "Friend Request Sent", Toast.LENGTH_SHORT).show();
                                     dialog.cancel();
 
@@ -1544,9 +1541,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     });
 
                 }
-
-
-
             }
         });
 
@@ -1607,6 +1601,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         }
     }
+
+
+
 
 
 

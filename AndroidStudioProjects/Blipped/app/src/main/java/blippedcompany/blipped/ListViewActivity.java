@@ -3,6 +3,7 @@ package blippedcompany.blipped;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -23,6 +24,7 @@ public class ListViewActivity extends AppCompatActivity {
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference UsersEmailFriends;
     ArrayList<String> friendrequestlist;
+    String email;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,37 +33,24 @@ public class ListViewActivity extends AppCompatActivity {
 
         //generate list
         friendrequestlist = new ArrayList<String>();
-        ShowFriendRequest(friendrequestlist);
+        ShowFriendRequest();
 
 
-        //instantiate custom adapter
-       FriendRequestsAdapter adapter = new FriendRequestsAdapter(friendrequestlist, this);
-
-        //handle listview and assign adapter
-        ListView lView = (ListView) findViewById(R.id.notifListview);
-        lView.setAdapter(adapter);
     }
 
 
-    public void ShowFriendRequest(final ArrayList<String> friendrequestlist){
+    public void ShowFriendRequest(){
 
         UsersEmailFriends = database.getReference("users").child(userName).child("FriendRequests");
-
         UsersEmailFriends.addChildEventListener(new ChildEventListener() {
-
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-
                 for (DataSnapshot snapm: dataSnapshot.getChildren()) {
 
-                    String email = snapm.child("email").getValue(String.class);
+                    email = snapm.getKey().toString();
                     friendrequestlist.add(email);
-
-                    // TODO
-                    //Get map of users in datasnapshot
-
-
                 }
+               load(friendrequestlist);
 
             }
 
@@ -87,6 +76,15 @@ public class ListViewActivity extends AppCompatActivity {
         });
 
 
+    }
+
+    public void load(ArrayList<String> friendrequestlist){
+        //instantiate custom adapter
+        FriendRequestsAdapter adapter = new FriendRequestsAdapter(friendrequestlist, this);
+
+        //handle listview and assign adapter
+        ListView lView = (ListView) findViewById(R.id.notifListview);
+        lView.setAdapter(adapter);
     }
 
     private static String removecom(String str) {
