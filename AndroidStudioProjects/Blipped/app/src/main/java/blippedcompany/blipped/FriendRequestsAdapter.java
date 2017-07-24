@@ -15,13 +15,13 @@ import java.util.ArrayList;
  * Created by Marcius Jude on 7/17/2017.
  */
 
-public class MyCustomAdapter extends BaseAdapter implements ListAdapter {
+public class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
     private ArrayList<String> list = new ArrayList<String>();
     private Context context;
 
 
 
-    public MyCustomAdapter(ArrayList<String> list, Context context) {
+    public FriendRequestsAdapter(ArrayList<String> list, Context context) {
         this.list = list;
         this.context = context;
     }

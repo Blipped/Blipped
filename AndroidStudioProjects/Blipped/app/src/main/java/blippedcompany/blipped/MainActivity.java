@@ -1199,68 +1199,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return row;
         }
     }
-    public class MyCustomAdapter extends BaseAdapter implements ListAdapter {
-        private ArrayList<String> list = new ArrayList<String>();
-        private Context context;
 
 
 
-        public MyCustomAdapter(ArrayList<String> list, Context context) {
-            this.list = list;
-            this.context = context;
-        }
 
-        @Override
-        public int getCount() {
-            return list.size();
-        }
-
-        @Override
-        public Object getItem(int pos) {
-            return list.get(pos);
-        }
-
-        @Override
-        public long getItemId(int pos) {
-            return 0;
-            //just return 0 if your list items do not have an Id variable.
-        }
-
-        @Override
-        public View getView(final int position, View convertView, ViewGroup parent) {
-            View view = convertView;
-            if (view == null) {
-                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                view = inflater.inflate(R.layout.notif_layout, null);
-            }
-
-            //Handle TextView and display string from your list
-            TextView listItemText = (TextView)view.findViewById(R.id.list_item_string);
-            listItemText.setText(list.get(position));
-
-            //Handle buttons and add onClickListeners
-            Button deleteBtn = (Button)view.findViewById(R.id.delete_btn);
-            Button addBtn = (Button)view.findViewById(R.id.add_btn);
-
-            deleteBtn.setOnClickListener(new View.OnClickListener(){
-                @Override
-                public void onClick(View v) {
-                    //do something
-                    list.remove(position); //or some other task
-                    notifyDataSetChanged();
-                }
-            });
-            addBtn.setOnClickListener(new View.OnClickListener(){
-                @Override
-                public void onClick(View v) {
-                    //do something
-                    notifyDataSetChanged();
-                }
-            });
-
-            return view;
-        }
-    }
     private boolean validateForm() {
         boolean valid = true;
 
@@ -1535,7 +1477,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
     }
-
     private void SendFriendRequest() {
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
@@ -1552,37 +1493,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         AddFriend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                friendrequestemail=friendemail.getText().toString();
+                friendrequestemail=removecom(friendemail.getText().toString());
                 if( validateAddFriend()){
+
                     friendrequestemail=removecom(friendemail.getText().toString());
-                    Users.addChildEventListener(new ChildEventListener() {
+
+                    Users.addListenerForSingleValueEvent(new  ValueEventListener() {
+
+
                         @Override
-                        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+
+
 
                             if (dataSnapshot.hasChild(friendrequestemail)) {
 
-                                Users.child(friendrequestemail).child("FriendRequests").push().child("userName").setValue(userName);// Add to user's blips
-                                dialog.cancel();
+                                if (dataSnapshot.child(friendrequestemail).child("FriendRequests").hasChild(userName)) {
+
+                                    Toast.makeText(MainActivity.this, "Friend Request Already Sent", Toast.LENGTH_SHORT).show();
+
+
+                                }
+
+                                else {
+                                    Users.child(friendrequestemail).child("FriendRequests").child(userName).child("email").setValue(userName);// Add to user's blips
+                                    Toast.makeText(MainActivity.this, "Friend Request Sent", Toast.LENGTH_SHORT).show();
+                                    dialog.cancel();
+
+
+                                }
+
 
                             }
+
+
+
                             else{
                                 Toast.makeText(MainActivity.this, "User does not exist", Toast.LENGTH_SHORT).show();
                                 friendemail.setText(null);
+
+
                             }
-                        }
-
-                        @Override
-                        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-                        }
-
-                        @Override
-                        public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-                        }
-
-                        @Override
-                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
 
                         }
 
@@ -1609,102 +1560,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
-    public void ShowFriendRequest(){
-    UsersEmailFriends = database.getReference("users").child(userName).child("Friends");
-
-         UsersEmailFriends.addChildEventListener(new ChildEventListener() {
-
-             @Override
-             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-
-                 for (DataSnapshot snapm: dataSnapshot.getChildren()) {
-
-                     // TODO
-                     double hello = snapm.child("FriendRequests").getValue(Double.class);
-
-                 }
-
-             }
-
-             @Override
-             public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
-                 if(!search.isIconified()){
-                     Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
-                 }
-                 else {
-
-                     mMap.clear();//Clear Map
-                     ShowBlips();//Go back load all blips again
-                 }
-             }
-
-             @Override
-             public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-             }
-
-             @Override
-             public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-             }
-
-             @Override
-             public void onCancelled(DatabaseError databaseError) {
-
-             }
-         });
- }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
 
     }
-
     @Override
     public void onConnectionSuspended(int i) {
         Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show();
     }
-
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 
@@ -1725,7 +1594,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.setMyLocationEnabled(true);
 
     }
-
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
