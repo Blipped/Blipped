@@ -103,7 +103,7 @@ public class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
                     public void onDataChange(DataSnapshot dataSnapshot) {
 
                         for (DataSnapshot datacollected: dataSnapshot.getChildren()) {
-                            Toast.makeText(context, "Deleted", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "Declined", Toast.LENGTH_SHORT).show();
                             datacollected.getRef().removeValue();
 
                         }
