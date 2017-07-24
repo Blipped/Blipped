@@ -1513,7 +1513,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 }
 
                                 else {
-                                    Users.child(friendrequestemail).child("FriendRequests").push().child(userName).setValue(1);// Add to user's blips
+
+                                    Users.child(friendrequestemail).child("FriendRequests").child(userName).child(userName).setValue(1);// Add to user's blips
                                     Toast.makeText(MainActivity.this, "Friend Request Sent", Toast.LENGTH_SHORT).show();
                                     dialog.cancel();
 
