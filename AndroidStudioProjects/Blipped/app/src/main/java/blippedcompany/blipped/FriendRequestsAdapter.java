@@ -82,7 +82,7 @@ public class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
         addBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                //do something
+                //TODO Add Friend
                 notifyDataSetChanged();
             }
         });

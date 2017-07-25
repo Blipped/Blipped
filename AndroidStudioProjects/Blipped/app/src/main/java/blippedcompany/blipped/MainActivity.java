@@ -25,15 +25,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,10 +38,8 @@ import android.widget.SearchView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Places;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -63,10 +58,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
-
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.Objects;
 
 
@@ -74,25 +65,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         GoogleApiClient.OnConnectionFailedListener {
     //Google Map Initialize
     private GoogleMap mMap;
-    private CameraPosition mCameraPosition;
+    public CameraPosition mCameraPosition;
     private final LatLng mDefaultLocation = new LatLng(14.5955772, 120.9880854);
     private static final int DEFAULT_ZOOM = 17;
-    LatLng coordinate;//Declare Coordinate
     LatLng cursor_coordinate;
     SearchView search;
-    String query;
-    LocationRequest mLocationRequest;
     GoogleApiClient mGoogleApiClient;
-    Location mCurrentLocation;
-    String mLastUpdateTime;
-    boolean toggle= false;
+
 
     //Variables
     private static final String TAG = "MainActivity";
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
 
-    Marker markers = null;
+
     Double cursor_coordinate_latitude;
     Double cursor_coordinate_longitude;
     String userName;
@@ -124,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             "Community", "Family & Education", "Fashion", "Media","Food","Health","Holiday","Music","Sports","Travel"};
 
     String blipIcon;
-    FloatingActionButton  btnFusedLocation;
+
 
     // The geographical location where the device is currently located. That is, the last-known
     // location retrieved by the Fused Location Provider.
@@ -141,9 +127,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DatabaseReference Blipsref = database.getReference("blips");
     DatabaseReference BlipsPublic = database.getReference("blips").child("public");
     DatabaseReference BlipsPrivate = database.getReference("blips").child("private");
-
-
-
 
 
     @Override
@@ -228,65 +211,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.setting_top_right, menu);
-        return true;
-    }
-    @Override//
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_addfriend) {
-            SendFriendRequest();
-
-
-        } else if (id == R.id.nav_notifications) {
-
-            Intent ListViewActivity = new Intent(this, ListViewActivity.class);
-            startActivity(ListViewActivity);
-
-
-        } else if (id == R.id.nav_friendlist) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_signout) {
-            mAuth.signOut();
-            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
-            finish();
-            Intent nextscreen = new Intent(this, LoginActivity.class);
-            startActivity(nextscreen);
-
-        }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
-
-    @Override
     public void onMapReady(GoogleMap googleMap) {
 
 
@@ -311,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkboxTransportation = (CheckBox)findViewById(R.id.checkboxTransportation);
         checkboxHoliday = (CheckBox)findViewById(R.id.checkboxHoliday);
         checkboxTravel = (CheckBox)findViewById(R.id.checkboxTravel);
-        ScrollView filter =(ScrollView) findViewById(R.id.filterscroll);
+
 
 
         checkboxlisteners();
@@ -401,18 +325,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
+    public void PlaceMarker(Blips blipsadded) {
+        LatLng newBlipCoordinates = new LatLng(blipsadded.latitude,blipsadded.longitude);
 
-
-
-    public void PlaceMarker(LatLng newBlipCoordinates, String newBlipName, String creator, String Details, Marker addmarkers, String blipIcon) {
-
-        addmarkers = mMap.addMarker(new MarkerOptions() // Set Marker
+        mMap.addMarker(new MarkerOptions() // Set Marker
                 .position(newBlipCoordinates)
-                .title(newBlipName)
-                .snippet(creator)
-                .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipIcon,"mipmap", getPackageName() ))));
+                .title(blipsadded.BlipName)
+                .snippet(blipsadded.Creator)
+                .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
     }
-
     public void AddBlip(LatLng point){
         cursor_coordinate = new LatLng(point.latitude, point.longitude);// Set current click location to marker
         cursor_coordinate_latitude= point.latitude;
@@ -431,7 +352,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-        RadioGroup radioGroup = (RadioGroup) mBlipAddView.findViewById(R.id.groupRadio);
+        RadioGroup radioGroup = mBlipAddView.findViewById(R.id.groupRadio);
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener()
         {
             @Override
@@ -471,42 +392,42 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         String dropboxvalue = mySpinner.getSelectedItem().toString();
 
 
-                        if (dropboxvalue == "Arts") {
+                        if (Objects.equals(dropboxvalue, "Arts")) {
                             blipIcon = "public_art";
-                        } else if (dropboxvalue == "Transportation") {
+                        } else if (Objects.equals(dropboxvalue, "Transportation")) {
                             blipIcon = "public_autoboatsair";
 
-                        } else if (dropboxvalue == "Business") {
+                        } else if (Objects.equals(dropboxvalue, "Business")) {
                             blipIcon = "public_business";
 
-                        } else if (dropboxvalue == "Community") {
+                        } else if (Objects.equals(dropboxvalue, "Community")) {
                             blipIcon = "public_community";
 
-                        } else if (dropboxvalue == "Family & Education") {
+                        } else if (Objects.equals(dropboxvalue, "Family & Education")) {
                             blipIcon = "public_family";
 
-                        } else if (dropboxvalue == "Fashion") {
+                        } else if (Objects.equals(dropboxvalue, "Fashion")) {
                             blipIcon = "public_fashion";
 
-                        } else if (dropboxvalue == "Media") {
+                        } else if (Objects.equals(dropboxvalue, "Media")) {
                             blipIcon = "public_filmandmedia";
 
-                        } else if (dropboxvalue == "Travel") {
+                        } else if (Objects.equals(dropboxvalue, "Travel")) {
                             blipIcon = "public_travelandoutdoor";
 
-                        } else if (dropboxvalue == "Food") {
+                        } else if (Objects.equals(dropboxvalue, "Food")) {
                             blipIcon = "public_foodanddrinks";
 
-                        } else if (dropboxvalue == "Health") {
+                        } else if (Objects.equals(dropboxvalue, "Health")) {
                             blipIcon = "public_health";
 
-                        } else if (dropboxvalue == "Holiday") {
+                        } else if (Objects.equals(dropboxvalue, "Holiday")) {
                             blipIcon = "public_holidaysandcelebrations";
 
-                        } else if (dropboxvalue == "Music") {
+                        } else if (Objects.equals(dropboxvalue, "Music")) {
                             blipIcon = "public_music";
 
-                        } else if (dropboxvalue == "Sports") {
+                        } else if (Objects.equals(dropboxvalue, "Sports")) {
                             blipIcon = "public_sportsandfitness";
 
                         } else {
@@ -517,11 +438,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         //Place Data
 
                         Blips blips = new Blips(cursor_coordinate_latitude,
-                                cursor_coordinate_longitude,
-                                BlipName,
-                                userName,
-                                Details,
-                                blipIcon);
+                                                cursor_coordinate_longitude,
+                                                BlipName,
+                                                userName,
+                                                Details,
+                                                blipIcon);
                         Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
                         Blipsref.child("public").push().setValue(blips);//Add to public blips
 
@@ -540,42 +461,42 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         String dropboxvalue = mySpinner.getSelectedItem().toString();
 
 
-                        if (dropboxvalue == "Arts") {//
+                        if (Objects.equals(dropboxvalue, "Arts")) {//
                             blipIcon = "private_art";
-                        } else if (dropboxvalue == "Transportation") {//
+                        } else if (Objects.equals(dropboxvalue, "Transportation")) {//
                             blipIcon = "private_autoboatsair";
 
-                        } else if (dropboxvalue == "Business") {//
+                        } else if (Objects.equals(dropboxvalue, "Business")) {//
                             blipIcon = "private_business";
 
-                        } else if (dropboxvalue == "Community") {//
+                        } else if (Objects.equals(dropboxvalue, "Community")) {//
                             blipIcon = "private_community";
 
-                        } else if (dropboxvalue == "Family & Education") {//
+                        } else if (Objects.equals(dropboxvalue, "Family & Education")) {//
                             blipIcon = "private_family";
 
-                        } else if (dropboxvalue == "Fashion") {//
+                        } else if (Objects.equals(dropboxvalue, "Fashion")) {//
                             blipIcon = "private_fashion";
 
-                        } else if (dropboxvalue == "Media") {//
+                        } else if (Objects.equals(dropboxvalue, "Media")) {//
                             blipIcon = "private_filmandmedia";
 
-                        } else if (dropboxvalue == "Travel") {//
+                        } else if (Objects.equals(dropboxvalue, "Travel")) {//
                             blipIcon = "private_travelandoutdoor";
 
-                        } else if (dropboxvalue == "Food") {//
+                        } else if (Objects.equals(dropboxvalue, "Food")) {//
                             blipIcon = "private_foodanddrinks";
 
-                        } else if (dropboxvalue == "Health") {//
+                        } else if (Objects.equals(dropboxvalue, "Health")) {//
                             blipIcon = "private_health";
 
-                        } else if (dropboxvalue == "Holiday") {
+                        } else if (Objects.equals(dropboxvalue, "Holiday")) {
                             blipIcon = "private_holidaysandcelebrations";
 
-                        } else if (dropboxvalue == "Music") {
+                        } else if (Objects.equals(dropboxvalue, "Music")) {
                             blipIcon = "private_music";
 
-                        } else if (dropboxvalue == "Sports") {
+                        } else if (Objects.equals(dropboxvalue, "Sports")) {
                             blipIcon = "private_sportsandfitness";
 
                         } else {
@@ -696,7 +617,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-        RadioGroup radioGroup = (RadioGroup) mBlipAddView.findViewById(R.id.groupRadio);
+        RadioGroup radioGroup =  mBlipAddView.findViewById(R.id.groupRadio);
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener()
         {
             @Override
@@ -736,42 +657,42 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         String dropboxvalue = mySpinner.getSelectedItem().toString();
 
 
-                        if (dropboxvalue == "Arts") {
+                        if (Objects.equals(dropboxvalue, "Arts")) {
                             blipIcon = "public_art";
-                        } else if (dropboxvalue == "Transportation") {
+                        } else if (Objects.equals(dropboxvalue, "Transportation")) {
                             blipIcon = "public_autoboatsair";
 
-                        } else if (dropboxvalue == "Business") {
+                        } else if (Objects.equals(dropboxvalue, "Business")) {
                             blipIcon = "public_business";
 
-                        } else if (dropboxvalue == "Community") {
+                        } else if (Objects.equals(dropboxvalue, "Community")) {
                             blipIcon = "public_community";
 
-                        } else if (dropboxvalue == "Family & Education") {
+                        } else if (Objects.equals(dropboxvalue, "Family & Education")) {
                             blipIcon = "public_family";
 
-                        } else if (dropboxvalue == "Fashion") {
+                        } else if (Objects.equals(dropboxvalue, "Fashion")) {
                             blipIcon = "public_fashion";
 
-                        } else if (dropboxvalue == "Media") {
+                        } else if (Objects.equals(dropboxvalue, "Media")) {
                             blipIcon = "public_filmandmedia";
 
-                        } else if (dropboxvalue == "Travel") {
+                        } else if (Objects.equals(dropboxvalue, "Travel")) {
                             blipIcon = "public_travelandoutdoor";
 
-                        } else if (dropboxvalue == "Food") {
+                        } else if (Objects.equals(dropboxvalue, "Food")) {
                             blipIcon = "public_foodanddrinks";
 
-                        } else if (dropboxvalue == "Health") {
+                        } else if (Objects.equals(dropboxvalue, "Health")) {
                             blipIcon = "public_health";
 
-                        } else if (dropboxvalue == "Holiday") {
+                        } else if (Objects.equals(dropboxvalue, "Holiday")) {
                             blipIcon = "public_holidaysandcelebrations";
 
-                        } else if (dropboxvalue == "Music") {
+                        } else if (Objects.equals(dropboxvalue, "Music")) {
                             blipIcon = "public_music";
 
-                        } else if (dropboxvalue == "Sports") {
+                        } else if (Objects.equals(dropboxvalue, "Sports")) {
                             blipIcon = "public_sportsandfitness";
 
                         } else {
@@ -805,42 +726,42 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         String dropboxvalue = mySpinner.getSelectedItem().toString();
 
 
-                        if (dropboxvalue == "Arts") {//
+                        if (Objects.equals(dropboxvalue, "Arts")) {//
                             blipIcon = "private_art";
-                        } else if (dropboxvalue == "Transportation") {//
+                        } else if (Objects.equals(dropboxvalue, "Transportation")) {//
                             blipIcon = "private_autoboatsair";
 
-                        } else if (dropboxvalue == "Business") {//
+                        } else if (Objects.equals(dropboxvalue, "Business")) {//
                             blipIcon = "private_business";
 
-                        } else if (dropboxvalue == "Community") {//
+                        } else if (Objects.equals(dropboxvalue, "Community")) {//
                             blipIcon = "private_community";
 
-                        } else if (dropboxvalue == "Family & Education") {//
+                        } else if (Objects.equals(dropboxvalue, "Family & Education")) {//
                             blipIcon = "private_family";
 
-                        } else if (dropboxvalue == "Fashion") {//
+                        } else if (Objects.equals(dropboxvalue, "Fashion")) {//
                             blipIcon = "private_fashion";
 
-                        } else if (dropboxvalue == "Media") {//
+                        } else if (Objects.equals(dropboxvalue, "Media")) {//
                             blipIcon = "private_filmandmedia";
 
-                        } else if (dropboxvalue == "Travel") {//
+                        } else if (Objects.equals(dropboxvalue, "Travel")) {//
                             blipIcon = "private_travelandoutdoor";
 
-                        } else if (dropboxvalue == "Food") {//
+                        } else if (Objects.equals(dropboxvalue, "Food")) {//
                             blipIcon = "private_foodanddrinks";
 
-                        } else if (dropboxvalue == "Health") {//
+                        } else if (Objects.equals(dropboxvalue, "Health")) {//
                             blipIcon = "private_health";
 
-                        } else if (dropboxvalue == "Holiday") {
+                        } else if (Objects.equals(dropboxvalue, "Holiday")) {
                             blipIcon = "private_holidaysandcelebrations";
 
-                        } else if (dropboxvalue == "Music") {
+                        } else if (Objects.equals(dropboxvalue, "Music")) {
                             blipIcon = "private_music";
 
-                        } else if (dropboxvalue == "Sports") {
+                        } else if (Objects.equals(dropboxvalue, "Sports")) {
                             blipIcon = "private_sportsandfitness";
 
                         } else {
@@ -901,49 +822,54 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String Details =snapm.child("Details").getValue(String.class);
                     String blipIcon =snapm.child("Icon").getValue(String.class);
 
-                    LatLng newBlipCoordinates = new LatLng(latitude,longitude);
+                    Blips blipsadded = new Blips(latitude,
+                            longitude,
+                            newBlipName,
+                            creator,
+                            Details,
+                            blipIcon);
 
 
                     if(privatecheckbox.isChecked() &&  blipIcon.toLowerCase().contains("private".toLowerCase()) && creator.toLowerCase().contains(userName.toLowerCase()) ){
 
                         if(checkboxArts.isChecked() &&  blipIcon.toLowerCase().contains("art".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxBusiness.isChecked() &&  blipIcon.toLowerCase().contains("business".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxCommunity.isChecked() &&  blipIcon.toLowerCase().contains("community".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxFamily.isChecked() &&  blipIcon.toLowerCase().contains("family".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxFashion.isChecked() &&  blipIcon.toLowerCase().contains("fashion".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxFood.isChecked() &&  blipIcon.toLowerCase().contains("food".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxHealth.isChecked() &&  blipIcon.toLowerCase().contains("health".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxHoliday.isChecked() &&  blipIcon.toLowerCase().contains("holiday".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxMedia.isChecked() &&  blipIcon.toLowerCase().contains("media".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxTransportation.isChecked() &&  blipIcon.toLowerCase().contains("auto".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxTravel.isChecked() &&  blipIcon.toLowerCase().contains("travel".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxSports.isChecked() &&  blipIcon.toLowerCase().contains("sports".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxMusic.isChecked() &&  blipIcon.toLowerCase().contains("music".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
 
 
@@ -952,43 +878,43 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     if(publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase()) )  {
                         if(checkboxArts.isChecked() &&  blipIcon.toLowerCase().contains("art".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxBusiness.isChecked() &&  blipIcon.toLowerCase().contains("business".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxCommunity.isChecked() &&  blipIcon.toLowerCase().contains("community".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxFamily.isChecked() &&  blipIcon.toLowerCase().contains("family".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxFashion.isChecked() &&  blipIcon.toLowerCase().contains("fashion".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxFood.isChecked() &&  blipIcon.toLowerCase().contains("food".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxHealth.isChecked() &&  blipIcon.toLowerCase().contains("health".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxHoliday.isChecked() &&  blipIcon.toLowerCase().contains("holiday".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxMedia.isChecked() &&  blipIcon.toLowerCase().contains("media".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxTransportation.isChecked() &&  blipIcon.toLowerCase().contains("auto".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxTravel.isChecked() &&  blipIcon.toLowerCase().contains("travel".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxSports.isChecked() &&  blipIcon.toLowerCase().contains("sports".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
                         if(checkboxMusic.isChecked() &&  blipIcon.toLowerCase().contains("music".toLowerCase())  ){
-                            PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                            PlaceMarker(blipsadded);
                         }
 
 
@@ -1034,172 +960,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
     }
-
-
-    public class MyCustomAdapterPublic extends ArrayAdapter<String>{
-
-        public MyCustomAdapterPublic(Context context, int textViewResourceId,
-                                     String[] objects) {
-            super(context, textViewResourceId, objects);
-// TODO Auto-generated constructor stub
-        }
-
-        @Override
-        public View getDropDownView(int position, View convertView,
-                                    ViewGroup parent) {
-// TODO Auto-generated method stub
-            return getCustomView(position, convertView, parent);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-// TODO Auto-generated method stub
-            return getCustomView(position, convertView, parent);
-        }
-
-        public View getCustomView(int position, View convertView, ViewGroup parent) {
-
-//return super.getView(position, convertView, parent);
-
-            LayoutInflater inflater=getLayoutInflater();
-            View row=inflater.inflate(R.layout.row, parent, false);
-            TextView label=(TextView)row.findViewById(R.id.weekofday);
-            label.setText(CustomBlips[position]);
-
-            ImageView icon=(ImageView)row.findViewById(R.id.icon);
-
-
-            if (CustomBlips[position]=="Arts" ){
-                icon.setImageResource(R.mipmap.public_art);
-            }
-            else if(CustomBlips[position]=="Transportation"){
-                icon.setImageResource(R.mipmap.public_autoboatsair);
-            }
-            else if(CustomBlips[position]=="Business"){
-                icon.setImageResource(R.mipmap.public_business);
-            }
-            else if(CustomBlips[position]=="Community"){
-                icon.setImageResource(R.mipmap.public_community);
-            }
-            else if(CustomBlips[position]=="Family & Education"){
-                icon.setImageResource(R.mipmap.public_family);
-            }
-            else if(CustomBlips[position]=="Fashion"){
-                icon.setImageResource(R.mipmap.public_fashion);
-            }
-            else if(CustomBlips[position]=="Media"){
-                icon.setImageResource(R.mipmap.public_filmandmedia);
-            }
-            else if(CustomBlips[position]=="Food"){
-                icon.setImageResource(R.mipmap.public_foodanddrinks);
-            }
-            else if(CustomBlips[position]=="Health"){
-                icon.setImageResource(R.mipmap.public_health);
-            }
-            else if(Objects.equals(CustomBlips[position], "Holiday")){
-                icon.setImageResource(R.mipmap.public_holidaysandcelebrations);
-            }
-            else if(CustomBlips[position]=="Music"){
-                icon.setImageResource(R.mipmap.public_music);
-            }
-            else if(CustomBlips[position]=="Sports"){
-                icon.setImageResource(R.mipmap.public_sportsandfitness);
-            }
-            else if(CustomBlips[position]=="Travel"){
-                icon.setImageResource(R.mipmap.public_travelandoutdoor);
-            }
-
-            else{
-                icon.setImageResource(R.mipmap.ic_launcher_round);
-            }
-
-            return row;
-        }
-    }
-    public class MyCustomAdapterPrivate extends ArrayAdapter<String>{
-
-        public MyCustomAdapterPrivate(Context context, int textViewResourceId,
-                                      String[] objects) {
-            super(context, textViewResourceId, objects);
-// TODO Auto-generated constructor stub
-        }
-
-        @Override
-        public View getDropDownView(int position, View convertView,
-                                    ViewGroup parent) {
-// TODO Auto-generated method stub
-            return getCustomView(position, convertView, parent);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-// TODO Auto-generated method stub
-            return getCustomView(position, convertView, parent);
-        }
-
-        public View getCustomView(int position, View convertView, ViewGroup parent) {
-// TODO Auto-generated method stub
-//return super.getView(position, convertView, parent);
-
-            LayoutInflater inflater=getLayoutInflater();
-            View row=inflater.inflate(R.layout.row, parent, false);
-            TextView label=(TextView)row.findViewById(R.id.weekofday);
-            label.setText(CustomBlips[position]);
-
-            ImageView icon=(ImageView)row.findViewById(R.id.icon);
-
-
-            if (CustomBlips[position]=="Arts" ){
-                icon.setImageResource(R.mipmap.private_art);
-            }
-            else if(CustomBlips[position]=="Transportation"){
-                icon.setImageResource(R.mipmap.private_autoboatsair);
-            }
-            else if(CustomBlips[position]=="Business"){
-                icon.setImageResource(R.mipmap.private_business);
-            }
-            else if(CustomBlips[position]=="Community"){
-                icon.setImageResource(R.mipmap.private_community);
-            }
-            else if(CustomBlips[position]=="Family & Education"){
-                icon.setImageResource(R.mipmap.private_family);
-            }
-            else if(CustomBlips[position]=="Fashion"){
-                icon.setImageResource(R.mipmap.private_fashion);
-            }
-            else if(CustomBlips[position]=="Media"){
-                icon.setImageResource(R.mipmap.private_filmandmedia);
-            }
-            else if(CustomBlips[position]=="Food"){
-                icon.setImageResource(R.mipmap.private_foodanddrinks);
-            }
-            else if(CustomBlips[position]=="Health"){
-                icon.setImageResource(R.mipmap.private_health);
-            }
-            else if(CustomBlips[position]=="Holiday"){
-                icon.setImageResource(R.mipmap.private_holidaysandcelebrations);
-            }
-            else if(CustomBlips[position]=="Music"){
-                icon.setImageResource(R.mipmap.private_music);
-            }
-            else if(CustomBlips[position]=="Sports"){
-                icon.setImageResource(R.mipmap.private_sportsandfitness);
-            }
-            else if(CustomBlips[position]=="Travel"){
-                icon.setImageResource(R.mipmap.private_travelandoutdoor);
-            }
-
-            else{
-                icon.setImageResource(R.mipmap.ic_launcher_round);
-            }
-
-            return row;
-        }
-    }
-
-
-
-
     private boolean validateForm() {
         boolean valid = true;
 
@@ -1258,13 +1018,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String Details =snapm.child("Details").getValue(String.class);
                     String blipIcon =snapm.child("Icon").getValue(String.class);
 
-                    LatLng newBlipCoordinates = new LatLng(latitude,longitude);
+                    Blips blipsadded = new Blips(latitude,
+                            longitude,
+                            newBlipName,
+                            creator,
+                            Details,
+                            blipIcon);
 
                     if(newBlipName.toUpperCase().startsWith(   query.toUpperCase()  )    )
                     {
-
-                        PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
-
+                        PlaceMarker(blipsadded);
                     }
 
 
@@ -1275,8 +1038,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onCancelled(DatabaseError databaseError) {
 
             }
-
-
 
         });
 
@@ -1297,12 +1058,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String Details =snapm.child("Details").getValue(String.class);
                     String blipIcon =snapm.child("Icon").getValue(String.class);
 
-                    LatLng newBlipCoordinates = new LatLng(latitude,longitude);
+                    Blips blipsadded = new Blips(latitude,
+                            longitude,
+                            newBlipName,
+                            creator,
+                            Details,
+                            blipIcon);
 
                     if(newBlipName.toUpperCase().startsWith(query.toUpperCase()) && creator.toLowerCase().contains(userName.toLowerCase())   )
                     {
 
-                        PlaceMarker(newBlipCoordinates,newBlipName,creator,Details,markers,blipIcon);
+                        PlaceMarker(blipsadded);
 
                     }
 
@@ -1474,6 +1240,215 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
     }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
+
+    }
+    @Override
+    public void onConnectionSuspended(int i) {
+        Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show();
+    }
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        else {
+            Toast.makeText(this, "Error: Permission not Granted", Toast.LENGTH_SHORT).show();
+        }
+        mMap.setMyLocationEnabled(true);
+
+    }
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+
+            super.onBackPressed();
+            mAuth.signOut();
+            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
+
+        }
+    }
+    private class MyCustomAdapterPublic extends ArrayAdapter<String>{
+
+        MyCustomAdapterPublic(Context context, int textViewResourceId,
+                              String[] objects) {
+            super(context, textViewResourceId, objects);
+
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView,
+                                    @NonNull ViewGroup parent) {
+
+            return getCustomView(position, parent);
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+
+            return getCustomView(position, parent);
+        }
+
+        View getCustomView(int position, ViewGroup parent) {
+
+//return super.getView(position, convertView, parent);
+
+            LayoutInflater inflater=getLayoutInflater();
+            View row=inflater.inflate(R.layout.row, parent, false);
+            TextView label=row.findViewById(R.id.weekofday);
+            label.setText(CustomBlips[position]);
+
+            ImageView icon=row.findViewById(R.id.icon);
+
+
+            if (Objects.equals(CustomBlips[position], "Arts")){
+                icon.setImageResource(R.mipmap.public_art);
+            }
+            else if(Objects.equals(CustomBlips[position], "Transportation")){
+                icon.setImageResource(R.mipmap.public_autoboatsair);
+            }
+            else if(Objects.equals(CustomBlips[position], "Business")){
+                icon.setImageResource(R.mipmap.public_business);
+            }
+            else if(Objects.equals(CustomBlips[position], "Community")){
+                icon.setImageResource(R.mipmap.public_community);
+            }
+            else if(Objects.equals(CustomBlips[position], "Family & Education")){
+                icon.setImageResource(R.mipmap.public_family);
+            }
+            else if(Objects.equals(CustomBlips[position], "Fashion")){
+                icon.setImageResource(R.mipmap.public_fashion);
+            }
+            else if(Objects.equals(CustomBlips[position], "Media")){
+                icon.setImageResource(R.mipmap.public_filmandmedia);
+            }
+            else if(Objects.equals(CustomBlips[position], "Food")){
+                icon.setImageResource(R.mipmap.public_foodanddrinks);
+            }
+            else if(Objects.equals(CustomBlips[position], "Health")){
+                icon.setImageResource(R.mipmap.public_health);
+            }
+            else if(Objects.equals(CustomBlips[position], "Holiday")){
+                icon.setImageResource(R.mipmap.public_holidaysandcelebrations);
+            }
+            else if(Objects.equals(CustomBlips[position], "Music")){
+                icon.setImageResource(R.mipmap.public_music);
+            }
+            else if(Objects.equals(CustomBlips[position], "Sports")){
+                icon.setImageResource(R.mipmap.public_sportsandfitness);
+            }
+            else if(Objects.equals(CustomBlips[position], "Travel")){
+                icon.setImageResource(R.mipmap.public_travelandoutdoor);
+            }
+
+            else{
+                icon.setImageResource(R.mipmap.ic_launcher_round);
+            }
+
+            return row;
+        }
+    }
+    private class MyCustomAdapterPrivate extends ArrayAdapter<String>{
+
+        MyCustomAdapterPrivate(Context context, int textViewResourceId,
+                               String[] objects) {
+            super(context, textViewResourceId, objects);
+
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView,
+                                    @NonNull ViewGroup parent) {
+
+            return getCustomView(position, parent);
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+
+            return getCustomView(position, parent);
+        }
+
+        View getCustomView(int position, ViewGroup parent) {
+
+
+
+            LayoutInflater inflater=getLayoutInflater();
+            View row=inflater.inflate(R.layout.row, parent, false);
+            TextView label=row.findViewById(R.id.weekofday);
+            label.setText(CustomBlips[position]);
+
+            ImageView icon=row.findViewById(R.id.icon);
+
+
+            if (Objects.equals(CustomBlips[position], "Arts")){
+                icon.setImageResource(R.mipmap.private_art);
+            }
+            else if(Objects.equals(CustomBlips[position], "Transportation")){
+                icon.setImageResource(R.mipmap.private_autoboatsair);
+            }
+            else if(Objects.equals(CustomBlips[position], "Business")){
+                icon.setImageResource(R.mipmap.private_business);
+            }
+            else if(Objects.equals(CustomBlips[position], "Community")){
+                icon.setImageResource(R.mipmap.private_community);
+            }
+            else if(Objects.equals(CustomBlips[position], "Family & Education")){
+                icon.setImageResource(R.mipmap.private_family);
+            }
+            else if(Objects.equals(CustomBlips[position], "Fashion")){
+                icon.setImageResource(R.mipmap.private_fashion);
+            }
+            else if(Objects.equals(CustomBlips[position], "Media")){
+                icon.setImageResource(R.mipmap.private_filmandmedia);
+            }
+            else if(Objects.equals(CustomBlips[position], "Food")){
+                icon.setImageResource(R.mipmap.private_foodanddrinks);
+            }
+            else if(Objects.equals(CustomBlips[position], "Health")){
+                icon.setImageResource(R.mipmap.private_health);
+            }
+            else if(Objects.equals(CustomBlips[position], "Holiday")){
+                icon.setImageResource(R.mipmap.private_holidaysandcelebrations);
+            }
+            else if(Objects.equals(CustomBlips[position], "Music")){
+                icon.setImageResource(R.mipmap.private_music);
+            }
+            else if(Objects.equals(CustomBlips[position], "Sports")){
+                icon.setImageResource(R.mipmap.private_sportsandfitness);
+            }
+            else if(Objects.equals(CustomBlips[position], "Travel")){
+                icon.setImageResource(R.mipmap.private_travelandoutdoor);
+            }
+
+            else{
+                icon.setImageResource(R.mipmap.ic_launcher_round);
+            }
+
+            return row;
+        }
+    }
+
     private void SendFriendRequest() {
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
@@ -1554,54 +1529,86 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-    }
+    } //TODO Friend Request
 
     @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
-
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.setting_top_right, menu);
+        return true;
     }
     @Override
-    public void onConnectionSuspended(int i) {
-        Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show();
-    }
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
-    }
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
 
-
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
+            return true;
         }
-        else {
-            // Permission was denied. Display an error message.
-        }
-        mMap.setMyLocationEnabled(true);
 
+        return super.onOptionsItemSelected(item);
     }
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
+    @SuppressWarnings("StatementWithEmptyBody")
 
-            super.onBackPressed();
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_addfriend) {
+            SendFriendRequest();
+
+
+        } else if (id == R.id.nav_notifications) {
+
+            Intent ListViewActivity = new Intent(this, ListViewActivity.class);
+            startActivity(ListViewActivity);
+
+
+        } else if (id == R.id.nav_friendlist) {
+            //TODO Friend List
+
+        } else if (id == R.id.nav_manage) {
+
+        } else if (id == R.id.nav_share) {
+
+        } else if (id == R.id.nav_signout) {
             mAuth.signOut();
             Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
+            finish();
+            Intent nextscreen = new Intent(this, LoginActivity.class);
+            startActivity(nextscreen);
 
         }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
