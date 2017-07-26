@@ -9,7 +9,7 @@
         <item
             android:id="@+id/nav_notifications"
             android:icon="@drawable/ic_menu_gallery"
-            android:title='"Friend Requests"' />
+            android:title="Friend Requests" />
         <item
             android:id="@+id/nav_friendlist"
             android:icon="@drawable/ic_menu_slideshow"

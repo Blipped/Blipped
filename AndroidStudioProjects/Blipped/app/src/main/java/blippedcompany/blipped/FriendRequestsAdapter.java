@@ -1,8 +1,11 @@
 package blippedcompany.blipped;
 
 import android.content.Context;
+import android.support.design.widget.NavigationView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -58,7 +61,7 @@ public class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
     }
 
     @Override
-    public View getView(final int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, final ViewGroup parent) {
         View view = convertView;
         if (view == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -79,11 +82,12 @@ public class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
             @Override
             public void onClick(View v) {
                 //do something
+
                 String emailtobedeleted =  list.get(position).toString();
                 list.remove(position); //or some other task
-                notifyDataSetChanged();
-
                 DeleteFriendNotif(emailtobedeleted);
+
+
             }
         });
         addBtn.setOnClickListener(new View.OnClickListener(){
@@ -91,9 +95,11 @@ public class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
             public void onClick(View v) {
                 String emailtobeadded =  list.get(position).toString();
                 list.remove(position); //or some other task
+                DeleteFriendNotif(emailtobeadded);
                 //TODO Add Friend
                 Users.child(userName).child("Friends").push().child(emailtobeadded).setValue(1);// Add to user's blips
-                notifyDataSetChanged();
+
+
             }
         });
 
@@ -107,7 +113,7 @@ public class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference UsersEmailFriends = database.getReference("users").child(userName).child("FriendRequests");
 
-        UsersEmailFriends.orderByChild(emailtobedeleted).equalTo(1).addListenerForSingleValueEvent(
+        UsersEmailFriends.orderByChild("email").equalTo(emailtobedeleted).addListenerForSingleValueEvent(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -115,6 +121,7 @@ public class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
                         for (DataSnapshot datacollected: dataSnapshot.getChildren()) {
                             Toast.makeText(context, "Declined", Toast.LENGTH_SHORT).show();
                             datacollected.getRef().removeValue();
+
 
                         }
                     }
@@ -140,4 +147,10 @@ public class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
 
     }
 
+
+
+
+
+
 }
+

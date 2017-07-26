@@ -75,6 +75,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     GoogleApiClient mGoogleApiClient;
 
 
+    // The geographical location where the device is currently located. That is, the last-known
+    // location retrieved by the Fused Location Provider.
+    private Location mLastKnownLocation;
+
+    //Firebase Authentication
+    FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    FirebaseUser userID = mAuth.getCurrentUser();
+
+    //Firebase Database
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    //initialize lat and lng values
+    DatabaseReference Users = database.getReference("users");
+    DatabaseReference Blipsref = database.getReference("blips");
+    DatabaseReference BlipsPublic = database.getReference("blips").child("public");
+    DatabaseReference BlipsPrivate = database.getReference("blips").child("private");
     //Variables
     private static final String TAG = "MainActivity";
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
@@ -83,7 +98,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     Double cursor_coordinate_latitude;
     Double cursor_coordinate_longitude;
-    String userName;
+    final String userName=removecom(userID.getEmail());
     String BlipName ;
     String Details;
     EditText friendemail;
@@ -113,23 +128,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     String blipIcon;
     ArrayList<String> friendrequestlist;
     int listcount;
+    boolean alreadysent= false;
 
 
-    // The geographical location where the device is currently located. That is, the last-known
-    // location retrieved by the Fused Location Provider.
-    private Location mLastKnownLocation;
-
-    //Firebase Authentication
-    FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    FirebaseUser userID = mAuth.getCurrentUser();
-
-    //Firebase Database
-    FirebaseDatabase database = FirebaseDatabase.getInstance();
-    //initialize lat and lng values
-    DatabaseReference Users = database.getReference("users");
-    DatabaseReference Blipsref = database.getReference("blips");
-    DatabaseReference BlipsPublic = database.getReference("blips").child("public");
-    DatabaseReference BlipsPrivate = database.getReference("blips").child("private");
 
 
     @Override
@@ -138,9 +139,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.sidebar);
         DeclareThings();
 
-
-
-
+        ShowFriendRequestCount();
 
         search = (SearchView) findViewById(R.id.searchView);
         search.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
@@ -217,14 +216,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     @Override
     public void onMapReady(GoogleMap googleMap) {
-
+        TextView userNameText = (TextView)findViewById(R.id.currentUserTxt);
+        userNameText.setText("Welcome "+ userID.getEmail());
 
         mMap = googleMap;
         googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
         getDeviceLocation();
 
 
-        userName=removecom(userID.getEmail());
+
         publiccheckbox = (CheckBox)findViewById(R.id.checkboxPublic);
         privatecheckbox = (CheckBox)findViewById(R.id.checkboxPrivate);
         checkboxMusic = (CheckBox)findViewById(R.id.checkboxMusic);
@@ -984,7 +984,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         boolean valid = true;
 
 
-        if (TextUtils.isEmpty(friendrequestemail)  ){
+        if (TextUtils.isEmpty(friendrequestemail) || friendrequestemail.length() < 5  ){
             friendemail.setError("Required.");
             valid = false;
         } else {
@@ -1248,10 +1248,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        TextView userNameText = (TextView)findViewById(R.id.currentUserTxt);
-        userNameText.setText("Welcome "+ userID.getEmail());
-        ShowFriendRequestCount();
-        Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
 
     }
     @Override
@@ -1469,7 +1465,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final AlertDialog dialog = mBuilder.create();
         dialog.show();
 
-
+       //Check if
         AddFriend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -1477,6 +1473,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if( validateAddFriend()){
 
                     friendrequestemail=removecom(friendemail.getText().toString());
+
 
                     Users.addListenerForSingleValueEvent(new  ValueEventListener() {
 
@@ -1488,21 +1485,53 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             if (dataSnapshot.hasChild(friendrequestemail)) {
 
-                                if (dataSnapshot.child(friendrequestemail).child("FriendRequests").hasChild(userName)) {
+                                                                Users.child(friendrequestemail).addChildEventListener(new  ChildEventListener() {
 
-                                    Toast.makeText(MainActivity.this, "Friend Request Already Sent", Toast.LENGTH_SHORT).show();
+                                                                    @Override
+                                                                    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                                                                            for (DataSnapshot snapm: dataSnapshot.getChildren()) {//GET ALL EMAILS AND IF MATCHES EMAIL TO BE SENT THE SET TRUE
+
+                                                                                if(snapm.hasChild(userName)){
+                                                                                    Toast.makeText(MainActivity.this, "Friend Request Already Sent", Toast.LENGTH_SHORT).show();
+                                                                                    alreadysent = true;
+
+                                                                                }
+
+                                                                        }
 
 
-                                }
+                                                                    }
 
-                                else {
+                                                                    @Override
+                                                                    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
 
-                                    Users.child(friendrequestemail).child("FriendRequests").child(userName).child(userName).setValue(1);// Add to user's blips
+                                                                    }
+
+                                                                    @Override
+                                                                    public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                                                                    }
+
+                                                                    @Override
+                                                                    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                                                                    }
+
+                                                                    @Override
+                                                                    public void onCancelled(DatabaseError databaseError) {
+
+                                                                    }
+                                                                });
+                                if(!alreadysent){//SET
+                                    Users.child(friendrequestemail).child("FriendRequests").push().child(userName).setValue(1);// Add to user's blips
                                     Toast.makeText(MainActivity.this, "Friend Request Sent", Toast.LENGTH_SHORT).show();
                                     dialog.cancel();
 
 
+
                                 }
+
 
 
                             }
@@ -1523,6 +1552,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         }
                     });
+
+
+
+
+
+
 
                 }
             }
@@ -1605,21 +1640,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void ShowFriendRequestCount(){
 
         friendrequestlist = new ArrayList<String>();
+
         DatabaseReference UsersEmailFriends = database.getReference("users").child(userName).child("FriendRequests");
         UsersEmailFriends.addChildEventListener(new ChildEventListener() {
 
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+
                 for (DataSnapshot snapm: dataSnapshot.getChildren()) {
 
-                    String  email = snapm.getKey();
+                    String email = snapm.child("email").getValue(String.class);
                     friendrequestlist.add(email);
 
                 }
+
                 int size= friendrequestlist.size();
                 String sizestring=Integer.toString(size) ;
-
-
                 changetitle("Friend Requests    "+sizestring);
 
 
@@ -1632,7 +1668,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-ShowFriendRequestCount();
+                Toast.makeText(MainActivity.this, "Child Removed", Toast.LENGTH_SHORT).show();
+                ShowFriendRequestCount();
             }
 
             @Override
