@@ -58,6 +58,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
 import java.util.Objects;
 
 
@@ -108,8 +110,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     RadioButton privateradio;
     String[] CustomBlips = {"Arts", "Transportation", "Business",
             "Community", "Family & Education", "Fashion", "Media","Food","Health","Holiday","Music","Sports","Travel"};
-
     String blipIcon;
+    ArrayList<String> friendrequestlist;
+    int listcount;
 
 
     // The geographical location where the device is currently located. That is, the last-known
@@ -134,6 +137,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sidebar);
         DeclareThings();
+
 
 
 
@@ -205,6 +209,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //Navigation View
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);//Layout
         navigationView.setNavigationItemSelectedListener(this);
+
 
 
 
@@ -1243,6 +1248,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
+        TextView userNameText = (TextView)findViewById(R.id.currentUserTxt);
+        userNameText.setText("Welcome "+ userID.getEmail());
+        ShowFriendRequestCount();
         Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
 
     }
@@ -1556,6 +1564,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+       //TODO GET NOTIF Count then then display to nav view text
+
+
 
         // Handle navigation view item clicks here.
         int id = item.getItemId();
@@ -1566,9 +1577,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         } else if (id == R.id.nav_notifications) {
 
-            Intent ListViewActivity = new Intent(this, ListViewActivity.class);
+            Intent ListViewActivity = new Intent(this, GetFriendNotificationsActivity.class);
             startActivity(ListViewActivity);
-
 
         } else if (id == R.id.nav_friendlist) {
             //TODO Friend List
@@ -1576,6 +1586,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (id == R.id.nav_manage) {
 
         } else if (id == R.id.nav_share) {
+
 
         } else if (id == R.id.nav_signout) {
             mAuth.signOut();
@@ -1591,12 +1602,60 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+    public void ShowFriendRequestCount(){
+
+        friendrequestlist = new ArrayList<String>();
+        DatabaseReference UsersEmailFriends = database.getReference("users").child(userName).child("FriendRequests");
+        UsersEmailFriends.addChildEventListener(new ChildEventListener() {
+
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+                for (DataSnapshot snapm: dataSnapshot.getChildren()) {
+
+                    String  email = snapm.getKey();
+                    friendrequestlist.add(email);
+
+                }
+                int size= friendrequestlist.size();
+                String sizestring=Integer.toString(size) ;
+
+
+                changetitle("Friend Requests    "+sizestring);
+
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+ShowFriendRequestCount();
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
 
 
+    }
 
-
-
+    public void changetitle(String sizestring){
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        Menu nv = navigationView.getMenu();
+        MenuItem item = nv.findItem(R.id.nav_notifications);
+        item.setTitle(sizestring);
+    }
 
 
 

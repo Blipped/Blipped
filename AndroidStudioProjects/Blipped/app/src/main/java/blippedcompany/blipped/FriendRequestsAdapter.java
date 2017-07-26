@@ -28,7 +28,12 @@ import java.util.ArrayList;
 public class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
     private ArrayList<String> list = new ArrayList<String>();
     private Context context;
-
+    FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    FirebaseUser userID = mAuth.getCurrentUser();
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    //initialize lat and lng values
+    DatabaseReference Users = database.getReference("users");
+    String userName=removecom(userID.getEmail());
 
 
     public FriendRequestsAdapter(ArrayList<String> list, Context context) {
@@ -57,7 +62,9 @@ public class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
         View view = convertView;
         if (view == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            view = inflater.inflate(R.layout.notif_layout, null);
+            view = inflater.inflate(R.layout.getfriendnotificationbuttons, null);
+
+
         }
 
         //Handle TextView and display string from your list
@@ -82,7 +89,10 @@ public class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
         addBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
+                String emailtobeadded =  list.get(position).toString();
+                list.remove(position); //or some other task
                 //TODO Add Friend
+                Users.child(userName).child("Friends").push().child(emailtobeadded).setValue(1);// Add to user's blips
                 notifyDataSetChanged();
             }
         });

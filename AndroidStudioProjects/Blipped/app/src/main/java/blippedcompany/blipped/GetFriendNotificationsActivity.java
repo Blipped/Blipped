@@ -3,7 +3,6 @@ package blippedcompany.blipped;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -16,7 +15,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 
 
-public class ListViewActivity extends AppCompatActivity {
+public class GetFriendNotificationsActivity extends AppCompatActivity {
 
     FirebaseAuth mAuth = FirebaseAuth.getInstance();
     FirebaseUser userID = mAuth.getCurrentUser();
@@ -29,7 +28,7 @@ public class ListViewActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.notif_listview);
+        setContentView(R.layout.getfriendnotification_view);
 
         //generate list
         friendrequestlist = new ArrayList<String>();
@@ -43,12 +42,15 @@ public class ListViewActivity extends AppCompatActivity {
 
         UsersEmailFriends = database.getReference("users").child(userName).child("FriendRequests");
         UsersEmailFriends.addChildEventListener(new ChildEventListener() {
+
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
                 for (DataSnapshot snapm: dataSnapshot.getChildren()) {
 
                     email = snapm.getKey().toString();
                     friendrequestlist.add(email);
+
+
                 }
                load(friendrequestlist);
 
