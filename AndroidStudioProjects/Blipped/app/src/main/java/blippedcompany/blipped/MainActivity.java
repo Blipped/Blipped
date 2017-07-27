@@ -136,6 +136,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     NavigationView navigationView;
     Menu nv;
     MenuItem item_notifications;
+    ListView lView;
+    AlertDialog dialogfriendrequest;
 
 
 
@@ -1513,6 +1515,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String emailtobeadded =  list.get(position);
                     list.remove(position); //or some other task
                     Users.child(userName).child("Friends").child(emailtobeadded).setValue(1);// Add to user's blips
+                    notifyDataSetChanged();
                     item_notifications.setTitle("Friend Requests    "+list.size());
                     Toast.makeText(MainActivity.this, "Child Added adapter"+list.size(), Toast.LENGTH_SHORT).show();
                 }
@@ -1527,8 +1530,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     list.remove(position); //or some other task
                     notifyDataSetChanged();
                     DeleteFriendNotif(emailtobedeleted);
+
                     item_notifications.setTitle("Friend Requests    "+list.size());
-                    Toast.makeText(MainActivity.this, "Child deleted adapter"+list.size(), Toast.LENGTH_SHORT).show();
+
 
                 }
             });
@@ -1660,9 +1664,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SendFriendRequest();
 
 
+
         } else if (id == R.id.nav_notifications) {
 
             ShowFriendRequest();
+
+
 
         } else if (id == R.id.nav_friendlist) {
             //TODO Friend List
@@ -1688,15 +1695,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void ShowFriendRequestCount(){
 
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference UsersEmailFriends = database.getReference("users").child(userName).child("FriendRequests");
+
+        friendrequestlist = new ArrayList<String>();
+        UsersEmailFriends = database.getReference("users").child(userName).child("FriendRequests");
         UsersEmailFriends.addChildEventListener(new ChildEventListener() {
 
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
 
-                String sizestringadd=Long.toString(dataSnapshot.getChildrenCount()) ;
-                item_notifications.setTitle("Friend Requests    "+sizestringadd);
+
+
+                item_notifications.setTitle("Friend Requests    " + dataSnapshot.getChildrenCount());
+                FriendRequestsAdapter adapter = new FriendRequestsAdapter(friendrequestlist, MainActivity.this);
+                //handle listview and assign adapter
+
+
 
 
 
@@ -1709,8 +1722,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                ShowFriendRequestCount();
-
 
             }
 
@@ -1727,35 +1738,34 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
+
     }
 
     public void ShowFriendRequest(){
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
-
+        friendrequestlist.clear();
         View mShowFriendAddView = getLayoutInflater().inflate(R.layout.x,null);
-        final ListView lView =  mShowFriendAddView.findViewById(R.id.notifListview);
+        lView =  mShowFriendAddView.findViewById(R.id.notifListview);
 
         mBuilder.setView(mShowFriendAddView);
-        final AlertDialog dialog = mBuilder.create();
-        dialog.show();
-
+        AlertDialog dialogfriendrequest = mBuilder.create();
+        dialogfriendrequest.show();
         friendrequestlist = new ArrayList<String>();
         UsersEmailFriends = database.getReference("users").child(userName).child("FriendRequests");
         UsersEmailFriends.addChildEventListener(new ChildEventListener() {
 
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-                String sizestringadd=Long.toString(dataSnapshot.getChildrenCount()) ;
-                item_notifications.setTitle("Friend Requests    "+sizestringadd);
 
-                for (DataSnapshot snapm: dataSnapshot.getChildren()) {
-                    String email = snapm.getKey().toString();
+
+
+                    String email = dataSnapshot.getKey().toString();
                     friendrequestlist.add(email);
 
-                }
 
 
+                      item_notifications.setTitle("Friend Requests    " + friendrequestlist.size());
                       FriendRequestsAdapter adapter = new FriendRequestsAdapter(friendrequestlist, MainActivity.this);
                       //handle listview and assign adapter
                       lView.setAdapter(adapter);
@@ -1768,7 +1778,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
-                  ShowFriendRequestCount();
+
             }
 
             @Override
