@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layoutDirection="ltr"
+    tools:layout_editor_absoluteX="0dp"
+    tools:layout_editor_absoluteY="81dp">
+
+    <TextView
+        android:id="@+id/blipdetailstextview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="70dp"
+        android:layout_marginTop="16dp"
+        android:text="Add Blip Details"
+        android:textAlignment="center"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/blipnameText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/blipnameEt"
+        android:layout_alignBottom="@+id/blipdetailstextview"
+        android:layout_alignEnd="@+id/detailsText"
+        android:layout_marginLeft="27dp"
+        android:text="Blip Name:"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintBaseline_toBaselineOf="@+id/blipnameEt"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
+    <EditText
+        android:id="@+id/blipnameEt"
+        android:layout_width="160dp"
+        android:layout_height="wrap_content"
+
+        android:layout_below="@+id/blipdetailstextview"
+        android:layout_marginLeft="123dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/edit_text_border"
+        android:ems="10"
+        android:inputType="textPersonName"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/blipdetailstextview" />
+
+    <TextView
+        android:id="@+id/detailsText"
+        android:layout_width="wrap_content"
+        android:layout_height="22dp"
+
+        android:layout_alignBottom="@+id/detailsEt"
+        android:layout_marginRight="8dp"
+        android:layout_toStartOf="@+id/detailsEt"
+        android:text="Details:"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintBaseline_toBaselineOf="@+id/detailsEt"
+        app:layout_constraintRight_toLeftOf="@+id/detailsEt" />
+
+    <EditText
+        android:id="@+id/detailsEt"
+        android:layout_width="160dp"
+        android:layout_height="124dp"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@+id/blipnameEt"
+        android:layout_marginLeft="123dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/edit_text_border"
+        android:contextClickable="true"
+        android:cursorVisible="true"
+        android:editable="true"
+        android:ems="10"
+        android:gravity="top"
+        android:hint="Enter Details"
+        android:inputType="textMultiLine"
+        android:selectAllOnFocus="false"
+        android:shadowColor="@color/common_google_signin_btn_text_dark_focused"
+        android:singleLine="false"
+        android:textSize="12sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/blipnameEt" />
+
+    <TextView
+        android:id="@+id/iconsText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_alignStart="@+id/addblip_button"
+        android:layout_alignTop="@+id/iconsSpinner"
+        android:layout_marginRight="14dp"
+        android:layout_marginTop="118dp"
+        android:text="Category:"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintRight_toLeftOf="@+id/iconsSpinner"
+        app:layout_constraintTop_toBottomOf="@+id/detailsText" />
+
+
+    <Spinner
+        android:id="@+id/iconsSpinner"
+        android:layout_width="167dp"
+        android:layout_height="30dp"
+        android:layout_below="@+id/detailsEt"
+        android:layout_marginLeft="123dp"
+        android:layout_marginTop="16dp"
+        android:layout_toEndOf="@+id/addblip_button"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/detailsEt" />
+
+    <Button
+        android:id="@+id/addblip_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/cancelblip_button"
+        android:layout_alignBottom="@+id/cancelblip_button"
+        android:layout_marginLeft="70dp"
+        android:layout_marginTop="8dp"
+        android:layout_toStartOf="@+id/detailsEt"
+        android:text="Create"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/groupRadio" />
+
+    <Button
+        android:id="@+id/cancelblip_button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/iconsSpinner"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_toEndOf="@+id/addblip_button"
+        android:text="Cancel"
+        app:layout_constraintLeft_toRightOf="@+id/addblip_button"
+        app:layout_constraintTop_toBottomOf="@+id/groupRadio" />
+
+    <RadioGroup
+        android:id="@+id/groupRadio"
+        android:layout_width="186dp"
+        android:layout_height="59dp"
+        android:layout_marginLeft="123dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/iconsSpinner">
+
+        <RadioButton
+            android:id="@+id/publicRadio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@+id/detailsText"
+            android:layout_alignTop="@+id/privateRadio"
+            android:layout_marginEnd="21dp"
+            android:layout_weight="1"
+            android:text="Public"
+            tools:layout_editor_absoluteX="89dp"
+            tools:layout_editor_absoluteY="284dp" />
+
+        <RadioButton
+            android:id="@+id/privateRadio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignEnd="@+id/cancelblip_button"
+            android:layout_below="@+id/iconsSpinner"
+            android:layout_weight="1"
+            android:text="Private"
+            tools:layout_editor_absoluteX="222dp"
+            tools:layout_editor_absoluteY="284dp" />
+    </RadioGroup>
+
+
+</android.support.constraint.ConstraintLayout>

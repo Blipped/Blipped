@@ -1,13 +1,14 @@
 package blippedcompany.blipped;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -49,6 +50,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
@@ -85,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     //Firebase Authentication
     FirebaseAuth mAuth = FirebaseAuth.getInstance();
     FirebaseUser userID = mAuth.getCurrentUser();
-    final String userName=removecom(userID.getEmail());
+    final String userName = removecom(userID.getEmail());
 
     //Firebase Database
     FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -94,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DatabaseReference Blipsref = database.getReference("blips");
     DatabaseReference BlipsPublic = database.getReference("blips").child("public");
     DatabaseReference BlipsPrivate = database.getReference("blips").child("private");
-    DatabaseReference UsersEmailFriends =database.getReference("users").child(userName).child("Friends");
+    DatabaseReference UsersEmailFriends = database.getReference("users").child(userName).child("Friends");
     DatabaseReference UsersEmailFriendRequests = database.getReference("users").child(userName).child("FriendRequests");
     //Variables
     private static final String TAG = "MainActivity";
@@ -105,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Double cursor_coordinate_latitude;
     Double cursor_coordinate_longitude;
 
-    String BlipName ;
+    String BlipName;
     String Details;
     EditText friendemailEt;
     String friendrequestemail;
@@ -114,11 +117,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Spinner mySpinner;
     CheckBox publiccheckbox;
     CheckBox privatecheckbox;
-    CheckBox checkboxArts ;
-    CheckBox checkboxBusiness ;
+    CheckBox checkboxArts;
+    CheckBox checkboxBusiness;
     CheckBox checkboxCommunity;
-    CheckBox checkboxFamily ;
-    CheckBox checkboxFashion ;
+    CheckBox checkboxFamily;
+    CheckBox checkboxFashion;
     CheckBox checkboxFood;
     CheckBox checkboxHealth;
     CheckBox checkboxMedia;
@@ -130,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     RadioButton publicradio;
     RadioButton privateradio;
     String[] CustomBlips = {"Arts", "Transportation", "Business",
-            "Community", "Family & Education", "Fashion", "Media","Food","Health","Holiday","Music","Sports","Travel"};
+            "Community", "Family & Education", "Fashion", "Media", "Food", "Health", "Holiday", "Music", "Sports", "Travel"};
     String blipIcon;
     ArrayList<String> friendrequestlist;
     boolean alreadysent;
@@ -141,22 +144,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     AlertDialog dialogfriendrequest;
     ArrayList<String> friendarraylist;
 
-
+    private Circle lastUserCircle;
+    private long pulseDuration = 10;
+    private ValueAnimator lastPulseAnimator;
+    LatLng pulseLatlng;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sidebar);
+
         friendrequestlist = new ArrayList<String>();
 
         DeclareThings();
         ShowFriendRequestCount();
 
 
-
         search = (SearchView) findViewById(R.id.searchView);
-        search.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
+        search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
 
@@ -184,11 +190,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-
-
-
     }
-    public void DeclareThings(){
+
+    public void DeclareThings() {
 
         //Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);//TOOLBAR
@@ -201,17 +205,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //Connect Geo Location
         GoogleMapAPIConnect();
 
-        //Action Button
 
-        final FloatingActionButton  btnFusedLocation = (FloatingActionButton) findViewById(R.id.fab);
-        btnFusedLocation.setImageResource(R.mipmap.ic_gps);
-        btnFusedLocation.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getDeviceLocation();
 
-            }
-        });
 
         //Navigation Drawer
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);//Layout
@@ -226,22 +221,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         item_notifications = nv.findItem(R.id.nav_notifications);
 
 
-
-
-
-
-    }
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        TextView userNameText = (TextView)findViewById(R.id.currentUserTxt);
-        userNameText.setText("Welcome "+ userID.getEmail());
-
-        mMap = googleMap;
-        googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
-        getDeviceLocation();
-
-
-
+        //CheckBoxes
         publiccheckbox = (CheckBox)findViewById(R.id.checkboxPublic);
         privatecheckbox = (CheckBox)findViewById(R.id.checkboxPrivate);
         checkboxMusic = (CheckBox)findViewById(R.id.checkboxMusic);
@@ -259,6 +239,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkboxTravel = (CheckBox)findViewById(R.id.checkboxTravel);
 
 
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        TextView userNameText = (TextView) findViewById(R.id.currentUserTxt);
+        userNameText.setText("Welcome " + userID.getEmail());
+
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+
+        mMap = googleMap;
+        mMap.setTrafficEnabled(true);
+        mMap.setMyLocationEnabled(true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        mMap.getUiSettings().setIndoorLevelPickerEnabled(true);
+        googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
 
         checkboxlisteners();
         ShowBlips();
@@ -297,6 +302,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
+
     private void GoogleMapAPIConnect() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .enableAutoManage(this /* FragmentActivity */,
@@ -366,7 +372,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         cursor_coordinate_longitude= point.longitude;
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
-        View mBlipAddView = getLayoutInflater().inflate(R.layout.enter_blip_details_popup,null);
+        View mBlipAddView = getLayoutInflater().inflate(R.layout.add_blip_details_popup,null);
 
         mBlipName = mBlipAddView.findViewById(R.id.blipnameEt);
         mDetails = mBlipAddView.findViewById(R.id.detailsEt);
@@ -898,7 +904,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
                 if(!search.isIconified()){
-                    Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Searchbox still focused", Toast.LENGTH_SHORT).show();
                 }
                 else {
                     mMap.clear();//Clear Map
@@ -1015,7 +1021,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                 String x= dataSnapshot.getKey().toString();
-                Toast.makeText(MainActivity.this, x, Toast.LENGTH_SHORT).show();
                 friendarraylist.add(x);
 
 
@@ -1330,7 +1335,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-
+        getDeviceLocation();
     }
     @Override
     public void onConnectionSuspended(int i) {
@@ -1648,8 +1653,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 public void onClick(View v) {//TODO ADD BUTTON
                     String emailtobeadded =  list.get(position);
                     list.remove(position); //or some other task
+                    DeleteFriendNotif(emailtobeadded);
                     Users.child(userName).child("Friends").child(emailtobeadded).setValue(1);// Add to user's blips
                     Users.child(emailtobeadded).child("Friends").child(userName).setValue(1);
+
                     notifyDataSetChanged();
                     item_notifications.setTitle("Friend Requests    "+list.size());
                     ShowBlips();
@@ -1844,7 +1851,41 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    private void addPulsatingEffect(final LatLng pulseLatlng){
+        if(lastPulseAnimator != null){
+            lastPulseAnimator.cancel();
+            Log.d("onLocationUpdated: ","cancelled" );
+        }
+        if(lastUserCircle != null)
+            lastUserCircle.setCenter(pulseLatlng);
 
+        lastPulseAnimator = valueAnimate( pulseDuration, new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                if(lastUserCircle != null)
+                    lastUserCircle.setRadius((Float) animation.getAnimatedValue());
+                else {
+                    lastUserCircle = mMap.addCircle(new CircleOptions()
+                            .center(pulseLatlng)
+                            .radius((Float) animation.getAnimatedValue())
+                            .strokeColor(Color.GREEN)
+                            .fillColor(Color.TRANSPARENT));
+                }
+            }
+        });
+
+    }
+    protected ValueAnimator valueAnimate(long duration, ValueAnimator.AnimatorUpdateListener updateListener){
+        Log.d( "valueAnimate: ", "called");
+        ValueAnimator va = ValueAnimator.ofFloat(0,1000);
+        va.setDuration(duration);
+        va.addUpdateListener(updateListener);
+        va.setRepeatCount(ValueAnimator.INFINITE);
+        va.setRepeatMode(ValueAnimator.RESTART);
+
+        va.start();
+        return va;
+    }
 
 
 
