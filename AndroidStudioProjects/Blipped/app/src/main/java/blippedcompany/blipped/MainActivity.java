@@ -279,16 +279,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-
-                EditBlip(marker);
+                if(marker.getSnippet().contains(userName)) {
+                    EditBlip(marker);
+                }
             }
         });
 
         mMap.setOnInfoWindowLongClickListener(new GoogleMap.OnInfoWindowLongClickListener() {
             @Override
             public void onInfoWindowLongClick(Marker marker) {
+                 if(marker.getSnippet().contains(userName)){
+                     DeleteBlip(marker);
+                 }
 
-                DeleteBlip(marker);
             }
         });
 
@@ -618,8 +621,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 });
 
     }
+
     public void EditBlip(final Marker marker){
-        DeleteBlip(marker);
+
         final LatLng coordinatetobeupdated =marker.getPosition();
 
         cursor_coordinate = new LatLng(coordinatetobeupdated.latitude, coordinatetobeupdated.longitude);// Set current click location to marker
@@ -669,6 +673,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mAddBlip.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                DeleteBlip(marker);
                 BlipName = mBlipName.getText().toString();
 
                 if(publicradio.isChecked()) {
@@ -730,6 +735,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 userName,
                                 Details,
                                 blipIcon);
+
                         Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
                         Blipsref.child("public").push().setValue(blips);//Add to public blips
 
@@ -799,13 +805,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 userName,
                                 Details,
                                 blipIcon);
-                        Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
+                          Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
 
-                        Blipsref.child("private").push().setValue(blips);//Add to private blips
+                            Blipsref.child("private").push().setValue(blips);//Add to private blips
 
-                        dialog.cancel();
-                        mMap.clear();
-                        ShowBlips();
+                              dialog.cancel();
+                              mMap.clear();
+                              ShowBlips();
 
 
                     }
@@ -828,6 +834,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
+
     private void ShowBlips() {
         getFriendsList();
         Blipsref.addChildEventListener(new ChildEventListener() {
@@ -1145,7 +1152,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             Details,
                             blipIcon);
 
-                    if(newBlipName.toUpperCase().startsWith(query.toUpperCase()) && creator.toLowerCase().contains(userName.toLowerCase())   )
+                    if(newBlipName.toUpperCase().startsWith(query.toUpperCase()) && (creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(creator)   ))
                     {
 
                         PlaceMarker(blipsadded);

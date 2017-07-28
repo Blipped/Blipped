@@ -45,21 +45,27 @@
         tools:layout_constraintBottom_creator="1"
         tools:layout_constraintLeft_creator="1" />
 
-    <ScrollView
+    <HorizontalScrollView
         android:id="@+id/filterscroll"
-        android:layout_width="98dp"
-        android:layout_height="144dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="111dp"
-        app:layout_constraintRight_toRightOf="parent"
+        android:layout_width="292dp"
+        android:layout_height="33dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="16dp"
+        android:fillViewport="false"
         app:layout_constraintTop_toTopOf="parent"
         tools:layout_constraintRight_creator="1"
-        tools:layout_constraintTop_creator="1">
+        tools:layout_constraintTop_creator="1"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginRight="32dp"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginStart="24dp"
+        tools:layout_constraintLeft_creator="1">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="horizontal">
 
             <CheckBox
                 android:id="@+id/checkboxPrivate"
@@ -243,7 +249,7 @@
 
 
         </LinearLayout>
-    </ScrollView>
+    </HorizontalScrollView>
 
 
 </android.support.constraint.ConstraintLayout>
