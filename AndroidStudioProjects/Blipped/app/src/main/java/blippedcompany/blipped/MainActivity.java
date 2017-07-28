@@ -998,20 +998,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
-
-    private boolean checkIfcreatorisfriend(String creator,ArrayList f){
-
-   if(f.contains(creator)){
-       return true;
-   }
-
-    else{
-       return  false;
-     }
-
-
-
-    }
     private void getFriendsList(){
             friendarraylist= new ArrayList<String>();
 
@@ -1052,7 +1038,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
-
 
     private boolean validateForm() {
         boolean valid = true;
@@ -1379,6 +1364,71 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         }
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.setting_top_right, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+    @SuppressWarnings("StatementWithEmptyBody")
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        //TODO GET NOTIF Count then then display to nav view text
+
+
+
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_addfriend) {
+            SendFriendRequest();
+
+
+
+        } else if (id == R.id.nav_notifications) {
+
+            ShowFriendRequest();
+
+
+
+        } else if (id == R.id.nav_friendlist) {
+            //TODO Friend List
+
+        } else if (id == R.id.nav_manage) {
+
+        } else if (id == R.id.nav_share) {
+
+
+        } else if (id == R.id.nav_signout) {
+            mAuth.signOut();
+            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
+            finish();
+            Intent nextscreen = new Intent(this, LoginActivity.class);
+            startActivity(nextscreen);
+
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
     private class MyCustomAdapterPublic extends ArrayAdapter<String>{
 
         MyCustomAdapterPublic(Context context, int textViewResourceId,
@@ -1703,73 +1753,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-    } //TODO Friend Request
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.setting_top_right, menu);
-        return true;
     }
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-    @SuppressWarnings("StatementWithEmptyBody")
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-       //TODO GET NOTIF Count then then display to nav view text
-
-
-
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_addfriend) {
-            SendFriendRequest();
-
-
-
-        } else if (id == R.id.nav_notifications) {
-
-            ShowFriendRequest();
-
-
-
-        } else if (id == R.id.nav_friendlist) {
-            //TODO Friend List
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-
-        } else if (id == R.id.nav_signout) {
-            mAuth.signOut();
-            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
-            finish();
-            Intent nextscreen = new Intent(this, LoginActivity.class);
-            startActivity(nextscreen);
-
-        }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
-
     public void ShowFriendRequestCount(){
 
         UsersEmailFriendRequests.addChildEventListener(new ChildEventListener() {
