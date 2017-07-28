@@ -148,9 +148,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sidebar);
+        friendrequestlist = new ArrayList<String>();
+
         DeclareThings();
         ShowFriendRequestCount();
-        getFriendsList();
+
 
 
         search = (SearchView) findViewById(R.id.searchView);
@@ -567,8 +569,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
 
-
-
                         for (DataSnapshot datacollected: dataSnapshot.getChildren()) {
 
                             String creator= datacollected.child("Creator").getValue(String.class);
@@ -599,8 +599,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                         for (DataSnapshot datacollected: dataSnapshot.getChildren()) {
-                            //We add this because firebase queries sucks
-                            if( datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude){
+                            String creator= datacollected.child("Creator").getValue(String.class);
+
+                            if( datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude && creator.toLowerCase().contains(userName.toLowerCase()) ){
                                 datacollected.getRef().removeValue();
                                 Toast.makeText(MainActivity.this,"Blip Deleted", Toast.LENGTH_SHORT).show();
                             }
@@ -828,7 +829,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
     private void ShowBlips() {
-
+        getFriendsList();
         Blipsref.addChildEventListener(new ChildEventListener() {
 
             @Override
@@ -1021,7 +1022,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-
+                getFriendsList();
             }
 
             @Override
@@ -1644,7 +1645,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Users.child(emailtobeadded).child("Friends").child(userName).setValue(1);
                     notifyDataSetChanged();
                     item_notifications.setTitle("Friend Requests    "+list.size());
-                    Toast.makeText(MainActivity.this, "Child Added adapter"+list.size(), Toast.LENGTH_SHORT).show();
+                    ShowBlips();
                 }
             });
 
@@ -1657,8 +1658,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     list.remove(position); //or some other task
                     notifyDataSetChanged();
                     DeleteFriendNotif(emailtobedeleted);
-
                     item_notifications.setTitle("Friend Requests    "+list.size());
+                    ShowBlips();
 
 
                 }
@@ -1760,15 +1761,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-
-
-
-                item_notifications.setTitle("Friend Requests    " + dataSnapshot.getChildrenCount());
-                FriendRequestsAdapter adapter = new FriendRequestsAdapter(friendrequestlist, MainActivity.this);
-                //handle listview and assign adapter
-
-
-
+                String y= dataSnapshot.getKey().toString();
+                friendrequestlist.add(y);
+                item_notifications.setTitle("Friend Requests    " + friendrequestlist.size());
 
 
             }
@@ -1780,6 +1775,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
+
 
             }
 
@@ -1800,7 +1796,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void ShowFriendRequest(){
-        friendrequestlist = new ArrayList<String>();
+
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
 
         View mShowFriendAddView = getLayoutInflater().inflate(R.layout.x,null);
@@ -1808,52 +1804,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         mBuilder.setView(mShowFriendAddView);
         AlertDialog dialogfriendrequest = mBuilder.create();
+
         dialogfriendrequest.show();
-
-        UsersEmailFriendRequests = database.getReference("users").child(userName).child("FriendRequests");
-        UsersEmailFriendRequests.addChildEventListener(new ChildEventListener() {
-
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-
-
-
-                    String email = dataSnapshot.getKey().toString();
-                    friendrequestlist.add(email);
-
-
-
-                      item_notifications.setTitle("Friend Requests    " + friendrequestlist.size());
-                      FriendRequestsAdapter adapter = new FriendRequestsAdapter(friendrequestlist, MainActivity.this);
-                      //handle listview and assign adapter
-                      lView.setAdapter(adapter);
-
-
-
-
-
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
-
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
+        FriendRequestsAdapter adapter = new FriendRequestsAdapter(friendrequestlist, MainActivity.this);
+        lView.setAdapter(adapter);
 
     }
 
