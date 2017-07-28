@@ -34,10 +34,10 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.SearchView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         GoogleApiClient.OnConnectionFailedListener {
     //Google Map Initialize
     private GoogleMap mMap;
-    public CameraPosition mCameraPosition;
+    private CameraPosition mCameraPosition;
     private final LatLng mDefaultLocation = new LatLng(14.5955772, 120.9880854);
     private static final int DEFAULT_ZOOM = 17;
     LatLng cursor_coordinate;
@@ -85,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     //Firebase Authentication
     FirebaseAuth mAuth = FirebaseAuth.getInstance();
     FirebaseUser userID = mAuth.getCurrentUser();
+    final String userName=removecom(userID.getEmail());
 
     //Firebase Database
     FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -93,8 +94,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DatabaseReference Blipsref = database.getReference("blips");
     DatabaseReference BlipsPublic = database.getReference("blips").child("public");
     DatabaseReference BlipsPrivate = database.getReference("blips").child("private");
-    final String userName=removecom(userID.getEmail());
-    DatabaseReference UsersEmailFriends = database.getReference("users").child(userName).child("FriendRequests");
+    DatabaseReference UsersEmailFriends =database.getReference("users").child(userName).child("Friends");
+    DatabaseReference UsersEmailFriendRequests = database.getReference("users").child(userName).child("FriendRequests");
     //Variables
     private static final String TAG = "MainActivity";
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
@@ -106,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     String BlipName ;
     String Details;
-    EditText friendemail;
+    EditText friendemailEt;
     String friendrequestemail;
     EditText mBlipName;
     EditText mDetails;
@@ -138,6 +139,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     MenuItem item_notifications;
     ListView lView;
     AlertDialog dialogfriendrequest;
+    ArrayList<String> friendarraylist;
 
 
 
@@ -147,8 +149,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sidebar);
         DeclareThings();
-
         ShowFriendRequestCount();
+        getFriendsList();
 
 
         search = (SearchView) findViewById(R.id.searchView);
@@ -352,6 +354,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .snippet(blipsadded.Creator)
                 .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
     }
+
     public void AddBlip(LatLng point){
         cursor_coordinate = new LatLng(point.latitude, point.longitude);// Set current click location to marker
         cursor_coordinate_latitude= point.latitude;
@@ -840,6 +843,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String Details =snapm.child("Details").getValue(String.class);
                     String blipIcon =snapm.child("Icon").getValue(String.class);
 
+
                     Blips blipsadded = new Blips(latitude,
                             longitude,
                             newBlipName,
@@ -848,97 +852,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             blipIcon);
 
 
-                    if(privatecheckbox.isChecked() &&  blipIcon.toLowerCase().contains("private".toLowerCase()) && creator.toLowerCase().contains(userName.toLowerCase()) ){
+                    if(privatecheckbox.isChecked()&&
+                            blipIcon.toLowerCase().contains("private".toLowerCase())
+                            && (  creator.toLowerCase().contains(userName.toLowerCase())  ||   friendarraylist.contains(creator) )  )  {
 
-                        if(checkboxArts.isChecked() &&  blipIcon.toLowerCase().contains("art".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxBusiness.isChecked() &&  blipIcon.toLowerCase().contains("business".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxCommunity.isChecked() &&  blipIcon.toLowerCase().contains("community".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxFamily.isChecked() &&  blipIcon.toLowerCase().contains("family".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxFashion.isChecked() &&  blipIcon.toLowerCase().contains("fashion".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxFood.isChecked() &&  blipIcon.toLowerCase().contains("food".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxHealth.isChecked() &&  blipIcon.toLowerCase().contains("health".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxHoliday.isChecked() &&  blipIcon.toLowerCase().contains("holiday".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxMedia.isChecked() &&  blipIcon.toLowerCase().contains("media".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxTransportation.isChecked() &&  blipIcon.toLowerCase().contains("auto".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxTravel.isChecked() &&  blipIcon.toLowerCase().contains("travel".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxSports.isChecked() &&  blipIcon.toLowerCase().contains("sports".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxMusic.isChecked() &&  blipIcon.toLowerCase().contains("music".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
+
+
+
+                        categoryFilterPrivate(blipsadded);
 
 
                     }
 
 
                     if(publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase()) )  {
-                        if(checkboxArts.isChecked() &&  blipIcon.toLowerCase().contains("art".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxBusiness.isChecked() &&  blipIcon.toLowerCase().contains("business".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxCommunity.isChecked() &&  blipIcon.toLowerCase().contains("community".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxFamily.isChecked() &&  blipIcon.toLowerCase().contains("family".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxFashion.isChecked() &&  blipIcon.toLowerCase().contains("fashion".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxFood.isChecked() &&  blipIcon.toLowerCase().contains("food".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxHealth.isChecked() &&  blipIcon.toLowerCase().contains("health".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxHoliday.isChecked() &&  blipIcon.toLowerCase().contains("holiday".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxMedia.isChecked() &&  blipIcon.toLowerCase().contains("media".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxTransportation.isChecked() &&  blipIcon.toLowerCase().contains("auto".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxTravel.isChecked() &&  blipIcon.toLowerCase().contains("travel".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxSports.isChecked() &&  blipIcon.toLowerCase().contains("sports".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
-                        if(checkboxMusic.isChecked() &&  blipIcon.toLowerCase().contains("music".toLowerCase())  ){
-                            PlaceMarker(blipsadded);
-                        }
 
+                        categoryFilterPublic(blipsadded);
 
                     }
-
-
 
                 }
 
@@ -978,6 +909,151 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
     }
+
+    public void categoryFilterPrivate(Blips blipsadded){
+
+        if(checkboxArts.isChecked() &&  blipsadded.Icon.toLowerCase().contains("art".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxBusiness.isChecked() && blipsadded.Icon.toLowerCase().contains("business".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxCommunity.isChecked() && blipsadded.Icon.toLowerCase().contains("community".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxFamily.isChecked() &&  blipsadded.Icon.toLowerCase().contains("family".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxFashion.isChecked() &&  blipsadded.Icon.toLowerCase().contains("fashion".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxFood.isChecked() &&  blipsadded.Icon.toLowerCase().contains("food".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxHealth.isChecked() &&  blipsadded.Icon.toLowerCase().contains("health".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxHoliday.isChecked() &&  blipsadded.Icon.toLowerCase().contains("holiday".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxMedia.isChecked() &&  blipsadded.Icon.toLowerCase().contains("media".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxTransportation.isChecked() && blipsadded.Icon.toLowerCase().contains("auto".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxTravel.isChecked() && blipsadded.Icon.toLowerCase().contains("travel".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxSports.isChecked() &&  blipsadded.Icon.toLowerCase().contains("sports".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxMusic.isChecked() &&  blipsadded.Icon.toLowerCase().contains("music".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+
+    }
+    public void categoryFilterPublic(Blips blipsadded){
+        if(checkboxArts.isChecked() &&  blipsadded.Icon.toLowerCase().contains("art".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxBusiness.isChecked() &&  blipsadded.Icon.toLowerCase().contains("business".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxCommunity.isChecked() && blipsadded.Icon.toLowerCase().contains("community".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxFamily.isChecked() && blipsadded.Icon.toLowerCase().contains("family".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxFashion.isChecked() &&  blipsadded.Icon.toLowerCase().contains("fashion".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxFood.isChecked() &&  blipsadded.Icon.toLowerCase().contains("food".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxHealth.isChecked() &&  blipsadded.Icon.toLowerCase().contains("health".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxHoliday.isChecked() &&  blipsadded.Icon.toLowerCase().contains("holiday".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxMedia.isChecked() &&  blipsadded.Icon.toLowerCase().contains("media".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxTransportation.isChecked() && blipsadded.Icon.toLowerCase().contains("auto".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxTravel.isChecked() &&  blipsadded.Icon.toLowerCase().contains("travel".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxSports.isChecked() &&  blipsadded.Icon.toLowerCase().contains("sports".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+        if(checkboxMusic.isChecked() &&  blipsadded.Icon.toLowerCase().contains("music".toLowerCase())  ){
+            PlaceMarker(blipsadded);
+        }
+
+
+
+
+    }
+
+    private boolean checkIfcreatorisfriend(String creator,ArrayList f){
+
+   if(f.contains(creator)){
+       return true;
+   }
+
+    else{
+       return  false;
+     }
+
+
+
+    }
+    private void getFriendsList(){
+            friendarraylist= new ArrayList<String>();
+
+        UsersEmailFriends.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+
+                String x= dataSnapshot.getKey().toString();
+                Toast.makeText(MainActivity.this, x, Toast.LENGTH_SHORT).show();
+                friendarraylist.add(x);
+
+
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+
+    }
+
+
     private boolean validateForm() {
         boolean valid = true;
 
@@ -998,10 +1074,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         if (TextUtils.isEmpty(friendrequestemail) || friendrequestemail.length() < 5  ){
-            friendemail.setError("Required.");
+            friendemailEt.setError("Required.");
             valid = false;
         } else {
-            friendemail.setError(null);
+            friendemailEt.setError(null);
         }
 
 
@@ -1515,6 +1591,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String emailtobeadded =  list.get(position);
                     list.remove(position); //or some other task
                     Users.child(userName).child("Friends").child(emailtobeadded).setValue(1);// Add to user's blips
+                    Users.child(emailtobeadded).child("Friends").child(userName).setValue(1);
                     notifyDataSetChanged();
                     item_notifications.setTitle("Friend Requests    "+list.size());
                     Toast.makeText(MainActivity.this, "Child Added adapter"+list.size(), Toast.LENGTH_SHORT).show();
@@ -1550,7 +1627,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
         View mFriendAddView = getLayoutInflater().inflate(R.layout.add_friend,null);
 
-        friendemail = mFriendAddView.findViewById(R.id.add_friend_et);
+        friendemailEt = mFriendAddView.findViewById(R.id.add_friend_et);
         Button AddFriend = mFriendAddView.findViewById(R.id.add_friend_btn);
         Button CancelFriend = mFriendAddView.findViewById(R.id.cancel_friend_btn);
         mBuilder.setView(mFriendAddView);
@@ -1561,7 +1638,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         AddFriend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                friendrequestemail=removecom(friendemail.getText().toString());
+                friendrequestemail=removecom(friendemailEt.getText().toString());
                 if( validateAddFriend()){
 
                     Users.addListenerForSingleValueEvent(new  ValueEventListener() {
@@ -1594,7 +1671,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             else{
                                 Toast.makeText(MainActivity.this, "User does not exist", Toast.LENGTH_SHORT).show();
-                                friendemail.setText(null);
+                                friendemailEt.setText(null);
 
 
                             }
@@ -1695,10 +1772,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void ShowFriendRequestCount(){
 
-
-        friendrequestlist = new ArrayList<String>();
-        UsersEmailFriends = database.getReference("users").child(userName).child("FriendRequests");
-        UsersEmailFriends.addChildEventListener(new ChildEventListener() {
+        UsersEmailFriendRequests.addChildEventListener(new ChildEventListener() {
 
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
@@ -1742,18 +1816,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void ShowFriendRequest(){
-
+        friendrequestlist = new ArrayList<String>();
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
-        friendrequestlist.clear();
+
         View mShowFriendAddView = getLayoutInflater().inflate(R.layout.x,null);
         lView =  mShowFriendAddView.findViewById(R.id.notifListview);
 
         mBuilder.setView(mShowFriendAddView);
         AlertDialog dialogfriendrequest = mBuilder.create();
         dialogfriendrequest.show();
-        friendrequestlist = new ArrayList<String>();
-        UsersEmailFriends = database.getReference("users").child(userName).child("FriendRequests");
-        UsersEmailFriends.addChildEventListener(new ChildEventListener() {
+
+        UsersEmailFriendRequests = database.getReference("users").child(userName).child("FriendRequests");
+        UsersEmailFriendRequests.addChildEventListener(new ChildEventListener() {
 
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
@@ -1800,13 +1874,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void DeleteFriendNotif(String emailtobedeleted){
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
-        FirebaseUser userID = mAuth.getCurrentUser();
-        String  userName=removecom(userID.getEmail());
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference UsersEmailFriends = database.getReference("users").child(userName).child("FriendRequests");
 
-        UsersEmailFriends.orderByChild(emailtobedeleted).equalTo(1).addListenerForSingleValueEvent(
+
+        UsersEmailFriendRequests.orderByChild(emailtobedeleted).equalTo(1).addListenerForSingleValueEvent(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
