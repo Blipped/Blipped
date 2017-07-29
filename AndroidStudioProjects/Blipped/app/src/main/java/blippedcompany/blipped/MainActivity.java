@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -99,6 +101,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DatabaseReference BlipsPrivate = database.getReference("blips").child("private");
     DatabaseReference UsersEmailFriends = database.getReference("users").child(userName).child("Friends");
     DatabaseReference UsersEmailFriendRequests = database.getReference("users").child(userName).child("FriendRequests");
+    DatabaseReference liveGPSEmail = database.getReference("liveGPS").child(userName);
+    DatabaseReference liveGPS = database.getReference("liveGPS");
     //Variables
     private static final String TAG = "MainActivity";
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
@@ -148,6 +152,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private long pulseDuration = 10;
     private ValueAnimator lastPulseAnimator;
     LatLng pulseLatlng;
+    Marker gpsmarker;
 
 
     @Override
@@ -206,8 +211,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         GoogleMapAPIConnect();
 
 
-
-
         //Navigation Drawer
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);//Layout
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -222,27 +225,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         //CheckBoxes
-        publiccheckbox = (CheckBox)findViewById(R.id.checkboxPublic);
-        privatecheckbox = (CheckBox)findViewById(R.id.checkboxPrivate);
-        checkboxMusic = (CheckBox)findViewById(R.id.checkboxMusic);
-        checkboxArts = (CheckBox)findViewById(R.id.checkboxArts);
-        checkboxBusiness = (CheckBox)findViewById(R.id.checkboxBusiness);
-        checkboxCommunity= (CheckBox)findViewById(R.id.checkboxCommunity);
-        checkboxFamily = (CheckBox)findViewById(R.id.checkboxFamily);
-        checkboxFashion = (CheckBox)findViewById(R.id.checkboxFashion);
-        checkboxFood = (CheckBox)findViewById(R.id.checkboxFood);
-        checkboxHealth = (CheckBox)findViewById(R.id.checkboxHealth);
-        checkboxMedia = (CheckBox)findViewById(R.id.checkboxMedia);
-        checkboxSports = (CheckBox)findViewById(R.id.checkboxSports);
-        checkboxTransportation = (CheckBox)findViewById(R.id.checkboxTransportation);
-        checkboxHoliday = (CheckBox)findViewById(R.id.checkboxHoliday);
-        checkboxTravel = (CheckBox)findViewById(R.id.checkboxTravel);
+        publiccheckbox = (CheckBox) findViewById(R.id.checkboxPublic);
+        privatecheckbox = (CheckBox) findViewById(R.id.checkboxPrivate);
+        checkboxMusic = (CheckBox) findViewById(R.id.checkboxMusic);
+        checkboxArts = (CheckBox) findViewById(R.id.checkboxArts);
+        checkboxBusiness = (CheckBox) findViewById(R.id.checkboxBusiness);
+        checkboxCommunity = (CheckBox) findViewById(R.id.checkboxCommunity);
+        checkboxFamily = (CheckBox) findViewById(R.id.checkboxFamily);
+        checkboxFashion = (CheckBox) findViewById(R.id.checkboxFashion);
+        checkboxFood = (CheckBox) findViewById(R.id.checkboxFood);
+        checkboxHealth = (CheckBox) findViewById(R.id.checkboxHealth);
+        checkboxMedia = (CheckBox) findViewById(R.id.checkboxMedia);
+        checkboxSports = (CheckBox) findViewById(R.id.checkboxSports);
+        checkboxTransportation = (CheckBox) findViewById(R.id.checkboxTransportation);
+        checkboxHoliday = (CheckBox) findViewById(R.id.checkboxHoliday);
+        checkboxTravel = (CheckBox) findViewById(R.id.checkboxTravel);
 
 
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(GoogleMap googleMap) throws NullPointerException {
         TextView userNameText = (TextView) findViewById(R.id.currentUserTxt);
         userNameText.setText("Welcome " + userID.getEmail());
 
@@ -264,8 +267,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.getUiSettings().setIndoorLevelPickerEnabled(true);
         googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
-
+        locationListen();
         checkboxlisteners();
+        ShowGPSLocation();
         ShowBlips();
 
         // WHen map is long clicked
@@ -274,7 +278,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onMapLongClick(LatLng point) {
-
                 AddBlip(point);
             }
         });
@@ -283,19 +286,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //When map is infolong clicked
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
-            public void onInfoWindowClick(Marker marker) {
-                if(marker.getSnippet().contains(userName)) {
-                    EditBlip(marker);
+            public void onInfoWindowClick(Marker marker) throws NullPointerException {
+
+                try {
+                    if (marker.getSnippet().contains(userName)) {
+                        EditBlip(marker);
+                    }
+                } catch (NullPointerException e) {
+
                 }
+
             }
         });
 
         mMap.setOnInfoWindowLongClickListener(new GoogleMap.OnInfoWindowLongClickListener() {
             @Override
             public void onInfoWindowLongClick(Marker marker) {
-                 if(marker.getSnippet().contains(userName)){
-                     DeleteBlip(marker);
-                 }
+
+                try {
+                    if (marker.getSnippet().contains(userName)) {
+                        DeleteBlip(marker);
+                    }
+                } catch (NullPointerException e) {
+
+                }
 
             }
         });
@@ -315,6 +329,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mGoogleApiClient.connect();
 
     }
+
     public void getDeviceLocation() {
 
         /*
@@ -354,10 +369,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-
     }
+
     public void PlaceMarker(Blips blipsadded) {
-        LatLng newBlipCoordinates = new LatLng(blipsadded.latitude,blipsadded.longitude);
+        LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
 
         mMap.addMarker(new MarkerOptions() // Set Marker
                 .position(newBlipCoordinates)
@@ -366,13 +381,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
     }
 
-    public void AddBlip(LatLng point){
+    public void AddBlip(LatLng point) {
         cursor_coordinate = new LatLng(point.latitude, point.longitude);// Set current click location to marker
-        cursor_coordinate_latitude= point.latitude;
-        cursor_coordinate_longitude= point.longitude;
+        cursor_coordinate_latitude = point.latitude;
+        cursor_coordinate_longitude = point.longitude;
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
-        View mBlipAddView = getLayoutInflater().inflate(R.layout.add_blip_details_popup,null);
+        View mBlipAddView = getLayoutInflater().inflate(R.layout.add_blip_details_popup, null);
 
         mBlipName = mBlipAddView.findViewById(R.id.blipnameEt);
         mDetails = mBlipAddView.findViewById(R.id.detailsEt);
@@ -383,18 +398,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mySpinner = mBlipAddView.findViewById(R.id.iconsSpinner);
 
 
-
         RadioGroup radioGroup = mBlipAddView.findViewById(R.id.groupRadio);
-        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener()
-        {
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                if(publicradio.isChecked()){
+                if (publicradio.isChecked()) {
                     privateradio.setChecked(false);
                     mySpinner.setAdapter(new MyCustomAdapterPublic(MainActivity.this, R.layout.row, CustomBlips));//Change to Public Spinnes
 
-                }
-                else if(privateradio.isChecked()){
+                } else if (privateradio.isChecked()) {
                     publicradio.setChecked(false);
                     mySpinner.setAdapter(new MyCustomAdapterPrivate(MainActivity.this, R.layout.row, CustomBlips));//Change to Private Spinner
 
@@ -403,8 +415,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 // checkedId is the RadioButton selected
             }
         });
-
-
 
 
         mBuilder.setView(mBlipAddView);
@@ -416,7 +426,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onClick(View view) {
                 BlipName = mBlipName.getText().toString();
 
-                if(publicradio.isChecked()) {
+                if (publicradio.isChecked()) {
 
                     if (validateForm()) {
 
@@ -470,22 +480,276 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         //Place Data
 
                         Blips blips = new Blips(cursor_coordinate_latitude,
-                                                cursor_coordinate_longitude,
-                                                BlipName,
-                                                userName,
-                                                Details,
-                                                blipIcon);
+                                cursor_coordinate_longitude,
+                                BlipName,
+                                userName,
+                                Details,
+                                blipIcon);
                         Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
                         Blipsref.child("public").push().setValue(blips);//Add to public blips
 
                         dialog.cancel();
                         mMap.clear();
                         ShowBlips();
+
                     }
+                } else if (privateradio.isChecked()) {
+                    if (validateForm()) {
+
+
+                        Details = mDetails.getText().toString();
+                        String dropboxvalue = mySpinner.getSelectedItem().toString();
+
+
+                        if (Objects.equals(dropboxvalue, "Arts")) {//
+                            blipIcon = "private_art";
+                        } else if (Objects.equals(dropboxvalue, "Transportation")) {//
+                            blipIcon = "private_autoboatsair";
+
+                        } else if (Objects.equals(dropboxvalue, "Business")) {//
+                            blipIcon = "private_business";
+
+                        } else if (Objects.equals(dropboxvalue, "Community")) {//
+                            blipIcon = "private_community";
+
+                        } else if (Objects.equals(dropboxvalue, "Family & Education")) {//
+                            blipIcon = "private_family";
+
+                        } else if (Objects.equals(dropboxvalue, "Fashion")) {//
+                            blipIcon = "private_fashion";
+
+                        } else if (Objects.equals(dropboxvalue, "Media")) {//
+                            blipIcon = "private_filmandmedia";
+
+                        } else if (Objects.equals(dropboxvalue, "Travel")) {//
+                            blipIcon = "private_travelandoutdoor";
+
+                        } else if (Objects.equals(dropboxvalue, "Food")) {//
+                            blipIcon = "private_foodanddrinks";
+
+                        } else if (Objects.equals(dropboxvalue, "Health")) {//
+                            blipIcon = "private_health";
+
+                        } else if (Objects.equals(dropboxvalue, "Holiday")) {
+                            blipIcon = "private_holidaysandcelebrations";
+
+                        } else if (Objects.equals(dropboxvalue, "Music")) {
+                            blipIcon = "private_music";
+
+                        } else if (Objects.equals(dropboxvalue, "Sports")) {
+                            blipIcon = "private_sportsandfitness";
+
+                        } else {
+                            blipIcon = "ic_launcher_round";
+                        }
+
+
+                        //Place Data
+
+                        Blips blips = new Blips(cursor_coordinate_latitude,
+                                cursor_coordinate_longitude,
+                                BlipName,
+                                userName,
+                                Details,
+                                blipIcon);
+                        Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
+
+                        Blipsref.child("private").push().setValue(blips);//Add to private blips
+
+                        dialog.cancel();
+                        ShowBlips();
+
+
+                    }
+
+
                 }
 
+            }
+        });
 
-                else if(privateradio.isChecked()){
+        mCancelBlip.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.cancel();
+
+            }
+        });
+    }
+
+    public void DeleteBlip(Marker marker) {
+        final LatLng coordinatetobedeleted = marker.getPosition();
+
+        BlipsPublic.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                        for (DataSnapshot datacollected : dataSnapshot.getChildren()) {
+
+                            String creator = datacollected.child("Creator").getValue(String.class);
+
+                            //We add this because firebase queries sucks
+                            if (datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude && creator.toLowerCase().contains(userName.toLowerCase())) {
+                                datacollected.getRef().removeValue();
+                                Toast.makeText(MainActivity.this, "Blip Deleted", Toast.LENGTH_SHORT).show();
+                            }
+
+
+                        }
+                    }
+
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.w("TodoApp", "getUser:onCancelled", databaseError.toException());
+                    }
+                });
+
+
+        BlipsPrivate.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+
+                        for (DataSnapshot datacollected : dataSnapshot.getChildren()) {
+                            String creator = datacollected.child("Creator").getValue(String.class);
+
+                            if (datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude && creator.toLowerCase().contains(userName.toLowerCase())) {
+                                datacollected.getRef().removeValue();
+                                Toast.makeText(MainActivity.this, "Blip Deleted", Toast.LENGTH_SHORT).show();
+                            }
+
+
+                        }
+                    }
+
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.w("TodoApp", "getUser:onCancelled", databaseError.toException());
+                    }
+                });
+
+    }
+
+    public void EditBlip(final Marker marker) {
+
+        final LatLng coordinatetobeupdated = marker.getPosition();
+
+        cursor_coordinate = new LatLng(coordinatetobeupdated.latitude, coordinatetobeupdated.longitude);// Set current click location to marker
+        cursor_coordinate_latitude = coordinatetobeupdated.latitude;
+        cursor_coordinate_longitude = coordinatetobeupdated.longitude;
+
+        AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
+        View mBlipAddView = getLayoutInflater().inflate(R.layout.edit_blip_details_popup, null);
+
+        mBlipName = mBlipAddView.findViewById(R.id.blipnameEt);
+        mDetails = mBlipAddView.findViewById(R.id.detailsEt);
+        Button mAddBlip = mBlipAddView.findViewById(R.id.addblip_button);
+        Button mCancelBlip = mBlipAddView.findViewById(R.id.cancelblip_button);
+        publicradio = mBlipAddView.findViewById(R.id.publicRadio);
+        privateradio = mBlipAddView.findViewById(R.id.privateRadio);
+        mySpinner = mBlipAddView.findViewById(R.id.iconsSpinner);
+
+
+        RadioGroup radioGroup = mBlipAddView.findViewById(R.id.groupRadio);
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (publicradio.isChecked()) {
+                    privateradio.setChecked(false);
+                    mySpinner.setAdapter(new MyCustomAdapterPublic(MainActivity.this, R.layout.row, CustomBlips));//Change to Public Spinnes
+
+                } else if (privateradio.isChecked()) {
+                    publicradio.setChecked(false);
+                    mySpinner.setAdapter(new MyCustomAdapterPrivate(MainActivity.this, R.layout.row, CustomBlips));//Change to Private Spinner
+
+                }
+
+                // checkedId is the RadioButton selected
+            }
+        });
+
+
+        mBuilder.setView(mBlipAddView);
+        final AlertDialog dialog = mBuilder.create();
+        dialog.show();
+
+        mAddBlip.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DeleteBlip(marker);
+                BlipName = mBlipName.getText().toString();
+
+                if (publicradio.isChecked()) {
+
+                    if (validateForm()) {
+
+                        Details = mDetails.getText().toString();
+                        String dropboxvalue = mySpinner.getSelectedItem().toString();
+
+
+                        if (Objects.equals(dropboxvalue, "Arts")) {
+                            blipIcon = "public_art";
+                        } else if (Objects.equals(dropboxvalue, "Transportation")) {
+                            blipIcon = "public_autoboatsair";
+
+                        } else if (Objects.equals(dropboxvalue, "Business")) {
+                            blipIcon = "public_business";
+
+                        } else if (Objects.equals(dropboxvalue, "Community")) {
+                            blipIcon = "public_community";
+
+                        } else if (Objects.equals(dropboxvalue, "Family & Education")) {
+                            blipIcon = "public_family";
+
+                        } else if (Objects.equals(dropboxvalue, "Fashion")) {
+                            blipIcon = "public_fashion";
+
+                        } else if (Objects.equals(dropboxvalue, "Media")) {
+                            blipIcon = "public_filmandmedia";
+
+                        } else if (Objects.equals(dropboxvalue, "Travel")) {
+                            blipIcon = "public_travelandoutdoor";
+
+                        } else if (Objects.equals(dropboxvalue, "Food")) {
+                            blipIcon = "public_foodanddrinks";
+
+                        } else if (Objects.equals(dropboxvalue, "Health")) {
+                            blipIcon = "public_health";
+
+                        } else if (Objects.equals(dropboxvalue, "Holiday")) {
+                            blipIcon = "public_holidaysandcelebrations";
+
+                        } else if (Objects.equals(dropboxvalue, "Music")) {
+                            blipIcon = "public_music";
+
+                        } else if (Objects.equals(dropboxvalue, "Sports")) {
+                            blipIcon = "public_sportsandfitness";
+
+                        } else {
+                            blipIcon = "ic_launcher_round";
+                        }
+
+
+                        //Place Data
+
+                        Blips blips = new Blips(cursor_coordinate_latitude,
+                                cursor_coordinate_longitude,
+                                BlipName,
+                                userName,
+                                Details,
+                                blipIcon);
+
+                        Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
+                        Blipsref.child("public").push().setValue(blips);//Add to public blips
+
+                        dialog.cancel();
+                        ShowBlips();
+                    }
+                } else if (privateradio.isChecked()) {
                     if (validateForm()) {
 
 
@@ -556,7 +820,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
 
 
-
                 }
 
             }
@@ -569,293 +832,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
-    }
-    public void DeleteBlip(Marker marker){
-        final LatLng coordinatetobedeleted =marker.getPosition();
-
-        BlipsPublic.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
-                new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-
-                        for (DataSnapshot datacollected: dataSnapshot.getChildren()) {
-
-                            String creator= datacollected.child("Creator").getValue(String.class);
-
-                            //We add this because firebase queries sucks
-                            if( datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude && creator.toLowerCase().contains(userName.toLowerCase()) ){
-                                datacollected.getRef().removeValue();
-                                Toast.makeText(MainActivity.this,"Blip Deleted", Toast.LENGTH_SHORT).show();
-                            }
-
-
-                        }
-                    }
-
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Log.w("TodoApp", "getUser:onCancelled", databaseError.toException());
-                    }
-                });
-
-
-        BlipsPrivate.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
-                new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-
-
-
-                        for (DataSnapshot datacollected: dataSnapshot.getChildren()) {
-                            String creator= datacollected.child("Creator").getValue(String.class);
-
-                            if( datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude && creator.toLowerCase().contains(userName.toLowerCase()) ){
-                                datacollected.getRef().removeValue();
-                                Toast.makeText(MainActivity.this,"Blip Deleted", Toast.LENGTH_SHORT).show();
-                            }
-
-
-                        }
-                    }
-
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Log.w("TodoApp", "getUser:onCancelled", databaseError.toException());
-                    }
-                });
-
-    }
-
-    public void EditBlip(final Marker marker){
-
-        final LatLng coordinatetobeupdated =marker.getPosition();
-
-        cursor_coordinate = new LatLng(coordinatetobeupdated.latitude, coordinatetobeupdated.longitude);// Set current click location to marker
-        cursor_coordinate_latitude= coordinatetobeupdated.latitude;
-        cursor_coordinate_longitude= coordinatetobeupdated.longitude;
-
-        AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
-        View mBlipAddView = getLayoutInflater().inflate(R.layout.edit_blip_details_popup,null);
-
-        mBlipName = mBlipAddView.findViewById(R.id.blipnameEt);
-        mDetails = mBlipAddView.findViewById(R.id.detailsEt);
-        Button mAddBlip = mBlipAddView.findViewById(R.id.addblip_button);
-        Button mCancelBlip = mBlipAddView.findViewById(R.id.cancelblip_button);
-        publicradio = mBlipAddView.findViewById(R.id.publicRadio);
-        privateradio = mBlipAddView.findViewById(R.id.privateRadio);
-        mySpinner = mBlipAddView.findViewById(R.id.iconsSpinner);
-
-
-
-        RadioGroup radioGroup =  mBlipAddView.findViewById(R.id.groupRadio);
-        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener()
-        {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                if(publicradio.isChecked()){
-                    privateradio.setChecked(false);
-                    mySpinner.setAdapter(new MyCustomAdapterPublic(MainActivity.this, R.layout.row, CustomBlips));//Change to Public Spinnes
-
-                }
-                else if(privateradio.isChecked()){
-                    publicradio.setChecked(false);
-                    mySpinner.setAdapter(new MyCustomAdapterPrivate(MainActivity.this, R.layout.row, CustomBlips));//Change to Private Spinner
-
-                }
-
-                // checkedId is the RadioButton selected
-            }
-        });
-
-
-
-
-        mBuilder.setView(mBlipAddView);
-        final AlertDialog dialog = mBuilder.create();
-        dialog.show();
-
-        mAddBlip.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                DeleteBlip(marker);
-                BlipName = mBlipName.getText().toString();
-
-                if(publicradio.isChecked()) {
-
-                    if (validateForm()) {
-
-                        Details = mDetails.getText().toString();
-                        String dropboxvalue = mySpinner.getSelectedItem().toString();
-
-
-                        if (Objects.equals(dropboxvalue, "Arts")) {
-                            blipIcon = "public_art";
-                        } else if (Objects.equals(dropboxvalue, "Transportation")) {
-                            blipIcon = "public_autoboatsair";
-
-                        } else if (Objects.equals(dropboxvalue, "Business")) {
-                            blipIcon = "public_business";
-
-                        } else if (Objects.equals(dropboxvalue, "Community")) {
-                            blipIcon = "public_community";
-
-                        } else if (Objects.equals(dropboxvalue, "Family & Education")) {
-                            blipIcon = "public_family";
-
-                        } else if (Objects.equals(dropboxvalue, "Fashion")) {
-                            blipIcon = "public_fashion";
-
-                        } else if (Objects.equals(dropboxvalue, "Media")) {
-                            blipIcon = "public_filmandmedia";
-
-                        } else if (Objects.equals(dropboxvalue, "Travel")) {
-                            blipIcon = "public_travelandoutdoor";
-
-                        } else if (Objects.equals(dropboxvalue, "Food")) {
-                            blipIcon = "public_foodanddrinks";
-
-                        } else if (Objects.equals(dropboxvalue, "Health")) {
-                            blipIcon = "public_health";
-
-                        } else if (Objects.equals(dropboxvalue, "Holiday")) {
-                            blipIcon = "public_holidaysandcelebrations";
-
-                        } else if (Objects.equals(dropboxvalue, "Music")) {
-                            blipIcon = "public_music";
-
-                        } else if (Objects.equals(dropboxvalue, "Sports")) {
-                            blipIcon = "public_sportsandfitness";
-
-                        } else {
-                            blipIcon = "ic_launcher_round";
-                        }
-
-
-                        //Place Data
-
-                        Blips blips = new Blips(cursor_coordinate_latitude,
-                                cursor_coordinate_longitude,
-                                BlipName,
-                                userName,
-                                Details,
-                                blipIcon);
-
-                        Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
-                        Blipsref.child("public").push().setValue(blips);//Add to public blips
-
-                        dialog.cancel();
-                        mMap.clear();
-                        ShowBlips();
-                    }
-                }
-
-
-                else if(privateradio.isChecked()){
-                    if (validateForm()) {
-
-
-                        Details = mDetails.getText().toString();
-                        String dropboxvalue = mySpinner.getSelectedItem().toString();
-
-
-                        if (Objects.equals(dropboxvalue, "Arts")) {//
-                            blipIcon = "private_art";
-                        } else if (Objects.equals(dropboxvalue, "Transportation")) {//
-                            blipIcon = "private_autoboatsair";
-
-                        } else if (Objects.equals(dropboxvalue, "Business")) {//
-                            blipIcon = "private_business";
-
-                        } else if (Objects.equals(dropboxvalue, "Community")) {//
-                            blipIcon = "private_community";
-
-                        } else if (Objects.equals(dropboxvalue, "Family & Education")) {//
-                            blipIcon = "private_family";
-
-                        } else if (Objects.equals(dropboxvalue, "Fashion")) {//
-                            blipIcon = "private_fashion";
-
-                        } else if (Objects.equals(dropboxvalue, "Media")) {//
-                            blipIcon = "private_filmandmedia";
-
-                        } else if (Objects.equals(dropboxvalue, "Travel")) {//
-                            blipIcon = "private_travelandoutdoor";
-
-                        } else if (Objects.equals(dropboxvalue, "Food")) {//
-                            blipIcon = "private_foodanddrinks";
-
-                        } else if (Objects.equals(dropboxvalue, "Health")) {//
-                            blipIcon = "private_health";
-
-                        } else if (Objects.equals(dropboxvalue, "Holiday")) {
-                            blipIcon = "private_holidaysandcelebrations";
-
-                        } else if (Objects.equals(dropboxvalue, "Music")) {
-                            blipIcon = "private_music";
-
-                        } else if (Objects.equals(dropboxvalue, "Sports")) {
-                            blipIcon = "private_sportsandfitness";
-
-                        } else {
-                            blipIcon = "ic_launcher_round";
-                        }
-
-
-                        //Place Data
-
-                        Blips blips = new Blips(cursor_coordinate_latitude,
-                                cursor_coordinate_longitude,
-                                BlipName,
-                                userName,
-                                Details,
-                                blipIcon);
-                          Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
-
-                            Blipsref.child("private").push().setValue(blips);//Add to private blips
-
-                              dialog.cancel();
-                              mMap.clear();
-                              ShowBlips();
-
-
-                    }
-
-
-
-                }
-
-            }
-        });
-
-        mCancelBlip.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dialog.cancel();
-
-            }
-        });
-
 
 
     }
 
     private void ShowBlips() {
+        mMap.clear();
         getFriendsList();
+
         Blipsref.addChildEventListener(new ChildEventListener() {
 
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
 
-                for (DataSnapshot snapm: dataSnapshot.getChildren()) {
+                for (DataSnapshot snapm : dataSnapshot.getChildren()) {
 
                     Double latitude = snapm.child("latitude").getValue(Double.class);
                     Double longitude = snapm.child("longitude").getValue(Double.class);
-                    String newBlipName= snapm.child("BlipName").getValue(String.class);
-                    String creator= snapm.child("Creator").getValue(String.class);
-                    String Details =snapm.child("Details").getValue(String.class);
-                    String blipIcon =snapm.child("Icon").getValue(String.class);
+                    String newBlipName = snapm.child("BlipName").getValue(String.class);
+                    String creator = snapm.child("Creator").getValue(String.class);
+                    String Details = snapm.child("Details").getValue(String.class);
+                    String blipIcon = snapm.child("Icon").getValue(String.class);
 
 
                     Blips blipsadded = new Blips(latitude,
@@ -866,11 +863,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             blipIcon);
 
 
-                    if(privatecheckbox.isChecked()&&
+                    if (privatecheckbox.isChecked() &&
                             blipIcon.toLowerCase().contains("private".toLowerCase())
-                            && (  creator.toLowerCase().contains(userName.toLowerCase())  ||   friendarraylist.contains(creator) )  )  {
-
-
+                            && (creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(creator))) {
 
 
                         categoryFilterPrivate(blipsadded);
@@ -879,7 +874,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
 
 
-                    if(publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase()) )  {
+                    if (publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase())) {
 
                         categoryFilterPublic(blipsadded);
 
@@ -891,23 +886,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
-                if(!search.isIconified()){
+                if (!search.isIconified()) {
                     Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
-                }
-                else {
+                } else {
 
-                    mMap.clear();//Clear Map
+
                     ShowBlips();//Go back load all blips again
                 }
             }
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                if(!search.isIconified()){
+                if (!search.isIconified()) {
                     Toast.makeText(MainActivity.this, "Searchbox still focused", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    mMap.clear();//Clear Map
+                } else {
+
                     ShowBlips();//Go back load all blips again
                 }
             }
@@ -924,105 +917,104 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
-    public void categoryFilterPrivate(Blips blipsadded){
+    public void categoryFilterPrivate(Blips blipsadded) {
 
-        if(checkboxArts.isChecked() &&  blipsadded.Icon.toLowerCase().contains("art".toLowerCase())  ){
+        if (checkboxArts.isChecked() && blipsadded.Icon.toLowerCase().contains("art".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if(checkboxBusiness.isChecked() && blipsadded.Icon.toLowerCase().contains("business".toLowerCase())  ){
+        if (checkboxBusiness.isChecked() && blipsadded.Icon.toLowerCase().contains("business".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if(checkboxCommunity.isChecked() && blipsadded.Icon.toLowerCase().contains("community".toLowerCase())  ){
+        if (checkboxCommunity.isChecked() && blipsadded.Icon.toLowerCase().contains("community".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if(checkboxFamily.isChecked() &&  blipsadded.Icon.toLowerCase().contains("family".toLowerCase())  ){
+        if (checkboxFamily.isChecked() && blipsadded.Icon.toLowerCase().contains("family".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if(checkboxFashion.isChecked() &&  blipsadded.Icon.toLowerCase().contains("fashion".toLowerCase())  ){
+        if (checkboxFashion.isChecked() && blipsadded.Icon.toLowerCase().contains("fashion".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if(checkboxFood.isChecked() &&  blipsadded.Icon.toLowerCase().contains("food".toLowerCase())  ){
+        if (checkboxFood.isChecked() && blipsadded.Icon.toLowerCase().contains("food".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if(checkboxHealth.isChecked() &&  blipsadded.Icon.toLowerCase().contains("health".toLowerCase())  ){
+        if (checkboxHealth.isChecked() && blipsadded.Icon.toLowerCase().contains("health".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if(checkboxHoliday.isChecked() &&  blipsadded.Icon.toLowerCase().contains("holiday".toLowerCase())  ){
+        if (checkboxHoliday.isChecked() && blipsadded.Icon.toLowerCase().contains("holiday".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if(checkboxMedia.isChecked() &&  blipsadded.Icon.toLowerCase().contains("media".toLowerCase())  ){
+        if (checkboxMedia.isChecked() && blipsadded.Icon.toLowerCase().contains("media".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if(checkboxTransportation.isChecked() && blipsadded.Icon.toLowerCase().contains("auto".toLowerCase())  ){
+        if (checkboxTransportation.isChecked() && blipsadded.Icon.toLowerCase().contains("auto".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if(checkboxTravel.isChecked() && blipsadded.Icon.toLowerCase().contains("travel".toLowerCase())  ){
+        if (checkboxTravel.isChecked() && blipsadded.Icon.toLowerCase().contains("travel".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if(checkboxSports.isChecked() &&  blipsadded.Icon.toLowerCase().contains("sports".toLowerCase())  ){
+        if (checkboxSports.isChecked() && blipsadded.Icon.toLowerCase().contains("sports".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if(checkboxMusic.isChecked() &&  blipsadded.Icon.toLowerCase().contains("music".toLowerCase())  ){
+        if (checkboxMusic.isChecked() && blipsadded.Icon.toLowerCase().contains("music".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-
-    }
-    public void categoryFilterPublic(Blips blipsadded){
-        if(checkboxArts.isChecked() &&  blipsadded.Icon.toLowerCase().contains("art".toLowerCase())  ){
-            PlaceMarker(blipsadded);
-        }
-        if(checkboxBusiness.isChecked() &&  blipsadded.Icon.toLowerCase().contains("business".toLowerCase())  ){
-            PlaceMarker(blipsadded);
-        }
-        if(checkboxCommunity.isChecked() && blipsadded.Icon.toLowerCase().contains("community".toLowerCase())  ){
-            PlaceMarker(blipsadded);
-        }
-        if(checkboxFamily.isChecked() && blipsadded.Icon.toLowerCase().contains("family".toLowerCase())  ){
-            PlaceMarker(blipsadded);
-        }
-        if(checkboxFashion.isChecked() &&  blipsadded.Icon.toLowerCase().contains("fashion".toLowerCase())  ){
-            PlaceMarker(blipsadded);
-        }
-        if(checkboxFood.isChecked() &&  blipsadded.Icon.toLowerCase().contains("food".toLowerCase())  ){
-            PlaceMarker(blipsadded);
-        }
-        if(checkboxHealth.isChecked() &&  blipsadded.Icon.toLowerCase().contains("health".toLowerCase())  ){
-            PlaceMarker(blipsadded);
-        }
-        if(checkboxHoliday.isChecked() &&  blipsadded.Icon.toLowerCase().contains("holiday".toLowerCase())  ){
-            PlaceMarker(blipsadded);
-        }
-        if(checkboxMedia.isChecked() &&  blipsadded.Icon.toLowerCase().contains("media".toLowerCase())  ){
-            PlaceMarker(blipsadded);
-        }
-        if(checkboxTransportation.isChecked() && blipsadded.Icon.toLowerCase().contains("auto".toLowerCase())  ){
-            PlaceMarker(blipsadded);
-        }
-        if(checkboxTravel.isChecked() &&  blipsadded.Icon.toLowerCase().contains("travel".toLowerCase())  ){
-            PlaceMarker(blipsadded);
-        }
-        if(checkboxSports.isChecked() &&  blipsadded.Icon.toLowerCase().contains("sports".toLowerCase())  ){
-            PlaceMarker(blipsadded);
-        }
-        if(checkboxMusic.isChecked() &&  blipsadded.Icon.toLowerCase().contains("music".toLowerCase())  ){
-            PlaceMarker(blipsadded);
-        }
-
-
-
 
     }
-    private void getFriendsList(){
-            friendarraylist= new ArrayList<String>();
+
+    public void categoryFilterPublic(Blips blipsadded) {
+        if (checkboxArts.isChecked() && blipsadded.Icon.toLowerCase().contains("art".toLowerCase())) {
+            PlaceMarker(blipsadded);
+        }
+        if (checkboxBusiness.isChecked() && blipsadded.Icon.toLowerCase().contains("business".toLowerCase())) {
+            PlaceMarker(blipsadded);
+        }
+        if (checkboxCommunity.isChecked() && blipsadded.Icon.toLowerCase().contains("community".toLowerCase())) {
+            PlaceMarker(blipsadded);
+        }
+        if (checkboxFamily.isChecked() && blipsadded.Icon.toLowerCase().contains("family".toLowerCase())) {
+            PlaceMarker(blipsadded);
+        }
+        if (checkboxFashion.isChecked() && blipsadded.Icon.toLowerCase().contains("fashion".toLowerCase())) {
+            PlaceMarker(blipsadded);
+        }
+        if (checkboxFood.isChecked() && blipsadded.Icon.toLowerCase().contains("food".toLowerCase())) {
+            PlaceMarker(blipsadded);
+        }
+        if (checkboxHealth.isChecked() && blipsadded.Icon.toLowerCase().contains("health".toLowerCase())) {
+            PlaceMarker(blipsadded);
+        }
+        if (checkboxHoliday.isChecked() && blipsadded.Icon.toLowerCase().contains("holiday".toLowerCase())) {
+            PlaceMarker(blipsadded);
+        }
+        if (checkboxMedia.isChecked() && blipsadded.Icon.toLowerCase().contains("media".toLowerCase())) {
+            PlaceMarker(blipsadded);
+        }
+        if (checkboxTransportation.isChecked() && blipsadded.Icon.toLowerCase().contains("auto".toLowerCase())) {
+            PlaceMarker(blipsadded);
+        }
+        if (checkboxTravel.isChecked() && blipsadded.Icon.toLowerCase().contains("travel".toLowerCase())) {
+            PlaceMarker(blipsadded);
+        }
+        if (checkboxSports.isChecked() && blipsadded.Icon.toLowerCase().contains("sports".toLowerCase())) {
+            PlaceMarker(blipsadded);
+        }
+        if (checkboxMusic.isChecked() && blipsadded.Icon.toLowerCase().contains("music".toLowerCase())) {
+            PlaceMarker(blipsadded);
+        }
+
+
+    }
+
+    private void getFriendsList() {
+        friendarraylist = new ArrayList<String>();
 
         UsersEmailFriends.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
 
-                String x= dataSnapshot.getKey().toString();
+                String x = dataSnapshot.getKey().toString();
                 friendarraylist.add(x);
-
 
 
             }
@@ -1049,7 +1041,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-
     }
 
     private boolean validateForm() {
@@ -1064,14 +1055,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-
         return valid;
     }
-    private boolean validateAddFriend(){
+
+    private boolean validateAddFriend() {
         boolean valid = true;
 
 
-        if (TextUtils.isEmpty(friendrequestemail) || friendrequestemail.length() < 5  ){
+        if (TextUtils.isEmpty(friendrequestemail) || friendrequestemail.length() < 5) {
             friendemailEt.setError("Required.");
             valid = false;
         } else {
@@ -1079,20 +1070,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-
         return valid;
 
     }
+
     private static String removecom(String str) {
-        if(str==null){
+        if (str == null) {
             return null;
-        }
-        else{
+        } else {
             return str.substring(0, str.length() - 4);
         }
 
     }
-    public void blipsupdateontextchange(final String query){
+
+    public void blipsupdateontextchange(final String query) {
         mMap.clear();
 
         BlipsPublic.orderByChild("BlipName").addListenerForSingleValueEvent(new ValueEventListener() {
@@ -1105,10 +1096,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     Double latitude = snapm.child("latitude").getValue(Double.class);
                     Double longitude = snapm.child("longitude").getValue(Double.class);
-                    String newBlipName= snapm.child("BlipName").getValue(String.class);
-                    String creator= snapm.child("Creator").getValue(String.class);
-                    String Details =snapm.child("Details").getValue(String.class);
-                    String blipIcon =snapm.child("Icon").getValue(String.class);
+                    String newBlipName = snapm.child("BlipName").getValue(String.class);
+                    String creator = snapm.child("Creator").getValue(String.class);
+                    String Details = snapm.child("Details").getValue(String.class);
+                    String blipIcon = snapm.child("Icon").getValue(String.class);
 
                     Blips blipsadded = new Blips(latitude,
                             longitude,
@@ -1117,8 +1108,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             Details,
                             blipIcon);
 
-                    if(newBlipName.toUpperCase().startsWith(   query.toUpperCase()  )    )
-                    {
+                    if (newBlipName.toUpperCase().startsWith(query.toUpperCase())) {
                         PlaceMarker(blipsadded);
                     }
 
@@ -1136,7 +1126,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         BlipsPrivate.orderByChild("BlipName").addListenerForSingleValueEvent(new ValueEventListener() {
 
 
-
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 
@@ -1145,10 +1134,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     Double latitude = snapm.child("latitude").getValue(Double.class);
                     Double longitude = snapm.child("longitude").getValue(Double.class);
-                    String newBlipName= snapm.child("BlipName").getValue(String.class);
-                    String creator= snapm.child("Creator").getValue(String.class);
-                    String Details =snapm.child("Details").getValue(String.class);
-                    String blipIcon =snapm.child("Icon").getValue(String.class);
+                    String newBlipName = snapm.child("BlipName").getValue(String.class);
+                    String creator = snapm.child("Creator").getValue(String.class);
+                    String Details = snapm.child("Details").getValue(String.class);
+                    String blipIcon = snapm.child("Icon").getValue(String.class);
 
                     Blips blipsadded = new Blips(latitude,
                             longitude,
@@ -1157,8 +1146,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             Details,
                             blipIcon);
 
-                    if(newBlipName.toUpperCase().startsWith(query.toUpperCase()) && (creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(creator)   ))
-                    {
+                    if (newBlipName.toUpperCase().startsWith(query.toUpperCase()) && (creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(creator))) {
 
                         PlaceMarker(blipsadded);
 
@@ -1174,15 +1162,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
 
-
         });
     }
-    public void checkboxlisteners(){
+
+    public void checkboxlisteners() {
         publiccheckbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1192,7 +1179,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1202,7 +1189,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1211,7 +1198,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1221,7 +1208,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1231,7 +1218,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1240,7 +1227,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1250,7 +1237,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1260,7 +1247,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1269,7 +1256,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1279,7 +1266,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1289,7 +1276,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1298,7 +1285,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1307,7 +1294,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1316,7 +1303,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+                ShowGPSLocation();
                 ShowBlips();
                 //handle click
             }
@@ -1325,7 +1312,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
 
-                mMap.clear();
+
                 ShowBlips();
                 //handle click
             }
@@ -1336,15 +1323,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         getDeviceLocation();
+
+
+
+
     }
+
     @Override
     public void onConnectionSuspended(int i) {
         Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show();
     }
+
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
@@ -1357,13 +1351,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
             return;
-        }
-        else {
+        } else {
             Toast.makeText(this, "Error: Permission not Granted", Toast.LENGTH_SHORT).show();
         }
         mMap.setMyLocationEnabled(true);
 
     }
+
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -1384,6 +1378,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         getMenuInflater().inflate(R.menu.setting_top_right, menu);
         return true;
     }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -1399,12 +1394,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         return super.onOptionsItemSelected(item);
     }
+
     @SuppressWarnings("StatementWithEmptyBody")
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         //TODO GET NOTIF Count then then display to nav view text
-
 
 
         // Handle navigation view item clicks here.
@@ -1414,11 +1409,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SendFriendRequest();
 
 
-
         } else if (id == R.id.nav_notifications) {
 
             ShowFriendRequest();
-
 
 
         } else if (id == R.id.nav_friendlist) {
@@ -1442,7 +1435,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
-    private class MyCustomAdapterPublic extends ArrayAdapter<String>{
+
+    public Context getActivity() {
+
+        return MainActivity.this;
+    }
+
+    private class MyCustomAdapterPublic extends ArrayAdapter<String> {
 
         MyCustomAdapterPublic(Context context, int textViewResourceId,
                               String[] objects) {
@@ -1468,62 +1467,49 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 //return super.getView(position, convertView, parent);
 
-            LayoutInflater inflater=getLayoutInflater();
-            View row=inflater.inflate(R.layout.row, parent, false);
-            TextView label=row.findViewById(R.id.weekofday);
+            LayoutInflater inflater = getLayoutInflater();
+            View row = inflater.inflate(R.layout.row, parent, false);
+            TextView label = row.findViewById(R.id.weekofday);
             label.setText(CustomBlips[position]);
 
-            ImageView icon=row.findViewById(R.id.icon);
+            ImageView icon = row.findViewById(R.id.icon);
 
 
-            if (Objects.equals(CustomBlips[position], "Arts")){
+            if (Objects.equals(CustomBlips[position], "Arts")) {
                 icon.setImageResource(R.mipmap.public_art);
-            }
-            else if(Objects.equals(CustomBlips[position], "Transportation")){
+            } else if (Objects.equals(CustomBlips[position], "Transportation")) {
                 icon.setImageResource(R.mipmap.public_autoboatsair);
-            }
-            else if(Objects.equals(CustomBlips[position], "Business")){
+            } else if (Objects.equals(CustomBlips[position], "Business")) {
                 icon.setImageResource(R.mipmap.public_business);
-            }
-            else if(Objects.equals(CustomBlips[position], "Community")){
+            } else if (Objects.equals(CustomBlips[position], "Community")) {
                 icon.setImageResource(R.mipmap.public_community);
-            }
-            else if(Objects.equals(CustomBlips[position], "Family & Education")){
+            } else if (Objects.equals(CustomBlips[position], "Family & Education")) {
                 icon.setImageResource(R.mipmap.public_family);
-            }
-            else if(Objects.equals(CustomBlips[position], "Fashion")){
+            } else if (Objects.equals(CustomBlips[position], "Fashion")) {
                 icon.setImageResource(R.mipmap.public_fashion);
-            }
-            else if(Objects.equals(CustomBlips[position], "Media")){
+            } else if (Objects.equals(CustomBlips[position], "Media")) {
                 icon.setImageResource(R.mipmap.public_filmandmedia);
-            }
-            else if(Objects.equals(CustomBlips[position], "Food")){
+            } else if (Objects.equals(CustomBlips[position], "Food")) {
                 icon.setImageResource(R.mipmap.public_foodanddrinks);
-            }
-            else if(Objects.equals(CustomBlips[position], "Health")){
+            } else if (Objects.equals(CustomBlips[position], "Health")) {
                 icon.setImageResource(R.mipmap.public_health);
-            }
-            else if(Objects.equals(CustomBlips[position], "Holiday")){
+            } else if (Objects.equals(CustomBlips[position], "Holiday")) {
                 icon.setImageResource(R.mipmap.public_holidaysandcelebrations);
-            }
-            else if(Objects.equals(CustomBlips[position], "Music")){
+            } else if (Objects.equals(CustomBlips[position], "Music")) {
                 icon.setImageResource(R.mipmap.public_music);
-            }
-            else if(Objects.equals(CustomBlips[position], "Sports")){
+            } else if (Objects.equals(CustomBlips[position], "Sports")) {
                 icon.setImageResource(R.mipmap.public_sportsandfitness);
-            }
-            else if(Objects.equals(CustomBlips[position], "Travel")){
+            } else if (Objects.equals(CustomBlips[position], "Travel")) {
                 icon.setImageResource(R.mipmap.public_travelandoutdoor);
-            }
-
-            else{
+            } else {
                 icon.setImageResource(R.mipmap.ic_launcher_round);
             }
 
             return row;
         }
     }
-    private class MyCustomAdapterPrivate extends ArrayAdapter<String>{
+
+    private class MyCustomAdapterPrivate extends ArrayAdapter<String> {
 
         MyCustomAdapterPrivate(Context context, int textViewResourceId,
                                String[] objects) {
@@ -1548,65 +1534,51 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         View getCustomView(int position, ViewGroup parent) {
 
 
-            LayoutInflater inflater=getLayoutInflater();
-            View row=inflater.inflate(R.layout.row, parent, false);
-            TextView label=row.findViewById(R.id.weekofday);
+            LayoutInflater inflater = getLayoutInflater();
+            View row = inflater.inflate(R.layout.row, parent, false);
+            TextView label = row.findViewById(R.id.weekofday);
             label.setText(CustomBlips[position]);
 
-            ImageView icon=row.findViewById(R.id.icon);
+            ImageView icon = row.findViewById(R.id.icon);
 
 
-            if (Objects.equals(CustomBlips[position], "Arts")){
+            if (Objects.equals(CustomBlips[position], "Arts")) {
                 icon.setImageResource(R.mipmap.private_art);
-            }
-            else if(Objects.equals(CustomBlips[position], "Transportation")){
+            } else if (Objects.equals(CustomBlips[position], "Transportation")) {
                 icon.setImageResource(R.mipmap.private_autoboatsair);
-            }
-            else if(Objects.equals(CustomBlips[position], "Business")){
+            } else if (Objects.equals(CustomBlips[position], "Business")) {
                 icon.setImageResource(R.mipmap.private_business);
-            }
-            else if(Objects.equals(CustomBlips[position], "Community")){
+            } else if (Objects.equals(CustomBlips[position], "Community")) {
                 icon.setImageResource(R.mipmap.private_community);
-            }
-            else if(Objects.equals(CustomBlips[position], "Family & Education")){
+            } else if (Objects.equals(CustomBlips[position], "Family & Education")) {
                 icon.setImageResource(R.mipmap.private_family);
-            }
-            else if(Objects.equals(CustomBlips[position], "Fashion")){
+            } else if (Objects.equals(CustomBlips[position], "Fashion")) {
                 icon.setImageResource(R.mipmap.private_fashion);
-            }
-            else if(Objects.equals(CustomBlips[position], "Media")){
+            } else if (Objects.equals(CustomBlips[position], "Media")) {
                 icon.setImageResource(R.mipmap.private_filmandmedia);
-            }
-            else if(Objects.equals(CustomBlips[position], "Food")){
+            } else if (Objects.equals(CustomBlips[position], "Food")) {
                 icon.setImageResource(R.mipmap.private_foodanddrinks);
-            }
-            else if(Objects.equals(CustomBlips[position], "Health")){
+            } else if (Objects.equals(CustomBlips[position], "Health")) {
                 icon.setImageResource(R.mipmap.private_health);
-            }
-            else if(Objects.equals(CustomBlips[position], "Holiday")){
+            } else if (Objects.equals(CustomBlips[position], "Holiday")) {
                 icon.setImageResource(R.mipmap.private_holidaysandcelebrations);
-            }
-            else if(Objects.equals(CustomBlips[position], "Music")){
+            } else if (Objects.equals(CustomBlips[position], "Music")) {
                 icon.setImageResource(R.mipmap.private_music);
-            }
-            else if(Objects.equals(CustomBlips[position], "Sports")){
+            } else if (Objects.equals(CustomBlips[position], "Sports")) {
                 icon.setImageResource(R.mipmap.private_sportsandfitness);
-            }
-            else if(Objects.equals(CustomBlips[position], "Travel")){
+            } else if (Objects.equals(CustomBlips[position], "Travel")) {
                 icon.setImageResource(R.mipmap.private_travelandoutdoor);
-            }
-
-            else{
+            } else {
                 icon.setImageResource(R.mipmap.ic_launcher_round);
             }
 
             return row;
         }
     }
+
     private class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
         private ArrayList<String> list = new ArrayList<String>();
         private Context context;
-
 
 
         public FriendRequestsAdapter(ArrayList<String> list, Context context) {
@@ -1648,31 +1620,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Button deleteBtn = view.findViewById(R.id.delete_btn);
             Button addBtn = view.findViewById(R.id.add_btn);
 
-            addBtn.setOnClickListener(new View.OnClickListener(){
+            addBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {//TODO ADD BUTTON
-                    String emailtobeadded =  list.get(position);
+                    String emailtobeadded = list.get(position);
                     list.remove(position); //or some other task
                     DeleteFriendNotif(emailtobeadded);
                     Users.child(userName).child("Friends").child(emailtobeadded).setValue(1);// Add to user's blips
                     Users.child(emailtobeadded).child("Friends").child(userName).setValue(1);
 
                     notifyDataSetChanged();
-                    item_notifications.setTitle("Friend Requests    "+list.size());
+                    item_notifications.setTitle("Friend Requests    " + list.size());
                     ShowBlips();
                 }
             });
 
-            deleteBtn.setOnClickListener(new View.OnClickListener(){
+            deleteBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {//TODO DELETE BUTTON
                     //do something
 
-                    String emailtobedeleted =  list.get(position);
+                    String emailtobedeleted = list.get(position);
                     list.remove(position); //or some other task
                     notifyDataSetChanged();
                     DeleteFriendNotif(emailtobedeleted);
-                    item_notifications.setTitle("Friend Requests    "+list.size());
+                    item_notifications.setTitle("Friend Requests    " + list.size());
                     ShowBlips();
 
 
@@ -1684,13 +1656,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-
     }
 
     private void SendFriendRequest() {
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
-        View mFriendAddView = getLayoutInflater().inflate(R.layout.add_friend,null);
+        View mFriendAddView = getLayoutInflater().inflate(R.layout.add_friend, null);
 
         friendemailEt = mFriendAddView.findViewById(R.id.add_friend_et);
         Button AddFriend = mFriendAddView.findViewById(R.id.add_friend_btn);
@@ -1699,19 +1670,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final AlertDialog dialog = mBuilder.create();
         dialog.show();
 
-       //Check if
+        //Check if
         AddFriend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                friendrequestemail=removecom(friendemailEt.getText().toString());
-                if( validateAddFriend()){
+                friendrequestemail = removecom(friendemailEt.getText().toString());
+                if (validateAddFriend()) {
 
-                    Users.addListenerForSingleValueEvent(new  ValueEventListener() {
+                    Users.addListenerForSingleValueEvent(new ValueEventListener() {
 
 
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-
 
 
                             if (dataSnapshot.hasChild(friendrequestemail)) {
@@ -1721,9 +1691,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     Toast.makeText(MainActivity.this, "Friend Request Already Sent", Toast.LENGTH_SHORT).show();
 
 
-                                }
-
-                                else {
+                                } else {
                                     Users.child(friendrequestemail).child("FriendRequests").child(userName).child(userName).setValue(1);// Add to user's blips
                                     Toast.makeText(MainActivity.this, "Friend Request Sent", Toast.LENGTH_SHORT).show();
                                     dialog.cancel();
@@ -1732,9 +1700,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 }
 
 
-                            }
-
-                            else{
+                            } else {
                                 Toast.makeText(MainActivity.this, "User does not exist", Toast.LENGTH_SHORT).show();
                                 friendemailEt.setText(null);
 
@@ -1748,11 +1714,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         }
                     });
-
-
-
-
-
 
 
                 }
@@ -1769,13 +1730,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
-    public void ShowFriendRequestCount(){
+
+    public void ShowFriendRequestCount() {
 
         UsersEmailFriendRequests.addChildEventListener(new ChildEventListener() {
 
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-                String y= dataSnapshot.getKey().toString();
+                String y = dataSnapshot.getKey().toString();
                 friendrequestlist.add(y);
                 item_notifications.setTitle("Friend Requests    " + friendrequestlist.size());
 
@@ -1805,16 +1767,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-
-
     }
 
-    public void ShowFriendRequest(){
+    public void ShowFriendRequest() {
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
 
-        View mShowFriendAddView = getLayoutInflater().inflate(R.layout.x,null);
-        lView =  mShowFriendAddView.findViewById(R.id.notifListview);
+        View mShowFriendAddView = getLayoutInflater().inflate(R.layout.x, null);
+        lView = mShowFriendAddView.findViewById(R.id.notifListview);
 
         mBuilder.setView(mShowFriendAddView);
         AlertDialog dialogfriendrequest = mBuilder.create();
@@ -1825,7 +1785,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    public void DeleteFriendNotif(String emailtobedeleted){
+    public void DeleteFriendNotif(String emailtobedeleted) {
 
 
         UsersEmailFriendRequests.orderByChild(emailtobedeleted).equalTo(1).addListenerForSingleValueEvent(
@@ -1833,7 +1793,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
 
-                        for (DataSnapshot datacollected: dataSnapshot.getChildren()) {
+                        for (DataSnapshot datacollected : dataSnapshot.getChildren()) {
 
                             datacollected.getRef().removeValue();
 
@@ -1847,22 +1807,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 });
 
 
-
-
     }
 
-    private void addPulsatingEffect(final LatLng pulseLatlng){
-        if(lastPulseAnimator != null){
+    private void addPulsatingEffect(final LatLng pulseLatlng) {
+        if (lastPulseAnimator != null) {
             lastPulseAnimator.cancel();
-            Log.d("onLocationUpdated: ","cancelled" );
+            Log.d("onLocationUpdated: ", "cancelled");
         }
-        if(lastUserCircle != null)
+        if (lastUserCircle != null)
             lastUserCircle.setCenter(pulseLatlng);
 
-        lastPulseAnimator = valueAnimate( pulseDuration, new ValueAnimator.AnimatorUpdateListener() {
+        lastPulseAnimator = valueAnimate(pulseDuration, new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                if(lastUserCircle != null)
+                if (lastUserCircle != null)
                     lastUserCircle.setRadius((Float) animation.getAnimatedValue());
                 else {
                     lastUserCircle = mMap.addCircle(new CircleOptions()
@@ -1875,9 +1833,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
     }
-    protected ValueAnimator valueAnimate(long duration, ValueAnimator.AnimatorUpdateListener updateListener){
-        Log.d( "valueAnimate: ", "called");
-        ValueAnimator va = ValueAnimator.ofFloat(0,1000);
+
+    protected ValueAnimator valueAnimate(long duration, ValueAnimator.AnimatorUpdateListener updateListener) {
+        Log.d("valueAnimate: ", "called");
+        ValueAnimator va = ValueAnimator.ofFloat(0, 1000);
         va.setDuration(duration);
         va.addUpdateListener(updateListener);
         va.setRepeatCount(ValueAnimator.INFINITE);
@@ -1887,23 +1846,93 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return va;
     }
 
+//TODO VIEW FRIENDS LIST
+
+
+    public void locationListen() {
+
+        LocationListener locationListener = new android.location.LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+
+                double latitude = location.getLatitude();
+                double longitude = location.getLongitude();
+
+                liveGPSEmail.child("longitude").setValue(longitude);
+                liveGPSEmail.child("latitude").setValue(latitude);
+
+
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
+
+            }
+        };
+
+        LocationManager locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            return;
+        }
+
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+    }
+
+    public void ShowGPSLocation() {
+
+       liveGPS.addValueEventListener(new ValueEventListener(){
+
+
+           @Override
+           public void onDataChange(DataSnapshot dataSnapshot) {
+                  mMap.clear();
+                  ShowBlips();
+
+
+               for (DataSnapshot snapm : dataSnapshot.getChildren()) {
+
+               Double liveGPSlong = snapm.child("longitude").getValue(Double.class);
+               Double liveGPSlat = snapm.child("latitude").getValue(Double.class);
+
+
+                   try {
+                       LatLng x = new LatLng(liveGPSlat, liveGPSlong);
+                       gpsmarker =  mMap.addMarker(new MarkerOptions() // Set Marker
+                               .position(x).icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_gps)));
+                   } catch (NullPointerException e) {
+                       locationListen();
+                   }
 
 
 
 
+               }
 
 
+           }
+
+           @Override
+           public void onCancelled(DatabaseError databaseError) {
+
+           }
+       });
 
 
-
-
-
-
-
+    }
 
 
 }
-
-
-
 
