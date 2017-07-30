@@ -31,6 +31,7 @@ import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
@@ -39,6 +40,7 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.SearchView;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -153,6 +155,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private ValueAnimator lastPulseAnimator;
     LatLng pulseLatlng;
     Marker gpsmarker;
+    Switch showGPSToggle;
 
 
     @Override
@@ -164,6 +167,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         DeclareThings();
         ShowFriendRequestCount();
+        showGPSToggle = (Switch) findViewById(R.id.showgpstoggle);
+        showGPSToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(!showGPSToggle.isChecked()){
+                    liveGPSEmail.child("longitude").setValue(null);
+                    liveGPSEmail.child("latitude").setValue(null);
+                }
+
+            }
+        });
 
 
         search = (SearchView) findViewById(R.id.searchView);
@@ -1857,9 +1870,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 double latitude = location.getLatitude();
                 double longitude = location.getLongitude();
+               if(showGPSToggle.isChecked()){
+                   liveGPSEmail.child("longitude").setValue(longitude);
+                   liveGPSEmail.child("latitude").setValue(latitude);
 
-                liveGPSEmail.child("longitude").setValue(longitude);
-                liveGPSEmail.child("latitude").setValue(latitude);
+               }
+               else{
+                   liveGPSEmail.child("longitude").setValue(null);
+                   liveGPSEmail.child("latitude").setValue(null);
+
+               }
 
 
             }
