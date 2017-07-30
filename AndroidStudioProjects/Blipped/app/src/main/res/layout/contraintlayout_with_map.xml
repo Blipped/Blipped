@@ -233,13 +233,15 @@
 
     <Switch
         android:id="@+id/showgpstoggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="109dp"
+        android:layout_height="15dp"
         android:layout_marginRight="0dp"
+        android:layout_marginTop="80dp"
         android:text="Show GPS"
+        android:textColor="@android:color/background_light"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="80dp" />
+        tools:layout_editor_absoluteX="275dp" />
 
 
 </android.support.constraint.ConstraintLayout>
