@@ -167,6 +167,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.sidebar);
         friendarraylist = new ArrayList<String>();
         friendrequestlist = new ArrayList<String>();
+        getFriendsList();
 
         DeclareThings();
         ShowFriendRequestCount();
@@ -891,7 +892,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void ShowBlips() {
         mMap.clear();
-        getFriendsList();
+
 
         Blipsref.addChildEventListener(new ChildEventListener() {
 
@@ -1068,7 +1069,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                 String x = dataSnapshot.getKey().toString();
-                friendarraylist.add(x);
+                if(!friendarraylist.contains(x)){
+                    friendarraylist.add(x);
+                }
+
 
 
             }
@@ -1474,6 +1478,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         } else if (id == R.id.nav_friendlist) {
             //TODO Friend List
+            ShowFriendList();
 
         } else if (id == R.id.nav_manage) {
 
@@ -2030,9 +2035,104 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         AlertDialog dialogfriendrequest = mBuilder.create();
 
         dialogfriendrequest.show();
-        FriendRequestsAdapter adapter = new FriendRequestsAdapter(friendrequestlist, MainActivity.this);
+        FriendListAdapter adapter = new FriendListAdapter(friendarraylist, MainActivity.this);
         lView.setAdapter(adapter);
 
     }
+
+    private class FriendListAdapter extends BaseAdapter implements ListAdapter {
+        private ArrayList<String> list1 = new ArrayList<String>();
+        private Context context;
+
+
+        public FriendListAdapter(ArrayList<String> list1, Context context) {
+            this.list1 = list1;
+            this.context = context;
+        }
+
+        @Override
+        public int getCount() {
+            return list1.size();
+        }
+
+        @Override
+        public Object getItem(int pos) {
+            return list1.get(pos);
+        }
+
+        @Override
+        public long getItemId(int pos) {
+            return 0;
+            //just return 0 if your list items do not have an Id variable.
+        }
+
+        @Override
+        public View getView(final int position, View convertView, final ViewGroup parent) {
+            View view = convertView;
+            if (view == null ) {
+                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                view = inflater.inflate(R.layout.getfriendlistbuttonsconstraint, null);
+
+
+            }
+
+            //Handle TextView and display string from your list
+            final TextView listItemText1 = view.findViewById(R.id.list_item_string1);
+            listItemText1.setText(list1.get(position));
+
+            //Handle buttons and add onClickListeners
+            Button deleteBtn = view.findViewById(R.id.delete_btn);
+
+
+
+            deleteBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {//TODO DELETE BUTTON
+                    //do something
+
+                    String friendtobedeleted = list1.get(position);
+                    list1.remove(position); //or some other task
+                    notifyDataSetChanged();
+                    DeleteFriend(friendtobedeleted);
+                    Users.child(userName).child("Friends").child(friendtobedeleted).setValue(null);// Add to user's blips
+                    Users.child(friendtobedeleted).child("Friends").child(userName).setValue(null);
+                    ShowBlips();
+
+
+                }
+            });
+
+
+            return view;
+        }
+
+
+    }
+
+    public void DeleteFriend(String friendtobedeleted) {
+
+
+        UsersEmailFriends.orderByChild(friendtobedeleted).equalTo(1).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                        for (DataSnapshot datacollected : dataSnapshot.getChildren()) {
+
+                            datacollected.getRef().removeValue();
+
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.w("TodoApp", "getUser:onCancelled", databaseError.toException());
+                    }
+                });
+
+
+    }
+
+
 }
 
