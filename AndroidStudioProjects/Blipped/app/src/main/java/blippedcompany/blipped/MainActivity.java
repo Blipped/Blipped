@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -22,6 +23,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -34,6 +36,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RadioButton;
@@ -392,8 +395,43 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.addMarker(new MarkerOptions() // Set Marker
                 .position(newBlipCoordinates)
                 .title(blipsadded.BlipName)
-                .snippet(blipsadded.Creator)
+                .snippet("Creator: "+blipsadded.Creator +"\n"
+                        +"Details: "+"\n"
+                        +blipsadded.Details)
                 .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
+
+
+        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+
+            @Override
+            public View getInfoWindow(Marker arg0) {
+                return null;
+            }
+
+            @Override
+            public View getInfoContents(Marker marker) {
+                Context context = getApplicationContext();
+
+                LinearLayout info = new LinearLayout(context);
+                info.setOrientation(LinearLayout.VERTICAL);
+
+
+                TextView title = new TextView(context);
+                title.setTextColor(Color.BLACK);
+                title.setGravity(Gravity.CENTER);
+                title.setTypeface(null, Typeface.BOLD);
+                title.setText(marker.getTitle());
+
+                TextView snippet = new TextView(context);
+                snippet.setTextColor(Color.GRAY);
+                snippet.setText(marker.getSnippet());
+
+                info.addView(title);
+                info.addView(snippet);
+
+                return info;
+            }
+        });
     }
 
     public void AddBlip(LatLng point) {
@@ -499,7 +537,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 BlipName,
                                 userName,
                                 Details,
-                                blipIcon);
+                                blipIcon,null,null,null);
                         Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
                         Blipsref.child("public").push().setValue(blips);//Add to public blips
 
@@ -566,7 +604,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 BlipName,
                                 userName,
                                 Details,
-                                blipIcon);
+                                blipIcon,null,null,null);
                         Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
 
                         Blipsref.child("private").push().setValue(blips);//Add to private blips
@@ -756,7 +794,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 BlipName,
                                 userName,
                                 Details,
-                                blipIcon);
+                                blipIcon,null,null,null);
 
                         Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
                         Blipsref.child("public").push().setValue(blips);//Add to public blips
@@ -822,7 +860,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 BlipName,
                                 userName,
                                 Details,
-                                blipIcon);
+                                blipIcon,null,null,null);
                         Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
 
                         Blipsref.child("private").push().setValue(blips);//Add to private blips
@@ -875,7 +913,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             newBlipName,
                             creator,
                             Details,
-                            blipIcon);
+                            blipIcon,null,null,null);
 
 
                     if (privatecheckbox.isChecked() &&
@@ -1122,7 +1160,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             newBlipName,
                             creator,
                             Details,
-                            blipIcon);
+                            blipIcon,null,null,null);
 
                     if (newBlipName.toUpperCase().startsWith(query.toUpperCase())) {
                         PlaceMarker(blipsadded);
@@ -1160,7 +1198,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             newBlipName,
                             creator,
                             Details,
-                            blipIcon);
+                            blipIcon,null,null,null);
 
                     if (newBlipName.toUpperCase().startsWith(query.toUpperCase()) && (creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(creator))) {
 
@@ -1631,7 +1669,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             View view = convertView;
             if (view == null && !friendrequestlist.isEmpty()) {
                 LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                view = inflater.inflate(R.layout.y, null);
+                view = inflater.inflate(R.layout.getfriendnotificationbuttonsconstraint, null);
 
 
             }
@@ -1797,7 +1835,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
 
-        View mShowFriendAddView = getLayoutInflater().inflate(R.layout.x, null);
+        View mShowFriendAddView = getLayoutInflater().inflate(R.layout.getfriendnotification_viewconstraint, null);
         lView = mShowFriendAddView.findViewById(R.id.notifListview);
 
         mBuilder.setView(mShowFriendAddView);
@@ -1981,6 +2019,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    public void ShowFriendList() {
 
+        AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
+
+        View mShowFriendAddView = getLayoutInflater().inflate(R.layout.getfriendnotification_viewconstraint, null);
+        lView = mShowFriendAddView.findViewById(R.id.notifListview);
+
+        mBuilder.setView(mShowFriendAddView);
+        AlertDialog dialogfriendrequest = mBuilder.create();
+
+        dialogfriendrequest.show();
+        FriendRequestsAdapter adapter = new FriendRequestsAdapter(friendrequestlist, MainActivity.this);
+        lView.setAdapter(adapter);
+
+    }
 }
 
