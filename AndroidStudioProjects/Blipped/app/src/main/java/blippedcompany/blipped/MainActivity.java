@@ -697,7 +697,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         cursor_coordinate_longitude = coordinatetobeupdated.longitude;
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
-        View mBlipAddView = getLayoutInflater().inflate(R.layout.edit_blip_details_popup, null);
+        View mBlipAddView = getLayoutInflater().inflate(R.layout.add_popup_constraint, null);
 
         mBlipName = mBlipAddView.findViewById(R.id.blipnameEt);
         mDetails = mBlipAddView.findViewById(R.id.detailsEt);
@@ -706,7 +706,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         publicradio = mBlipAddView.findViewById(R.id.publicRadio);
         privateradio = mBlipAddView.findViewById(R.id.privateRadio);
         mySpinner = mBlipAddView.findViewById(R.id.iconsSpinner);
-
+        TextView x = mBlipAddView.findViewById(R.id.blipdetailstextview);
+        x.setText("Edit Blip Details");
 
         RadioGroup radioGroup = mBlipAddView.findViewById(R.id.groupRadio);
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -714,7 +715,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 if (publicradio.isChecked()) {
                     privateradio.setChecked(false);
-                    mySpinner.setAdapter(new MyCustomAdapterPublic(MainActivity.this, R.layout.row, CustomBlips));//Change to Public Spinnes
+                    mySpinner.setAdapter(new MyCustomAdapterPublic(MainActivity.this, R.layout.row, CustomBlips));//Change to Public Spinner
+
 
                 } else if (privateradio.isChecked()) {
                     publicradio.setChecked(false);
@@ -725,7 +727,81 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 // checkedId is the RadioButton selected
             }
         });
+///////////////////////////////////Retrieve Data to TextBoxes
+        BlipsPublic.orderByChild("latitude").equalTo(coordinatetobeupdated.latitude).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
 
+                        for (DataSnapshot datacollected : dataSnapshot.getChildren()) {
+
+                            String creator = datacollected.child("Creator").getValue(String.class);
+
+                            //We add this because firebase queries sucks
+                            if (datacollected.child("longitude").getValue(Double.class) == coordinatetobeupdated.longitude && creator.toLowerCase().contains(userName.toLowerCase())) {
+                               String refKey =   datacollected.getRef().toString();
+
+
+                                String BlipName =  datacollected.child("BlipName").getValue(String.class);
+                                String Details = datacollected.child("Details").getValue(String.class);
+
+
+                                publicradio.setChecked(true);
+                                mBlipName.setText(BlipName);
+                                mDetails.setText(Details);
+
+
+
+                            }
+
+
+                        }
+                    }
+
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.w("TodoApp", "getUser:onCancelled", databaseError.toException());
+                    }
+                });
+
+
+        BlipsPrivate.orderByChild("latitude").equalTo(coordinatetobeupdated.latitude).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+
+                        for (DataSnapshot datacollected : dataSnapshot.getChildren()) {
+                            String creator = datacollected.child("Creator").getValue(String.class);
+
+                            if (datacollected.child("longitude").getValue(Double.class) == coordinatetobeupdated.longitude && creator.toLowerCase().contains(userName.toLowerCase())) {
+
+                                String BlipName =  datacollected.child("BlipName").getValue(String.class);
+                                String Details = datacollected.child("Details").getValue(String.class);
+
+
+                                privateradio.setChecked(true);
+                                mBlipName.setText(BlipName);
+                                mDetails.setText(Details);
+
+
+
+                            }
+
+
+                        }
+                    }
+
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.w("TodoApp", "getUser:onCancelled", databaseError.toException());
+                    }
+                });
+
+
+////////////////////////////////////////////////////////////////////
 
         mBuilder.setView(mBlipAddView);
         final AlertDialog dialog = mBuilder.create();

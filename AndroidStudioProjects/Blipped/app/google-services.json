@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "724424918750-4vb05jbei9b5jvevqi5o66b18j8ufsho.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "blippedcompany.blipped",
+            "certificate_hash": "74b54e36662003ef398e010f79f0ac740441ab20"
+          }
+        },
+        {
           "client_id": "724424918750-07p8fu6ronot57o4dkj63q6j5kaspjnt.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
