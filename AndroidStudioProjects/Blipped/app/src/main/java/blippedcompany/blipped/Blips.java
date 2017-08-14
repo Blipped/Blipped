@@ -18,6 +18,7 @@ import com.google.firebase.database.IgnoreExtraProperties;
     public String DateCreated;
     public String StartTime;
     public String EndTime;
+    public String imageURL;
 
 
     public String key;
@@ -35,7 +36,8 @@ import com.google.firebase.database.IgnoreExtraProperties;
                  String Icon,
                  String DateCreated,
                  String StartTime,
-                 String EndTime) {
+                 String EndTime,
+                 String imageURL) {
 
 
 
@@ -48,6 +50,7 @@ import com.google.firebase.database.IgnoreExtraProperties;
         this.DateCreated= DateCreated;
         this.StartTime= StartTime;
         this.EndTime= EndTime;
+        this.imageURL= imageURL;
     }
 
 

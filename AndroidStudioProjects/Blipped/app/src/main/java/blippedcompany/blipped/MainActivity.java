@@ -38,7 +38,6 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RadioButton;
@@ -78,6 +77,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -173,12 +173,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Switch showGPSToggle;
 
     int PICK_IMAGE_REQUEST = 111;
+    int CAMERA_IMAGE_REQUEST = 1888;
     Uri filePath;
-    ImageView imageView;
-    LinearLayout layout;
+    ImageView imgView;
     ProgressDialog pd;
     HashMap<String,Uri> filePathMap = new HashMap<>();
     UploadTask uploadTask;
+    String imageURLLink;
+    Blips blips;
 
 
     @Override
@@ -410,7 +412,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    public void PlaceMarker(Blips blipsadded) {
+    public void PlaceMarker(final Blips blipsadded) {
         LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
 
         mMap.addMarker(new MarkerOptions() // Set Marker
@@ -433,11 +435,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public View getInfoContents(Marker marker) {
-                View v = getLayoutInflater().inflate(R.layout.custom_info_window, null);
-                Context context = getApplicationContext();
+
+                 View v = getLayoutInflater().inflate(R.layout.custom_info_window, null);
+                 Context context = getApplicationContext();
 
                  ImageView badge =  v.findViewById(R.id.badge);
-                 badge.setImageResource(R.mipmap.ic_launcher_round);
+                 Picasso.with(context).load(blipsadded.imageURL).into(badge);
+                Toast.makeText(context, blipsadded.imageURL, Toast.LENGTH_SHORT).show();
+
 
                 TextView title =  v.findViewById(R.id.title);
                 title.setText(marker.getTitle());
@@ -470,12 +475,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         privateradio = mBlipAddView.findViewById(R.id.privateRadio);
         mySpinner = mBlipAddView.findViewById(R.id.iconsSpinner);
         Button chooseImg =  mBlipAddView.findViewById(R.id.chooseImg);
-        layout = mBlipAddView.findViewById(R.id.linear);
+        imgView = mBlipAddView.findViewById(R.id.imgView);
         pd = new ProgressDialog(this);
         pd.setMessage("Uploading....");
-
-
-
 
 
         chooseImg.setOnClickListener(new View.OnClickListener() {//Choose Image Button Click
@@ -486,12 +488,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 intent.setAction(Intent.ACTION_PICK);
                 startActivityForResult(Intent.createChooser(intent, "Select Image"), PICK_IMAGE_REQUEST);
 
-
             }
         });
-
-
-
 
 
 
@@ -580,19 +578,66 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                         //Place Data
+                        final DatabaseReference addblippushref =  Users.child(userName).child("Blips").push();// Add to user's blips
+                        final String blipkey =  addblippushref.getKey();
 
+
+                        if(filePath != null) {
+
+                            //uploading the image
+                            for (String name : filePathMap.keySet()){
+                                pd.show();
+                                Uri value = filePathMap.get(name);
+                                StorageReference childRefKey = storageRef.child("BlipPhotos").child(blipkey);
+                                uploadTask = childRefKey.child(filePath.getLastPathSegment()).putFile(value);
+                                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                        pd.dismiss();
+                                        Toast.makeText(MainActivity.this, "Upload successful", Toast.LENGTH_SHORT).show();
+                                        //get the download URL like this:
+                                        @SuppressWarnings("VisibleForTests")
+                                        Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                        //and you can convert it to string like this:
+                                        imageURLLink = downloadUrl.toString();
+                                        Blips blips = new Blips(cursor_coordinate_latitude,
+                                                cursor_coordinate_longitude,
+                                                BlipName,
+                                                userName,
+                                                Details,
+                                                blipIcon,null,null,null,imageURLLink);
+                                        addblippushref.setValue(blips);
+                                        Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
+
+                                        dialog.cancel();
+                                        ShowBlips();
+                                        filePathMap.clear();
+
+
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        pd.dismiss();
+                                        Toast.makeText(MainActivity.this, "Upload Failed -> " + e, Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+
+
+                            }
+                        }
                         Blips blips = new Blips(cursor_coordinate_latitude,
                                 cursor_coordinate_longitude,
                                 BlipName,
                                 userName,
                                 Details,
-                                blipIcon,null,null,null);
-                        Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
-                        Blipsref.child("public").push().setValue(blips);//Add to public blips
+                                blipIcon,null,null,null,imageURLLink);
+                        addblippushref.setValue(blips);
+                        Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
                         dialog.cancel();
-                        mMap.clear();
                         ShowBlips();
+                        filePathMap.clear();
 
                     }
                 } else if (privateradio.isChecked()) {
@@ -647,32 +692,43 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                         //Place Data
+                        final DatabaseReference addblippushref =  Users.child(userName).child("Blips").push();// Add to user's blips
+                        final String blipkey =  addblippushref.getKey();
 
-                        Blips blips = new Blips(cursor_coordinate_latitude,
-                                cursor_coordinate_longitude,
-                                BlipName,
-                                userName,
-                                Details,
-                                blipIcon,null,null,null);
-                        DatabaseReference addblippushref =  Users.child(userName).child("Blips").push();// Add to user's blips
-                        addblippushref.setValue(blips);
-                        String blipkey =  addblippushref.getKey();
-                        Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
 
                         if(filePath != null) {
-
 
                             //uploading the image
                             for (String name : filePathMap.keySet()){
                                 pd.show();
                                 Uri value = filePathMap.get(name);
-                                StorageReference childRefKey = storageRef.child("pics").child(blipkey);
+                                StorageReference childRefKey = storageRef.child("BlipPhotos").child(blipkey);
                                 uploadTask = childRefKey.child(filePath.getLastPathSegment()).putFile(value);
                                 uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                                     @Override
                                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                         pd.dismiss();
                                         Toast.makeText(MainActivity.this, "Upload successful", Toast.LENGTH_SHORT).show();
+                                        //get the download URL like this:
+                                        @SuppressWarnings("VisibleForTests")
+                                        Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                        //and you can convert it to string like this:
+                                         imageURLLink = downloadUrl.toString();
+                                        blips = new Blips(cursor_coordinate_latitude,
+                                                cursor_coordinate_longitude,
+                                                BlipName,
+                                                userName,
+                                                Details,
+                                                blipIcon,null,null,null,imageURLLink);
+                                        Toast.makeText(MainActivity.this, imageURLLink, Toast.LENGTH_SHORT).show();
+                                        addblippushref.setValue(blips);
+                                        Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
+
+                                        dialog.cancel();
+                                        ShowBlips();
+                                        filePathMap.clear();
+
+
                                     }
                                 }).addOnFailureListener(new OnFailureListener() {
                                     @Override
@@ -685,6 +741,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             }
                         }
+                        blips = new Blips(cursor_coordinate_latitude,
+                                cursor_coordinate_longitude,
+                                BlipName,
+                                userName,
+                                Details,
+                                blipIcon,null,null,null,imageURLLink);
+                        Toast.makeText(MainActivity.this, imageURLLink, Toast.LENGTH_SHORT).show();
+                        addblippushref.setValue(blips);
+                        Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
 
                         dialog.cancel();
                         ShowBlips();
@@ -716,20 +781,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
             filePath = data.getData();
-
-
+            filePathMap.put(filePath.getLastPathSegment(),filePath);
             try {
-                imageView = new ImageView(this);
                 //getting image from gallery
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath);
-                Bitmap bitmapthumbnail = Bitmap.createScaledBitmap(bitmap, 80,80, true);
                 //Setting image to ImageView
-                imageView.setPadding(2, 2, 2, 2);
-                imageView.setImageBitmap( bitmapthumbnail);
-                imageView.setScaleType(ImageView.ScaleType.FIT_XY);
-                imageView.getCropToPadding();
-                layout.addView(imageView);
-                filePathMap.put(filePath.getLastPathSegment(),filePath);
+                imgView.setImageBitmap(bitmap);
+                imgView.setPadding(2, 2, 2, 2);
+                imgView.setScaleType(ImageView.ScaleType.FIT_XY);
+                imgView.getCropToPadding();
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        else if  (requestCode == CAMERA_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            filePath = data.getData();
+            filePathMap.put(filePath.getLastPathSegment(),filePath);
+            try {
+                //getting image from gallery
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath);
+                //Setting image to ImageView
+                imgView.setImageBitmap(bitmap);
+                imgView.setPadding(2, 2, 2, 2);
+                imgView.setScaleType(ImageView.ScaleType.FIT_XY);
+                imgView.getCropToPadding();
+
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -976,7 +1056,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 BlipName,
                                 userName,
                                 Details,
-                                blipIcon,null,null,null);
+                                blipIcon,null,null,null,imageURLLink);
 
                         Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
                         Blipsref.child("public").push().setValue(blips);//Add to public blips
@@ -1042,7 +1122,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 BlipName,
                                 userName,
                                 Details,
-                                blipIcon,null,null,null);
+                                blipIcon,null,null,null,imageURLLink);
                         Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
 
                         Blipsref.child("private").push().setValue(blips);//Add to private blips
@@ -1088,14 +1168,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String creator = snapm.child("Creator").getValue(String.class);
                     String Details = snapm.child("Details").getValue(String.class);
                     String blipIcon = snapm.child("Icon").getValue(String.class);
-
+                    String imgURL = snapm.child("imgURL").getValue(String.class);
 
                     Blips blipsadded = new Blips(latitude,
                             longitude,
                             newBlipName,
                             creator,
                             Details,
-                            blipIcon,null,null,null);
+                            blipIcon,null,null,null,imgURL);
 
 
                     if (privatecheckbox.isChecked() &&
@@ -1339,13 +1419,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String creator = snapm.child("Creator").getValue(String.class);
                     String Details = snapm.child("Details").getValue(String.class);
                     String blipIcon = snapm.child("Icon").getValue(String.class);
+                    String imgURL = snapm.child("imgURL").getValue(String.class);
 
                     Blips blipsadded = new Blips(latitude,
                             longitude,
                             newBlipName,
                             creator,
                             Details,
-                            blipIcon,null,null,null);
+                            blipIcon,null,null,null,imgURL);
 
                     if (newBlipName.toUpperCase().startsWith(query.toUpperCase())) {
                         PlaceMarker(blipsadded);
@@ -1377,13 +1458,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String creator = snapm.child("Creator").getValue(String.class);
                     String Details = snapm.child("Details").getValue(String.class);
                     String blipIcon = snapm.child("Icon").getValue(String.class);
-
+                    String imgURL = snapm.child("imgURL").getValue(String.class);
                     Blips blipsadded = new Blips(latitude,
                             longitude,
                             newBlipName,
                             creator,
                             Details,
-                            blipIcon,null,null,null);
+                            blipIcon,null,null,null,imgURL);
 
                     if (newBlipName.toUpperCase().startsWith(query.toUpperCase()) && (creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(creator))) {
 
