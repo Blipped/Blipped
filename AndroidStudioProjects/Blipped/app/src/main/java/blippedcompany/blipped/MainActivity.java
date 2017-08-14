@@ -1,15 +1,18 @@
 package blippedcompany.blipped;
 
 import android.animation.ValueAnimator;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
@@ -23,7 +26,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -63,6 +65,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -71,8 +75,12 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 
 
@@ -86,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     LatLng cursor_coordinate;
     SearchView search;
     GoogleApiClient mGoogleApiClient;
+
 
 
     // The geographical location where the device is currently located. That is, the last-known
@@ -108,6 +117,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DatabaseReference UsersEmailFriendRequests = database.getReference("users").child(userName).child("FriendRequests");
     DatabaseReference liveGPSEmail = database.getReference("liveGPS").child(userName);
     DatabaseReference liveGPS = database.getReference("liveGPS");
+    //creating reference to firebase storage
+    FirebaseStorage storage = FirebaseStorage.getInstance();
+    StorageReference storageRef = storage.getReferenceFromUrl("gs://blipped-project.appspot.com");
     //Variables
     private static final String TAG = "MainActivity";
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
@@ -159,6 +171,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     LatLng pulseLatlng;
     Marker gpsmarker;
     Switch showGPSToggle;
+
+    int PICK_IMAGE_REQUEST = 111;
+    Uri filePath;
+    ImageView imageView;
+    LinearLayout layout;
+    ProgressDialog pd;
+    HashMap<String,Uri> filePathMap = new HashMap<>();
+    UploadTask uploadTask;
 
 
     @Override
@@ -406,34 +426,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public View getInfoWindow(Marker arg0) {
+
                 return null;
             }
 
+
             @Override
             public View getInfoContents(Marker marker) {
+                View v = getLayoutInflater().inflate(R.layout.custom_info_window, null);
                 Context context = getApplicationContext();
 
-                LinearLayout info = new LinearLayout(context);
-                info.setOrientation(LinearLayout.VERTICAL);
+                 ImageView badge =  v.findViewById(R.id.badge);
+                 badge.setImageResource(R.mipmap.ic_launcher_round);
 
-
-                TextView title = new TextView(context);
-                title.setTextColor(Color.BLACK);
-                title.setGravity(Gravity.CENTER);
-                title.setTypeface(null, Typeface.BOLD);
+                TextView title =  v.findViewById(R.id.title);
                 title.setText(marker.getTitle());
 
-                TextView snippet = new TextView(context);
+                TextView snippet =  v.findViewById(R.id.snippet);
                 snippet.setTextColor(Color.GRAY);
                 snippet.setText(marker.getSnippet());
 
-                info.addView(title);
-                info.addView(snippet);
 
-                return info;
+                return v;
             }
         });
     }
+
+
 
     public void AddBlip(LatLng point) {
         cursor_coordinate = new LatLng(point.latitude, point.longitude);// Set current click location to marker
@@ -450,6 +469,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         publicradio = mBlipAddView.findViewById(R.id.publicRadio);
         privateradio = mBlipAddView.findViewById(R.id.privateRadio);
         mySpinner = mBlipAddView.findViewById(R.id.iconsSpinner);
+        Button chooseImg =  mBlipAddView.findViewById(R.id.chooseImg);
+        layout = mBlipAddView.findViewById(R.id.linear);
+        pd = new ProgressDialog(this);
+        pd.setMessage("Uploading....");
+
+
+
+
+
+        chooseImg.setOnClickListener(new View.OnClickListener() {//Choose Image Button Click
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setType("image/*");
+                intent.setAction(Intent.ACTION_PICK);
+                startActivityForResult(Intent.createChooser(intent, "Select Image"), PICK_IMAGE_REQUEST);
+
+
+            }
+        });
+
+
+
+
 
 
         RadioGroup radioGroup = mBlipAddView.findViewById(R.id.groupRadio);
@@ -478,7 +521,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mAddBlip.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+
+
+
                 BlipName = mBlipName.getText().toString();
+
 
                 if (publicradio.isChecked()) {
 
@@ -606,18 +654,49 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 userName,
                                 Details,
                                 blipIcon,null,null,null);
-                        Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
+                        DatabaseReference addblippushref =  Users.child(userName).child("Blips").push();// Add to user's blips
+                        addblippushref.setValue(blips);
+                        String blipkey =  addblippushref.getKey();
+                        Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
 
-                        Blipsref.child("private").push().setValue(blips);//Add to private blips
+                        if(filePath != null) {
+
+
+                            //uploading the image
+                            for (String name : filePathMap.keySet()){
+                                pd.show();
+                                Uri value = filePathMap.get(name);
+                                StorageReference childRefKey = storageRef.child("pics").child(blipkey);
+                                uploadTask = childRefKey.child(filePath.getLastPathSegment()).putFile(value);
+                                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                        pd.dismiss();
+                                        Toast.makeText(MainActivity.this, "Upload successful", Toast.LENGTH_SHORT).show();
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        pd.dismiss();
+                                        Toast.makeText(MainActivity.this, "Upload Failed -> " + e, Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+
+
+                            }
+                        }
 
                         dialog.cancel();
                         ShowBlips();
-
+                        filePathMap.clear();
 
                     }
 
 
                 }
+
+
+
 
             }
         });
@@ -629,6 +708,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            filePath = data.getData();
+
+
+            try {
+                imageView = new ImageView(this);
+                //getting image from gallery
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath);
+                Bitmap bitmapthumbnail = Bitmap.createScaledBitmap(bitmap, 80,80, true);
+                //Setting image to ImageView
+                imageView.setPadding(2, 2, 2, 2);
+                imageView.setImageBitmap( bitmapthumbnail);
+                imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+                imageView.getCropToPadding();
+                layout.addView(imageView);
+                filePathMap.put(filePath.getLastPathSegment(),filePath);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void DeleteBlip(Marker marker) {
@@ -1988,9 +2093,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         va.start();
         return va;
     }
-
-//TODO VIEW FRIENDS LIST
-
 
     public void locationListen() {
 
