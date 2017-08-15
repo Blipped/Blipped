@@ -77,6 +77,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -157,7 +158,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             "Community", "Family & Education", "Fashion", "Media", "Food", "Health", "Holiday", "Music", "Sports", "Travel"};
     String blipIcon;
     ArrayList<String> friendrequestlist;
-    boolean alreadysent;
     NavigationView navigationView;
     Menu nv;
     MenuItem item_notifications;
@@ -181,6 +181,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     UploadTask uploadTask;
     String imageURLLink;
     Blips blips;
+    ImageView badge;
+    View v;
+    String Description;
 
 
     @Override
@@ -316,7 +319,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // WHen map is long clicked
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
 
-
             @Override
             public void onMapLongClick(LatLng point) {
                 AddBlip(point);
@@ -354,6 +356,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
+
+
 
 
     }
@@ -414,20 +418,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void PlaceMarker(final Blips blipsadded) {
         LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
-
+        // Put inormation into a single string with comma seperators
+        Description = blipsadded.Creator+"123"+ blipsadded.Details +"123"+blipsadded.imageURL;
         mMap.addMarker(new MarkerOptions() // Set Marker
+
                 .position(newBlipCoordinates)
                 .title(blipsadded.BlipName)
-                .snippet("Creator: "+blipsadded.Creator +"\n"
-                        +"Details: "+"\n"
-                        +blipsadded.Details)
+                .snippet(Description)
                 .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
 
 
         mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
 
             @Override
-            public View getInfoWindow(Marker arg0) {
+            public View getInfoWindow(final Marker marker) {
+
 
                 return null;
             }
@@ -435,29 +440,62 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public View getInfoContents(Marker marker) {
+                  v = getLayoutInflater().inflate(R.layout.custom_info_window, null);
+                  badge =  v.findViewById(R.id.badge);
+                          //Split Information int array
+            String[] dataarray =  marker.getSnippet().split("123(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
 
-                 View v = getLayoutInflater().inflate(R.layout.custom_info_window, null);
-                 Context context = getApplicationContext();
 
-                 ImageView badge =  v.findViewById(R.id.badge);
-                 Picasso.with(context).load(blipsadded.imageURL).into(badge);
-                Toast.makeText(context, blipsadded.imageURL, Toast.LENGTH_SHORT).show();
 
+                Picasso.with(getActivity())
+                        .load(dataarray[2])
+                        .error(R.drawable.places_ic_clear)
+                        .placeholder(R.drawable.ic_menu_slideshow)
+                        .into(badge, new MarkerCallback(marker,dataarray[2],badge));
+
+
+                TextView snippet =  v.findViewById(R.id.snippet);
+                snippet.setText("Creator: "+ dataarray[0] +"\n"+
+                                "Details: "+ dataarray[1] +"\n"           );
 
                 TextView title =  v.findViewById(R.id.title);
                 title.setText(marker.getTitle());
-
-                TextView snippet =  v.findViewById(R.id.snippet);
-                snippet.setTextColor(Color.GRAY);
-                snippet.setText(marker.getSnippet());
-
 
                 return v;
             }
         });
     }
 
+    public class MarkerCallback implements Callback {
+        Marker marker=null;
+        String URL;
+        ImageView userPhoto;
 
+
+        MarkerCallback(Marker marker, String URL, ImageView userPhoto) {
+            this.marker=marker;
+            this.URL = URL;
+            this.userPhoto = userPhoto;
+        }
+
+        @Override
+        public void onError() {
+            //Log.e(getClass().getSimpleName(), "Error loading thumbnail!");
+        }
+
+        @Override
+        public void onSuccess() {
+            if (marker != null && marker.isInfoWindowShown()) {
+                marker.hideInfoWindow();
+
+                Picasso.with(getActivity())
+                        .load(URL)
+                        .into(userPhoto);
+
+                marker.showInfoWindow();
+            }
+        }
+    }
 
     public void AddBlip(LatLng point) {
         cursor_coordinate = new LatLng(point.latitude, point.longitude);// Set current click location to marker
@@ -490,7 +528,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
-
 
 
         RadioGroup radioGroup = mBlipAddView.findViewById(R.id.groupRadio);
@@ -965,12 +1002,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 String BlipName =  datacollected.child("BlipName").getValue(String.class);
                                 String Details = datacollected.child("Details").getValue(String.class);
 
-
                                 privateradio.setChecked(true);
                                 mBlipName.setText(BlipName);
                                 mDetails.setText(Details);
-
-
 
                             }
 
@@ -1168,7 +1202,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String creator = snapm.child("Creator").getValue(String.class);
                     String Details = snapm.child("Details").getValue(String.class);
                     String blipIcon = snapm.child("Icon").getValue(String.class);
-                    String imgURL = snapm.child("imgURL").getValue(String.class);
+                    String imgURL = snapm.child("imageURL").getValue(String.class);
 
                     Blips blipsadded = new Blips(latitude,
                             longitude,
@@ -1419,7 +1453,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String creator = snapm.child("Creator").getValue(String.class);
                     String Details = snapm.child("Details").getValue(String.class);
                     String blipIcon = snapm.child("Icon").getValue(String.class);
-                    String imgURL = snapm.child("imgURL").getValue(String.class);
+                    String imgURL = snapm.child("imageURL").getValue(String.class);
 
                     Blips blipsadded = new Blips(latitude,
                             longitude,
@@ -1458,7 +1492,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String creator = snapm.child("Creator").getValue(String.class);
                     String Details = snapm.child("Details").getValue(String.class);
                     String blipIcon = snapm.child("Icon").getValue(String.class);
-                    String imgURL = snapm.child("imgURL").getValue(String.class);
+                    String imgURL = snapm.child("imageURL").getValue(String.class);
                     Blips blipsadded = new Blips(latitude,
                             longitude,
                             newBlipName,
@@ -2391,6 +2425,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 }
