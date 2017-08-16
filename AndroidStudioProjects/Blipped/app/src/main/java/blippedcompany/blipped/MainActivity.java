@@ -6,12 +6,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -80,9 +82,13 @@ import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Random;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
@@ -172,8 +178,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Marker gpsmarker;
     Switch showGPSToggle;
 
-    int PICK_IMAGE_REQUEST = 111;
-    int CAMERA_IMAGE_REQUEST = 1888;
+  final  int PICK_IMAGE_REQUEST = 111;
+   final int CAMERA_IMAGE_REQUEST = 1888;
     Uri filePath;
     ImageView imgView;
     ProgressDialog pd;
@@ -184,6 +190,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ImageView badge;
     View v;
     String Description;
+    String mCurrentPhotoPath;
+    Uri photoURI;
+
+
 
 
     @Override
@@ -360,6 +370,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
+
     }
 
     private void GoogleMapAPIConnect() {
@@ -432,18 +443,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public View getInfoWindow(final Marker marker) {
-
-
-                return null;
-            }
-
-
-            @Override
-            public View getInfoContents(Marker marker) {
-                  v = getLayoutInflater().inflate(R.layout.custom_info_window, null);
-                  badge =  v.findViewById(R.id.badge);
-                          //Split Information int array
-            String[] dataarray =  marker.getSnippet().split("123(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                v = getLayoutInflater().inflate(R.layout.custom_info_window, null);
+                badge =  v.findViewById(R.id.badge);
+                //Split Information int array
+                String[] dataarray =  marker.getSnippet().split("123(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
 
 
 
@@ -455,13 +458,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                 TextView snippet =  v.findViewById(R.id.snippet);
-                snippet.setText("Creator: "+ dataarray[0] +"\n"+
-                                "Details: "+ dataarray[1] +"\n"           );
-
                 TextView title =  v.findViewById(R.id.title);
                 title.setText(marker.getTitle());
+                snippet.setText("Creator: "+ dataarray[0] +"\n"+
+                        "Details: "+ dataarray[1] +"\n"           );
+
+
+
+
 
                 return v;
+
+
+            }
+
+
+            @Override
+            public View getInfoContents(Marker marker) {
+                 return null;
             }
         });
     }
@@ -497,6 +511,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    public void takePicture() {
+
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        Random random = new Random();
+        int key =random.nextInt(1000);
+
+        File photo = new File(Environment.getExternalStorageDirectory(), "picture"+key+".jpg");
+        //  File photo = new File(getCacheDir(), "picture.jpg");
+
+
+        photoURI = Uri.fromFile(photo);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+        startActivityForResult(intent, 0);
+
+    }
+
+
     public void AddBlip(LatLng point) {
         cursor_coordinate = new LatLng(point.latitude, point.longitude);// Set current click location to marker
         cursor_coordinate_latitude = point.latitude;
@@ -513,6 +545,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         privateradio = mBlipAddView.findViewById(R.id.privateRadio);
         mySpinner = mBlipAddView.findViewById(R.id.iconsSpinner);
         Button chooseImg =  mBlipAddView.findViewById(R.id.chooseImg);
+        Button takePhoto =  mBlipAddView.findViewById(R.id.takePhoto);
         imgView = mBlipAddView.findViewById(R.id.imgView);
         pd = new ProgressDialog(this);
         pd.setMessage("Uploading....");
@@ -521,11 +554,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         chooseImg.setOnClickListener(new View.OnClickListener() {//Choose Image Button Click
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent();
-                intent.setType("image/*");
-                intent.setAction(Intent.ACTION_PICK);
-                startActivityForResult(Intent.createChooser(intent, "Select Image"), PICK_IMAGE_REQUEST);
+                Intent pickPhoto = new Intent(Intent.ACTION_PICK,
+                        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(pickPhoto , 1);//one can be replaced with any action code
 
+            }
+        });
+
+        takePhoto.setOnClickListener(new View.OnClickListener() {//Choose Image Button Click
+            @Override
+            public void onClick(View v) {
+
+                takePicture();
             }
         });
 
@@ -556,8 +596,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mAddBlip.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-
 
 
                 BlipName = mBlipName.getText().toString();
@@ -625,8 +663,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             for (String name : filePathMap.keySet()){
                                 pd.show();
                                 Uri value = filePathMap.get(name);
+
+
+
                                 StorageReference childRefKey = storageRef.child("BlipPhotos").child(blipkey);
-                                uploadTask = childRefKey.child(filePath.getLastPathSegment()).putFile(value);
+                                uploadTask = childRefKey.child(filePath.getLastPathSegment()).putBytes(convertURItocompresseddata(value));
+
                                 uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                                     @Override
                                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -637,6 +679,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         Uri downloadUrl = taskSnapshot.getDownloadUrl();
                                         //and you can convert it to string like this:
                                         imageURLLink = downloadUrl.toString();
+
                                         Blips blips = new Blips(cursor_coordinate_latitude,
                                                 cursor_coordinate_longitude,
                                                 BlipName,
@@ -739,8 +782,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             for (String name : filePathMap.keySet()){
                                 pd.show();
                                 Uri value = filePathMap.get(name);
+
+
                                 StorageReference childRefKey = storageRef.child("BlipPhotos").child(blipkey);
-                                uploadTask = childRefKey.child(filePath.getLastPathSegment()).putFile(value);
+                                uploadTask = childRefKey.child(filePath.getLastPathSegment()).putBytes( convertURItocompresseddata(value));
                                 uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                                     @Override
                                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -750,14 +795,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         @SuppressWarnings("VisibleForTests")
                                         Uri downloadUrl = taskSnapshot.getDownloadUrl();
                                         //and you can convert it to string like this:
-                                         imageURLLink = downloadUrl.toString();
+                                        imageURLLink = downloadUrl.toString();
                                         blips = new Blips(cursor_coordinate_latitude,
                                                 cursor_coordinate_longitude,
                                                 BlipName,
                                                 userName,
                                                 Details,
                                                 blipIcon,null,null,null,imageURLLink);
-                                        Toast.makeText(MainActivity.this, imageURLLink, Toast.LENGTH_SHORT).show();
+
                                         addblippushref.setValue(blips);
                                         Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
 
@@ -784,7 +829,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 userName,
                                 Details,
                                 blipIcon,null,null,null,imageURLLink);
-                        Toast.makeText(MainActivity.this, imageURLLink, Toast.LENGTH_SHORT).show();
+
                         addblippushref.setValue(blips);
                         Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
 
@@ -811,47 +856,90 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
     }
+    public byte[] convertURItocompresseddata(Uri value){
+
+        Scanner scanner = new Scanner();
+        Bitmap bitmap = null;
+        try {
+            bitmap = scanner.decodeBitmapUri(MainActivity.this, value);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] data = baos.toByteArray();
+        return data;
+    }
+    public class Scanner {
+
+        public Bitmap decodeBitmapUri(MainActivity ctx, Uri uri) throws FileNotFoundException {
+            int targetW = 1000;
+            int targetH = 1000;
+            BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+            bmOptions.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(ctx.getContentResolver().openInputStream(uri), null, bmOptions);
+            int photoW = bmOptions.outWidth;
+            int photoH = bmOptions.outHeight;
+
+            int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
+            bmOptions.inJustDecodeBounds = false;
+            bmOptions.inSampleSize = scaleFactor;
+
+
+            return BitmapFactory.decodeStream(ctx.getContentResolver()
+                    .openInputStream(uri), null, bmOptions);
+        }
+    }
+    private void launchMediaScanIntent() {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        mediaScanIntent.setData(photoURI);
+        this.sendBroadcast(mediaScanIntent);
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            filePath = data.getData();
-            filePathMap.put(filePath.getLastPathSegment(),filePath);
-            try {
-                //getting image from gallery
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath);
-                //Setting image to ImageView
-                imgView.setImageBitmap(bitmap);
-                imgView.setPadding(2, 2, 2, 2);
-                imgView.setScaleType(ImageView.ScaleType.FIT_XY);
-                imgView.getCropToPadding();
+        switch(requestCode) {
+            case 0:
+                if(resultCode == RESULT_OK){
+                    launchMediaScanIntent();
+                    try {
+                        Scanner scanner = new Scanner();
+                        Bitmap bitmap = scanner.decodeBitmapUri(MainActivity.this, photoURI);
+
+                        imgView.setImageBitmap(bitmap);
+
+                        filePath = photoURI;
+                        filePathMap.put(filePath.getLastPathSegment(),filePath);
 
 
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Failed to load Image", Toast.LENGTH_SHORT)
+                                .show();
+
+                    }
+
+                }
+
+                break;
+            case 1:
+                if(resultCode == RESULT_OK){
+                    Uri selectedImage = data.getData();
+
+                    imgView.setImageURI(selectedImage);
+                    filePath = data.getData();
+                    filePathMap.put(filePath.getLastPathSegment(),filePath);
+
+                }
+                break;
         }
 
-        else if  (requestCode == CAMERA_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            filePath = data.getData();
-            filePathMap.put(filePath.getLastPathSegment(),filePath);
-            try {
-                //getting image from gallery
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath);
-                //Setting image to ImageView
-                imgView.setImageBitmap(bitmap);
-                imgView.setPadding(2, 2, 2, 2);
-                imgView.setScaleType(ImageView.ScaleType.FIT_XY);
-                imgView.getCropToPadding();
 
 
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
     }
+
 
     public void DeleteBlip(Marker marker) {
         final LatLng coordinatetobedeleted = marker.getPosition();
@@ -867,6 +955,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             //We add this because firebase queries sucks
                             if (datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude && creator.toLowerCase().contains(userName.toLowerCase())) {
+
                                 datacollected.getRef().removeValue();
                                 Toast.makeText(MainActivity.this, "Blip Deleted", Toast.LENGTH_SHORT).show();
                             }
