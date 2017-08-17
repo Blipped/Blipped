@@ -321,6 +321,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.getUiSettings().setIndoorLevelPickerEnabled(true);
         googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
+
         showGPSToggle = (Switch) findViewById(R.id.showgpstoggle);
         showGPSToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -384,9 +385,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
+
                 Animation bottomDown = AnimationUtils.loadAnimation(getApplicationContext(),
                         R.anim.bottom_down);
-
+                mMap.setPadding(0, 0, 0, 0);
                 bottomNavigationView.startAnimation(bottomDown);
                 bottomNavigationView.setVisibility(View.GONE);
             }
@@ -477,7 +479,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 Animation bottomUp = AnimationUtils.loadAnimation(getApplicationContext(),
                         R.anim.bottom_up);
-
+                mMap.setPadding(0, 0, 0, 100);
                 bottomNavigationView.startAnimation(bottomUp);
                 bottomNavigationView.setVisibility(View.VISIBLE);
                 selected = marker;
