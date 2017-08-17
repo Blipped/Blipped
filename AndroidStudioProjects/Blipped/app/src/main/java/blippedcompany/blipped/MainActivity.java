@@ -17,6 +17,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -33,6 +34,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -188,12 +191,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     String imageURLLink;
     Blips blips;
     ImageView badge;
-    View v;
+
     String Description;
     String mCurrentPhotoPath;
     Uri photoURI;
+    Marker selected;
+    String[] dataarray;
 
 
+    BottomNavigationView bottomNavigationView;
 
 
     @Override
@@ -206,6 +212,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         DeclareThings();
         ShowFriendRequestCount();
+
+
+        bottomNavigationView = (BottomNavigationView)
+                findViewById(R.id.bottom_navigation);
+
 
 
         search = (SearchView) findViewById(R.id.searchView);
@@ -291,17 +302,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         TextView userNameText = (TextView) findViewById(R.id.currentUserTxt);
         userNameText.setText("Welcome " + userID.getEmail());
 
-        showGPSToggle = (Switch) findViewById(R.id.showgpstoggle);
-        showGPSToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(!showGPSToggle.isChecked()){
-                    liveGPSEmail.child("longitude").setValue(null);
-                    liveGPSEmail.child("latitude").setValue(null);
-                    liveGPSEmail.child("Creator").setValue(null);
-                }
 
-            }
-        });
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -320,12 +321,57 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.getUiSettings().setIndoorLevelPickerEnabled(true);
         googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
+        showGPSToggle = (Switch) findViewById(R.id.showgpstoggle);
+        showGPSToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(!showGPSToggle.isChecked()){
+                    liveGPSEmail.child("longitude").setValue(null);
+                    liveGPSEmail.child("latitude").setValue(null);
+                    liveGPSEmail.child("Creator").setValue(null);
+                }
 
+            }
+        });
         checkboxlisteners();
         ShowBlips();
         ShowGPSLocation();
         locationListen();
 
+
+        bottomNavigationView.setOnNavigationItemSelectedListener(
+                new BottomNavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                        switch (item.getItemId()) {
+                            case R.id.action_delete: {
+                                try {
+                                    if (selected.getSnippet().contains(userName)) {
+                                        DeleteBlip(selected);
+                                        bottomNavigationView.setVisibility(View.GONE);
+                                    }
+                                } catch (NullPointerException e) {
+                                    Toast.makeText(MainActivity.this, "No marker selected", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+
+                            case R.id.action_edit: {
+                                try {
+                                    if (selected.getSnippet().contains(userName)) {
+                                        EditBlip(selected);
+                                    }
+                                } catch (NullPointerException e) {
+
+                                }
+                            }
+
+
+
+                            case R.id.action_music:
+
+                        }
+                        return true;
+                    }
+                });
         // WHen map is long clicked
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
 
@@ -335,19 +381,118 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                Animation bottomDown = AnimationUtils.loadAnimation(getApplicationContext(),
+                        R.anim.bottom_down);
+
+                bottomNavigationView.startAnimation(bottomDown);
+                bottomNavigationView.setVisibility(View.GONE);
+            }
+        });
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+
+                if(marker.getSnippet().contains("123marcius")) {
+
+                     //If Normal Marker is clicked
+                    mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+                        View v;
+                        @Override
+                        public View getInfoWindow(final Marker marker) {
+
+                            v = getLayoutInflater().inflate(R.layout.custom_info_window, null);
+                            badge = v.findViewById(R.id.badge);
+                            //Split Information int array
+                            try {
+                                dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                            } catch (NullPointerException e) {
+
+                            }
+
+
+                            Picasso.with(getActivity())
+                                    .load(dataarray[2])
+                                    .error(R.drawable.places_ic_clear)
+                                    .placeholder(R.drawable.ic_menu_slideshow)
+                                    .into(badge, new MarkerCallback(marker, dataarray[2], badge));
+
+
+                            TextView snippet = v.findViewById(R.id.snippet);
+                            TextView title = v.findViewById(R.id.title);
+                            title.setText(marker.getTitle());
+                            snippet.setText("Creator: " + dataarray[0] + "\n" +
+                                    "Details: " + dataarray[1] + "\n");
+
+                            return v;
+
+
+                        }
+
+
+                        @Override
+                        public View getInfoContents(Marker marker) {
+                            return null;
+                        }
+                    });
+                }
+
+                else{
+                    //If Live GPS Marker is clicked
+                    mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+                        View vgps;
+                        @Override
+                        public View getInfoWindow(final Marker marker) {
+                            vgps = getLayoutInflater().inflate(R.layout.gpscustom_info_window, null);
+                            badge = vgps.findViewById(R.id.badge);
+                            //Split Information int array
+
+                            Picasso.with(getActivity())
+                                    .load(marker.getSnippet())
+                                    .error(R.drawable.places_ic_clear)
+                                    .placeholder(R.drawable.ic_menu_slideshow)
+                                    .into(badge, new MarkerCallback(marker, marker.getSnippet(), badge));
+
+                            TextView title = vgps.findViewById(R.id.title);
+                            title.setText(marker.getTitle());
+
+                            return vgps;
+
+                        }
+
+
+                        @Override
+                        public View getInfoContents(Marker marker) {
+                            return null;
+                        }
+                    });
+
+                }
+
+
+
+
+
+                Animation bottomUp = AnimationUtils.loadAnimation(getApplicationContext(),
+                        R.anim.bottom_up);
+
+                bottomNavigationView.startAnimation(bottomUp);
+                bottomNavigationView.setVisibility(View.VISIBLE);
+                selected = marker;
+
+                return false;
+            }
+        });
+
 
         //When map is infolong clicked
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
-            public void onInfoWindowClick(Marker marker) throws NullPointerException {
+            public void onInfoWindowClick(final Marker marker) throws NullPointerException {
 
-                try {
-                    if (marker.getSnippet().contains(userName)) {
-                        EditBlip(marker);
-                    }
-                } catch (NullPointerException e) {
 
-                }
 
             }
         });
@@ -412,14 +557,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Set the map's camera position to the current location of the device.
         if (mCameraPosition != null) {
-            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(mCameraPosition));
+            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(mCameraPosition));
         } else if (mLastKnownLocation != null) {
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                     new LatLng(mLastKnownLocation.getLatitude(),
                             mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
         } else {
             Log.d(TAG, "Current location is null. Using defaults.");
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
             mMap.getUiSettings().setMyLocationButtonEnabled(true);
             mMap.setMyLocationEnabled(true);
         }
@@ -430,7 +575,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void PlaceMarker(final Blips blipsadded) {
         LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
         // Put inormation into a single string with comma seperators
-        Description = blipsadded.Creator+"123"+ blipsadded.Details +"123"+blipsadded.imageURL;
+        Description = blipsadded.Creator+"123marcius"+ blipsadded.Details +"123marcius"+blipsadded.imageURL;
         mMap.addMarker(new MarkerOptions() // Set Marker
 
                 .position(newBlipCoordinates)
@@ -438,46 +583,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .snippet(Description)
                 .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
 
-
-        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
-
-            @Override
-            public View getInfoWindow(final Marker marker) {
-                v = getLayoutInflater().inflate(R.layout.custom_info_window, null);
-                badge =  v.findViewById(R.id.badge);
-                //Split Information int array
-                String[] dataarray =  marker.getSnippet().split("123(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-
-
-
-                Picasso.with(getActivity())
-                        .load(dataarray[2])
-                        .error(R.drawable.places_ic_clear)
-                        .placeholder(R.drawable.ic_menu_slideshow)
-                        .into(badge, new MarkerCallback(marker,dataarray[2],badge));
-
-
-                TextView snippet =  v.findViewById(R.id.snippet);
-                TextView title =  v.findViewById(R.id.title);
-                title.setText(marker.getTitle());
-                snippet.setText("Creator: "+ dataarray[0] +"\n"+
-                        "Details: "+ dataarray[1] +"\n"           );
-
-
-
-
-
-                return v;
-
-
-            }
-
-
-            @Override
-            public View getInfoContents(Marker marker) {
-                 return null;
-            }
-        });
     }
 
     public class MarkerCallback implements Callback {
@@ -527,8 +632,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         startActivityForResult(intent, 0);
 
     }
-
-
     public void AddBlip(LatLng point) {
         cursor_coordinate = new LatLng(point.latitude, point.longitude);// Set current click location to marker
         cursor_coordinate_latitude = point.latitude;
@@ -1767,9 +1870,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onConnected(@Nullable Bundle bundle) {
         getDeviceLocation();
 
-
-
-
     }
 
     @Override
@@ -2307,6 +2407,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 double latitude = location.getLatitude();
                 double longitude = location.getLongitude();
                if(showGPSToggle.isChecked()){
+
                    liveGPSEmail.child("longitude").setValue(longitude);
                    liveGPSEmail.child("latitude").setValue(latitude);
                    liveGPSEmail.child("Creator").setValue(userName);
@@ -2377,7 +2478,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                    gpsmarker = mMap.addMarker(new MarkerOptions() // Set Marker
                                            .position(x)
                                            .title(creatorx)
+                                           .snippet("Blank")
                                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.public_sports)));
+
                                }
 
                            }
