@@ -11,6 +11,8 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -181,6 +183,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Marker gpsmarker;
     Switch showGPSToggle;
     LocationListener locationListener;
+    LocationManager locationManager;
 
 
     Uri filePath;
@@ -212,6 +215,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         DeclareThings();
         ShowFriendRequestCount();
+        ConnectivityManager cm = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
 
 
         bottomNavigationView = (BottomNavigationView)
@@ -332,6 +339,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     liveGPSEmail.child("longitude").setValue(null);
                     liveGPSEmail.child("latitude").setValue(null);
                     liveGPSEmail.child("Creator").setValue(null);
+                    locationManager.removeUpdates(locationListener);
+                    locationListener = null;
 
                 }
                 else{
@@ -401,15 +410,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
-
-
-                if(bottomNavigationView.isShown()) {
+                if (bottomNavigationView.getVisibility() == View.VISIBLE) {
                     Animation bottomDown = AnimationUtils.loadAnimation(getApplicationContext(),
                             R.anim.bottom_down);
                     mMap.setPadding(0, 0, 0, 0);
                     bottomNavigationView.startAnimation(bottomDown);
                     bottomNavigationView.setVisibility(View.GONE);
+                } else {
+                    // Either gone or invisible
                 }
+
+
             }
         });
 
@@ -484,7 +495,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         }
 
-
                         @Override
                         public View getInfoContents(Marker marker) {
                             return null;
@@ -492,8 +502,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     });
 
                 }
-
-
 
 
 
@@ -514,6 +522,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onInfoWindowClick(final Marker marker) throws NullPointerException {
 
+            showImage(marker);
+
 
 
             }
@@ -523,13 +533,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onInfoWindowLongClick(Marker marker) {
 
-                try {
-                    if (marker.getSnippet().contains(userName)) {
-                        DeleteBlip(marker);
-                    }
-                } catch (NullPointerException e) {
 
-                }
 
             }
         });
@@ -537,6 +541,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
+
+    }
+
+    public void showImage(Marker marker){
+        View  imagefull = getLayoutInflater().inflate(R.layout.fullscreen_image, null);
+        ImageView fullscreenimage = imagefull.findViewById(R.id.fullscreenimage);
+
+        try {
+
+            AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
+
+
+            dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+            Picasso.with(getActivity())
+                    .load(dataarray[2])
+                    .error(R.drawable.places_ic_clear)
+                    .placeholder(R.drawable.ic_menu_slideshow)
+                    .into(fullscreenimage, new MarkerCallback(marker, dataarray[2], fullscreenimage));
+            mBuilder.setView(imagefull);
+            final AlertDialog dialog = mBuilder.create();
+
+            dialog.show();
+
+
+        } catch (NullPointerException e) {
+
+        }
 
     }
 
@@ -991,7 +1022,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             e.printStackTrace();
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
         byte[] data = baos.toByteArray();
         return data;
     }
@@ -1896,6 +1927,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onConnectionSuspended(int i) {
+        locationManager.removeUpdates(locationListener);
+        locationListener = null;
+
         Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show();
     }
 
@@ -1934,6 +1968,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             liveGPSEmail.child("longitude").setValue(null);
             liveGPSEmail.child("latitude").setValue(null);
             liveGPSEmail.child("Creator").setValue(null);
+            locationManager.removeUpdates(locationListener);
+            locationListener = null;
+
             mAuth.signOut();
             MainActivity.this.finish();
             Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
@@ -2440,6 +2477,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                    liveGPSEmail.child("latitude").setValue(null);
                    liveGPSEmail.child("Creator").setValue(null);
 
+
+
                }
 
 
@@ -2461,7 +2500,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         };
 
-        LocationManager locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
+       locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
@@ -2642,13 +2681,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
-
-
-
-
-
-
-
 
 
 
