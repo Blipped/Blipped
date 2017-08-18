@@ -232,17 +232,18 @@
 
     <Switch
         android:id="@+id/showgpstoggle"
-        android:layout_width="109dp"
-        android:layout_height="27dp"
+        android:layout_width="151dp"
+        android:layout_height="30dp"
+        android:layout_marginRight="16dp"
         android:layout_marginTop="80dp"
-        android:text="Show GPS"
+        android:textAllCaps="false"
         android:textColor="@android:color/background_light"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/bottom_navigation"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_gravity="bottom"
@@ -257,4 +258,16 @@
         app:layout_constraintTop_toBottomOf="@+id/map"
         app:layout_constraintVertical_bias="1.0"
         app:menu="@menu/bottom_navigation_main" />
+
+    <TextView
+        android:id="@+id/shareloc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="63dp"
+        android:text="Share Location"
+        android:textColor="@color/common_google_signin_btn_text_dark_default"
+        android:textStyle="bold"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </android.support.constraint.ConstraintLayout>

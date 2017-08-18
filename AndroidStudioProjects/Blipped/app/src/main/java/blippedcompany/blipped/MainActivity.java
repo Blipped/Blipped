@@ -180,9 +180,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     LatLng pulseLatlng;
     Marker gpsmarker;
     Switch showGPSToggle;
+    LocationListener locationListener;
 
-  final  int PICK_IMAGE_REQUEST = 111;
-   final int CAMERA_IMAGE_REQUEST = 1888;
+
     Uri filePath;
     ImageView imgView;
     ProgressDialog pd;
@@ -323,20 +323,34 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
 
         showGPSToggle = (Switch) findViewById(R.id.showgpstoggle);
+
         showGPSToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(!showGPSToggle.isChecked()){
+
+
                     liveGPSEmail.child("longitude").setValue(null);
                     liveGPSEmail.child("latitude").setValue(null);
                     liveGPSEmail.child("Creator").setValue(null);
+
+                }
+                else{
+
+                    locationListen();
+                    ShowGPSLocation();
                 }
 
             }
         });
         checkboxlisteners();
+
         ShowBlips();
+        liveGPSEmail.child("longitude").setValue(null);
+        liveGPSEmail.child("latitude").setValue(null);
+        liveGPSEmail.child("Creator").setValue(null);
         ShowGPSLocation();
-        locationListen();
+
+
 
 
         bottomNavigationView.setOnNavigationItemSelectedListener(
@@ -349,6 +363,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     if (selected.getSnippet().contains(userName)) {
                                         DeleteBlip(selected);
                                         bottomNavigationView.setVisibility(View.GONE);
+                                        break;
                                     }
                                 } catch (NullPointerException e) {
                                     Toast.makeText(MainActivity.this, "No marker selected", Toast.LENGTH_SHORT).show();
@@ -359,6 +374,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 try {
                                     if (selected.getSnippet().contains(userName)) {
                                         EditBlip(selected);
+                                        break;
                                     }
                                 } catch (NullPointerException e) {
 
@@ -386,13 +402,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onMapClick(LatLng latLng) {
 
-                Animation bottomDown = AnimationUtils.loadAnimation(getApplicationContext(),
-                        R.anim.bottom_down);
-                mMap.setPadding(0, 0, 0, 0);
-                bottomNavigationView.startAnimation(bottomDown);
-                bottomNavigationView.setVisibility(View.GONE);
+
+                if(bottomNavigationView.isShown()) {
+                    Animation bottomDown = AnimationUtils.loadAnimation(getApplicationContext(),
+                            R.anim.bottom_down);
+                    mMap.setPadding(0, 0, 0, 0);
+                    bottomNavigationView.startAnimation(bottomDown);
+                    bottomNavigationView.setVisibility(View.GONE);
+                }
             }
         });
+
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
@@ -1113,7 +1133,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         cursor_coordinate_longitude = coordinatetobeupdated.longitude;
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
-        View mBlipAddView = getLayoutInflater().inflate(R.layout.add_popup_constraint, null);
+        View mBlipAddView = getLayoutInflater().inflate(R.layout.add_blip_details_popup, null);
 
         mBlipName = mBlipAddView.findViewById(R.id.blipnameEt);
         mDetails = mBlipAddView.findViewById(R.id.detailsEt);
@@ -1915,7 +1935,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             liveGPSEmail.child("latitude").setValue(null);
             liveGPSEmail.child("Creator").setValue(null);
             mAuth.signOut();
-
+            MainActivity.this.finish();
             Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
 
         }
@@ -2402,16 +2422,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void locationListen() {
 
-        LocationListener locationListener = new android.location.LocationListener() {
+       locationListener = new android.location.LocationListener() {
+
             @Override
             public void onLocationChanged(Location location) {
 
-                double latitude = location.getLatitude();
-                double longitude = location.getLongitude();
+
                if(showGPSToggle.isChecked()){
 
-                   liveGPSEmail.child("longitude").setValue(longitude);
-                   liveGPSEmail.child("latitude").setValue(latitude);
+                   liveGPSEmail.child("longitude").setValue(location.getLongitude());
+                   liveGPSEmail.child("latitude").setValue(location.getLatitude());
                    liveGPSEmail.child("Creator").setValue(userName);
 
                }
@@ -2456,52 +2476,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void ShowGPSLocation() {
        liveGPS.addValueEventListener(new ValueEventListener(){
-
-
            @Override
            public void onDataChange(DataSnapshot dataSnapshot) {
-                  mMap.clear();
-                  ShowBlips();
+               try {
+                   mMap.clear();
+                   ShowBlips();
 
-
-               for (DataSnapshot snapm : dataSnapshot.getChildren()) {
-
-                       try {
-
-                           Double liveGPSlong = snapm.child("longitude").getValue(Double.class);
-                           Double liveGPSlat = snapm.child("latitude").getValue(Double.class);
-                           String creatorx = snapm.child("Creator").getValue(String.class);
-
-
-                           for (String temp : friendarraylist) {
-                               if(creatorx.equals(temp)) {
-
-                                   LatLng x = new LatLng(liveGPSlat, liveGPSlong);
-                                   gpsmarker = mMap.addMarker(new MarkerOptions() // Set Marker
-                                           .position(x)
-                                           .title(creatorx)
-                                           .snippet("Blank")
-                                           .icon(BitmapDescriptorFactory.fromResource(R.mipmap.public_sports)));
-
-                               }
-
-                           }
-
-
-
-                       } catch (NullPointerException e) {
-
-                           locationListen();
-                       }
-
-
-
+                   getliveGPSdatathenplacemarker(dataSnapshot);
+               }
+               catch (NullPointerException e){
+                   Toast.makeText(MainActivity.this, "No markers", Toast.LENGTH_SHORT).show();
 
                }
 
 
            }
-
            @Override
            public void onCancelled(DatabaseError databaseError) {
 
@@ -2509,6 +2498,40 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
        });
 
 
+    }
+
+    public void getliveGPSdatathenplacemarker(DataSnapshot dataSnapshot){
+        for (DataSnapshot snapm : dataSnapshot.getChildren()) {
+
+            try {
+
+                Double liveGPSlong = snapm.child("longitude").getValue(Double.class);
+                Double liveGPSlat = snapm.child("latitude").getValue(Double.class);
+                String creatorx = snapm.child("Creator").getValue(String.class);
+
+
+                for (String temp : friendarraylist) {
+                    if(creatorx.equals(temp)) {
+
+                        LatLng x = new LatLng(liveGPSlat, liveGPSlong);
+                        gpsmarker = mMap.addMarker(new MarkerOptions() // Set Marker
+                                .position(x)
+                                .title(creatorx)
+                                .snippet("Blank")
+                                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.public_sports)));
+
+                    }
+
+                }
+
+
+            } catch (NullPointerException e) {
+
+                locationListen();
+            }
+
+
+        }
     }
 
     public void ShowFriendList() {
