@@ -11,11 +11,11 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -38,12 +38,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.BounceInterpolator;
+import android.view.animation.Interpolator;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -86,6 +89,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Transformation;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -94,6 +98,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Random;
+
+import jp.wasabeef.picasso.transformations.CropCircleTransformation;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
@@ -126,6 +132,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DatabaseReference BlipsPublic = database.getReference("blips").child("public");
     DatabaseReference BlipsPrivate = database.getReference("blips").child("private");
     DatabaseReference UsersEmailFriends = database.getReference("users").child(userName).child("Friends");
+    DatabaseReference UsersEmailPic = database.getReference("users").child(userName).child("profilepic");
+
     DatabaseReference UsersEmailFriendRequests = database.getReference("users").child(userName).child("FriendRequests");
     DatabaseReference liveGPSEmail = database.getReference("liveGPS").child(userName);
     DatabaseReference liveGPS = database.getReference("liveGPS");
@@ -175,6 +183,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ListView lView;
     AlertDialog dialogfriendrequest;
     ArrayList<String> friendarraylist;
+    ArrayList<String> friendprofilepicarraylist;
 
     private Circle lastUserCircle;
     private long pulseDuration = 10;
@@ -184,6 +193,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Switch showGPSToggle;
     LocationListener locationListener;
     LocationManager locationManager;
+
 
 
     Uri filePath;
@@ -201,6 +211,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Marker selected;
     String[] dataarray;
 
+    boolean alreadyExecuted;
+    ImageView profilepic;
+
 
     BottomNavigationView bottomNavigationView;
 
@@ -211,14 +224,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.sidebar);
         friendarraylist = new ArrayList<String>();
         friendrequestlist = new ArrayList<String>();
+        friendprofilepicarraylist = new ArrayList<String>();
         getFriendsList();
 
         DeclareThings();
         ShowFriendRequestCount();
-        ConnectivityManager cm = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
 
 
         bottomNavigationView = (BottomNavigationView)
@@ -253,6 +263,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 //handle click
             }
         });
+
 
 
     }
@@ -306,8 +317,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onMapReady(GoogleMap googleMap) throws NullPointerException {
+        alreadyExecuted = false;
         TextView userNameText = (TextView) findViewById(R.id.currentUserTxt);
         userNameText.setText("Welcome " + userID.getEmail());
+
+        ImageButton editprofilepic = (ImageButton) findViewById(R.id.editprofilepicbutton);
+        profilepic = (ImageView) findViewById(R.id.profilepic);
+        loadprofilepic();
+
+        editprofilepic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                editprofpic();
+            }
+        });
 
 
 
@@ -629,12 +652,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
         // Put inormation into a single string with comma seperators
         Description = blipsadded.Creator+"123marcius"+ blipsadded.Details +"123marcius"+blipsadded.imageURL;
-        mMap.addMarker(new MarkerOptions() // Set Marker
+     Marker t =   mMap.addMarker(new MarkerOptions() // Set Marker
 
                 .position(newBlipCoordinates)
                 .title(blipsadded.BlipName)
                 .snippet(Description)
                 .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
+
+        if(!alreadyExecuted) {
+            dropPinEffect(t);
+        }
+
 
     }
 
@@ -1051,7 +1079,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mediaScanIntent.setData(photoURI);
         this.sendBroadcast(mediaScanIntent);
     }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -1095,8 +1122,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
-
-
     public void DeleteBlip(Marker marker) {
         final LatLng coordinatetobedeleted = marker.getPosition();
 
@@ -1154,7 +1179,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 });
 
     }
-
     public void EditBlip(final Marker marker) {
 
         final LatLng coordinatetobeupdated = marker.getPosition();
@@ -1461,10 +1485,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             blipIcon.toLowerCase().contains("private".toLowerCase())
                             && (creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(creator))) {
 
-
                         categoryFilterPrivate(blipsadded);
-
-
 
                     }
 
@@ -1510,6 +1531,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
+        alreadyExecuted = true;
     }
 
     public void categoryFilterPrivate(Blips blipsadded) {
@@ -1602,18 +1624,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void getFriendsList() {
 
-
         UsersEmailFriends.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
-
+                 //Split String
                 String x = dataSnapshot.getKey().toString();
+
                 if(!friendarraylist.contains(x)){
+
                     friendarraylist.add(x);
+
+                    DatabaseReference UsersxEmailxprofilepic = database.getReference("users").child(x).child("profilepic");
+
+                    UsersxEmailxprofilepic.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            //Get Download link for profile pic
+                            String   profilepiclink =   dataSnapshot.child("MyProfilePic").getValue(String.class);
+                            friendprofilepicarraylist.add(profilepiclink);
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+
+
                 }
-
-
 
             }
 
@@ -2515,25 +2554,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void ShowGPSLocation() {
        liveGPS.addValueEventListener(new ValueEventListener(){
-           @Override
-           public void onDataChange(DataSnapshot dataSnapshot) {
-               try {
-                   mMap.clear();
-                   ShowBlips();
+               @Override
+               public void onDataChange(DataSnapshot dataSnapshot) {
+                   try {
+                       mMap.clear();
+                       ShowBlips();
 
-                   getliveGPSdatathenplacemarker(dataSnapshot);
+                       getliveGPSdatathenplacemarker(dataSnapshot);
+                   }
+                   catch (NullPointerException e){
+                       Toast.makeText(MainActivity.this, "No markers", Toast.LENGTH_SHORT).show();
+
+                   }
+
+
                }
-               catch (NullPointerException e){
-                   Toast.makeText(MainActivity.this, "No markers", Toast.LENGTH_SHORT).show();
+               @Override
+               public void onCancelled(DatabaseError databaseError) {
 
                }
-
-
-           }
-           @Override
-           public void onCancelled(DatabaseError databaseError) {
-
-           }
        });
 
 
@@ -2584,29 +2623,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         AlertDialog dialogfriendrequest = mBuilder.create();
 
         dialogfriendrequest.show();
-        FriendListAdapter adapter = new FriendListAdapter(friendarraylist, MainActivity.this);
+        FriendListAdapter adapter = new FriendListAdapter(friendarraylist, friendprofilepicarraylist, MainActivity.this);
         lView.setAdapter(adapter);
 
     }
 
     private class FriendListAdapter extends BaseAdapter implements ListAdapter {
-        private ArrayList<String> list1 = new ArrayList<String>();
+
+        private ArrayList<String> names = new ArrayList<String>();
+        private ArrayList<String> pictures = new ArrayList<String>();
         private Context context;
 
 
-        public FriendListAdapter(ArrayList<String> list1, Context context) {
-            this.list1 = list1;
+        public FriendListAdapter(ArrayList<String> friendnamesarraylist, ArrayList<String> friendprofilepicarraylist, Context context) {
+            this.names = friendnamesarraylist;
+            this.pictures = friendprofilepicarraylist;
             this.context = context;
         }
 
         @Override
         public int getCount() {
-            return list1.size();
+            return names.size();
         }
 
         @Override
         public Object getItem(int pos) {
-            return list1.get(pos);
+            return names.get(pos);
         }
 
         @Override
@@ -2618,16 +2660,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         @Override
         public View getView(final int position, View convertView, final ViewGroup parent) {
             View view = convertView;
+
             if (view == null ) {
                 LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                view = inflater.inflate(R.layout.getfriendlistbuttonsconstraint, null);
+                view = inflater.inflate(R.layout.getfriendlistbuttons, null);
 
 
             }
 
             //Handle TextView and display string from your list
-            final TextView listItemText1 = view.findViewById(R.id.list_item_string1);
-            listItemText1.setText(list1.get(position));
+            final TextView namestext = view.findViewById(R.id.list_item_string1);
+            namestext.setText(names.get(position)+".com");
+
+            ImageButton viewprofile = view.findViewById(R.id.viewprofile);
+            final Transformation transformation = new CropCircleTransformation();
+            Picasso.with(getActivity())
+                    .load(pictures.get(position)).transform(transformation)
+                    .into(viewprofile);
 
             //Handle buttons and add onClickListeners
             Button deleteBtn = view.findViewById(R.id.delete_btn);
@@ -2639,8 +2688,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 public void onClick(View v) {//TODO DELETE BUTTON
                     //do something
 
-                    String friendtobedeleted = list1.get(position);
-                    list1.remove(position); //or some other task
+                    String friendtobedeleted = names.get(position);
+                    names.remove(position); //or some other task
                     notifyDataSetChanged();
                     DeleteFriend(friendtobedeleted);
                     Users.child(userName).child("Friends").child(friendtobedeleted).setValue(null);// Add to user's blips
@@ -2682,11 +2731,146 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    private void dropPinEffect(final Marker marker) {
+        final Handler handler = new Handler();
+        final long start = SystemClock.uptimeMillis();
+        final long duration = 1500;
+
+        final Interpolator interpolator = new BounceInterpolator();
+
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                long elapsed = SystemClock.uptimeMillis() - start;
+                float t = Math.max(
+                        1 - interpolator.getInterpolation((float) elapsed
+                                / duration), 0);
+                marker.setAnchor(0.5f, 1.0f + 14 * t);
+
+                if (t > 0.0) {
+                    // Post again 15ms later.
+                    handler.postDelayed(this, 15);
+                } else {
+
+                }
+            }
+        });
+    }
+
+    private void editprofpic(){
+       View  editprofilepicview= getLayoutInflater().inflate(R.layout.editprofilepicview, null);
+       Button chooseImg =  editprofilepicview.findViewById(R.id.chooseImg);
+       Button takePhoto =  editprofilepicview.findViewById(R.id.takePhoto);
+       imgView = editprofilepicview.findViewById(R.id.imgView);
+       Button uploadprofpic = editprofilepicview.findViewById(R.id.uploadprofilepic);
+       pd = new ProgressDialog(this);
+       pd.setMessage("Uploading....");
+       try {
+
+           AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
+           mBuilder.setView(editprofilepicview);
+           final AlertDialog dialog = mBuilder.create();
+
+           dialog.show();
+
+
+
+           chooseImg.setOnClickListener(new View.OnClickListener() {//Choose Image Button Click
+               @Override
+               public void onClick(View v) {
+                   Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                   startActivityForResult(pickPhoto , 1);//one can be replaced with any action code
+
+               }
+           });
+
+           takePhoto.setOnClickListener(new View.OnClickListener() {//Choose Image Button Click
+               @Override
+               public void onClick(View v) {
+                   takePicture();
+               }
+           });
+
+
+          uploadprofpic.setOnClickListener(new View.OnClickListener() {//Choose Image Button Click
+               @Override
+               public void onClick(View v) {
+
+                   if(filePath != null) {
+
+                       //uploading the image
+                       for (String name : filePathMap.keySet()){
+                           pd.show();
+                           Uri value = filePathMap.get(name);
+
+                           StorageReference childusername = storageRef.child("BlipPhotos").child(userName);
+                           uploadTask = childusername.child(filePath.getLastPathSegment()).putBytes(convertURItocompresseddata(value));
+
+                           uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                               @Override
+                               public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                   pd.dismiss();
+                                   Toast.makeText(MainActivity.this, "Upload successful", Toast.LENGTH_SHORT).show();
+                                   //get the download URL like this:
+                                   @SuppressWarnings("VisibleForTests")
+                                   Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                   //and you can convert it to string like this:
+                                   imageURLLink = downloadUrl.toString();
+                                   UsersEmailPic.child("MyProfilePic").setValue(imageURLLink);
+
+                                   dialog.cancel();
+                                   filePathMap.clear();
+
+                                   Picasso.with(getActivity())
+                                           .load(imageURLLink)
+                                           .into(profilepic);
+
+
+
+
+                               }
+                           }).addOnFailureListener(new OnFailureListener() {
+                               @Override
+                               public void onFailure(@NonNull Exception e) {
+                                   pd.dismiss();
+                                   Toast.makeText(MainActivity.this, "Upload Failed -> " + e, Toast.LENGTH_SHORT).show();
+                               }
+                           });
+
+
+                       }
+                   }
+               }
+           });
 
 
 
 
 
+       } catch (NullPointerException e) {
+
+       }
+
+   }
+
+   private void loadprofilepic(){
+       UsersEmailPic.addValueEventListener(new ValueEventListener(){
+           @Override
+           public void onDataChange(DataSnapshot dataSnapshot) {
+             String profpicdownloadlink= dataSnapshot.child("MyProfilePic").getValue(String.class);
+
+               final Transformation transformation = new CropCircleTransformation();
+               Picasso.with(getActivity())
+                       .load(profpicdownloadlink).transform(transformation)
+                       .into(profilepic);
+
+           }
+           @Override
+           public void onCancelled(DatabaseError databaseError) {
+
+           }
+       });
+   }
 
 }
 
