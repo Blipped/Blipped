@@ -184,6 +184,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     AlertDialog dialogfriendrequest;
     ArrayList<String> friendarraylist;
     ArrayList<String> friendprofilepicarraylist;
+    ArrayList<String> profilepicarraylist;
 
     private Circle lastUserCircle;
     private long pulseDuration = 10;
@@ -225,6 +226,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         friendarraylist = new ArrayList<String>();
         friendrequestlist = new ArrayList<String>();
         friendprofilepicarraylist = new ArrayList<String>();
+        profilepicarraylist = new ArrayList<String>();
         getFriendsList();
 
         DeclareThings();
@@ -350,7 +352,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.getUiSettings().setIndoorLevelPickerEnabled(true);
-        googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
+        googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_style));
 
         showGPSToggle = (Switch) findViewById(R.id.showgpstoggle);
 
@@ -969,6 +971,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                                 StorageReference childRefKey = storageRef.child("BlipPhotos").child(blipkey);
+
                                 uploadTask = childRefKey.child(filePath.getLastPathSegment()).putBytes( convertURItocompresseddata(value));
                                 uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                                     @Override
@@ -2228,11 +2231,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
         private ArrayList<String> list = new ArrayList<String>();
+        private ArrayList<String> profilepicarraylist = new ArrayList<String>();
         private Context context;
 
 
-        public FriendRequestsAdapter(ArrayList<String> list, Context context) {
+        public FriendRequestsAdapter(ArrayList<String> list, ArrayList<String> profilepicarraylist, Context context) {
             this.list = list;
+            this.profilepicarraylist = profilepicarraylist;
             this.context = context;
         }
 
@@ -2265,6 +2270,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             //Handle TextView and display string from your list
             final TextView listItemText = view.findViewById(R.id.list_item_string);
             listItemText.setText(list.get(position));
+
+            ImageButton friendrequestviewprofile = view.findViewById(R.id.friendrequestviewprofile);
+            try {
+                final Transformation transformation = new CropCircleTransformation();
+                Picasso.with(getActivity())
+                        .load(profilepicarraylist.get(position)).transform(transformation)
+                        .into(friendrequestviewprofile);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             //Handle buttons and add onClickListeners
             Button deleteBtn = view.findViewById(R.id.delete_btn);
@@ -2389,6 +2404,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
                 String y = dataSnapshot.getKey().toString();
                 friendrequestlist.add(y);
+                DatabaseReference UsersxEmailxprofilepic = database.getReference("users").child(y).child("profilepic");
+
+                UsersxEmailxprofilepic.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        //Get Download link for profile pic
+                        String   profilepiclink =   dataSnapshot.child("MyProfilePic").getValue(String.class);
+                        profilepicarraylist.add(profilepiclink);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
+
                 item_notifications.setTitle("Friend Requests    " + friendrequestlist.size());
 
 
@@ -2423,14 +2455,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
 
-        View mShowFriendAddView = getLayoutInflater().inflate(R.layout.listview, null);
+        View mShowFriendAddView = getLayoutInflater().inflate(R.layout.friendrequestlistview, null);
         lView = mShowFriendAddView.findViewById(R.id.notifListview);
 
         mBuilder.setView(mShowFriendAddView);
         AlertDialog dialogfriendrequest = mBuilder.create();
 
         dialogfriendrequest.show();
-        FriendRequestsAdapter adapter = new FriendRequestsAdapter(friendrequestlist, MainActivity.this);
+        FriendRequestsAdapter adapter = new FriendRequestsAdapter(friendrequestlist,profilepicarraylist, MainActivity.this);
         lView.setAdapter(adapter);
 
     }
@@ -2616,13 +2648,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
 
-        View mShowFriendAddView = getLayoutInflater().inflate(R.layout.listview, null);
+        View mShowFriendAddView = getLayoutInflater().inflate(R.layout.friendlistlistview, null);
         lView = mShowFriendAddView.findViewById(R.id.notifListview);
 
         mBuilder.setView(mShowFriendAddView);
-        AlertDialog dialogfriendrequest = mBuilder.create();
+        AlertDialog dialogfriendlist = mBuilder.create();
 
-        dialogfriendrequest.show();
+        dialogfriendlist.show();
         FriendListAdapter adapter = new FriendListAdapter(friendarraylist, friendprofilepicarraylist, MainActivity.this);
         lView.setAdapter(adapter);
 
@@ -2674,11 +2706,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 final TextView namestext = view.findViewById(R.id.list_item_string1);
                 namestext.setText(names.get(position)+".com");
 
-                ImageButton viewprofile = view.findViewById(R.id.viewprofile);
+                ImageButton friendlistviewprofile = view.findViewById(R.id.friendlistviewprofile);
                 final Transformation transformation = new CropCircleTransformation();
                 Picasso.with(getActivity())
                         .load(pictures.get(position)).transform(transformation)
-                        .into(viewprofile);
+                        .into(friendlistviewprofile);
 
                 //Handle buttons and add onClickListeners
                 deleteBtn = view.findViewById(R.id.delete_btn);

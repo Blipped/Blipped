@@ -2,9 +2,9 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="2dp"
+    android:padding="0dp"
     tools:layout_editor_absoluteX="0dp"
     tools:layout_editor_absoluteY="81dp">
 
@@ -14,12 +14,14 @@
         android:gravity="end"
         android:orientation="horizontal"
         android:padding="5dp"
-        tools:layout_editor_absoluteX="8dp"
-        tools:layout_editor_absoluteY="8dp">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        tools:layout_constraintBottom_creator="1"
+        tools:layout_constraintLeft_creator="1">
 
         <ImageButton
-            android:id="@+id/viewprofile"
-            android:layout_width="wrap_content"
+            android:id="@+id/friendlistviewprofile"
+            android:layout_width="50dp"
             android:layout_height="50dp"
             android:adjustViewBounds="true"
             android:background="@null"
@@ -30,7 +32,7 @@
 
         <TextView
             android:id="@+id/list_item_string1"
-            android:layout_width="220dp"
+            android:layout_width="230dp"
             android:layout_height="wrap_content"
             android:paddingLeft="8dp"
             android:text="Empty"
