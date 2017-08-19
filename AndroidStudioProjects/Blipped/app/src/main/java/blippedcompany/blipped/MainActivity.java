@@ -2257,7 +2257,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             View view = convertView;
             if (view == null && !friendrequestlist.isEmpty()) {
                 LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                view = inflater.inflate(R.layout.getfriendnotificationbuttonsconstraint, null);
+                view = inflater.inflate(R.layout.getfriendnotificationbuttons, null);
 
 
             }
@@ -2423,7 +2423,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
 
-        View mShowFriendAddView = getLayoutInflater().inflate(R.layout.getfriendnotification_viewconstraint, null);
+        View mShowFriendAddView = getLayoutInflater().inflate(R.layout.listview, null);
         lView = mShowFriendAddView.findViewById(R.id.notifListview);
 
         mBuilder.setView(mShowFriendAddView);
@@ -2616,7 +2616,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
 
-        View mShowFriendAddView = getLayoutInflater().inflate(R.layout.getfriendnotification_viewconstraint, null);
+        View mShowFriendAddView = getLayoutInflater().inflate(R.layout.listview, null);
         lView = mShowFriendAddView.findViewById(R.id.notifListview);
 
         mBuilder.setView(mShowFriendAddView);
@@ -2669,18 +2669,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
             //Handle TextView and display string from your list
-            final TextView namestext = view.findViewById(R.id.list_item_string1);
-            namestext.setText(names.get(position)+".com");
+            Button deleteBtn = null;
+            try {
+                final TextView namestext = view.findViewById(R.id.list_item_string1);
+                namestext.setText(names.get(position)+".com");
 
-            ImageButton viewprofile = view.findViewById(R.id.viewprofile);
-            final Transformation transformation = new CropCircleTransformation();
-            Picasso.with(getActivity())
-                    .load(pictures.get(position)).transform(transformation)
-                    .into(viewprofile);
+                ImageButton viewprofile = view.findViewById(R.id.viewprofile);
+                final Transformation transformation = new CropCircleTransformation();
+                Picasso.with(getActivity())
+                        .load(pictures.get(position)).transform(transformation)
+                        .into(viewprofile);
 
-            //Handle buttons and add onClickListeners
-            Button deleteBtn = view.findViewById(R.id.delete_btn);
-
+                //Handle buttons and add onClickListeners
+                deleteBtn = view.findViewById(R.id.delete_btn);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
 
             deleteBtn.setOnClickListener(new View.OnClickListener() {
