@@ -2,58 +2,60 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="0dp"
     tools:layout_editor_absoluteX="0dp"
     tools:layout_editor_absoluteY="81dp">
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="end"
-        android:orientation="horizontal"
-        android:padding="5dp"
+    <ImageButton
+        android:id="@+id/friendlistviewprofile"
+        android:layout_width="50dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="2dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="2dp"
+        android:adjustViewBounds="true"
+        android:background="@null"
+        android:scaleType="fitXY"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"
+        app:srcCompat="@mipmap/anime"
         tools:layout_constraintBottom_creator="1"
-        tools:layout_constraintLeft_creator="1">
+        tools:layout_constraintTop_creator="1" />
 
-        <ImageButton
-            android:id="@+id/friendlistviewprofile"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:adjustViewBounds="true"
-            android:background="@null"
-            android:scaleType="fitXY"
-            app:srcCompat="@mipmap/anime"
-            tools:layout_editor_absoluteX="-4dp"
-            tools:layout_editor_absoluteY="0dp" />
+    <TextView
+        android:id="@+id/list_item_string1"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginLeft="75dp"
+        android:layout_marginStart="75dp"
+        android:paddingLeft="8dp"
+        android:text="Empty"
+        android:textAlignment="textStart"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        tools:layout_constraintBottom_creator="1" />
 
-        <TextView
-            android:id="@+id/list_item_string1"
-            android:layout_width="230dp"
-            android:layout_height="wrap_content"
-            android:paddingLeft="8dp"
-            android:text="Empty"
-            android:textAlignment="textStart"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            tools:layout_editor_absoluteX="0dp"
-            tools:layout_editor_absoluteY="68dp" />
-
-        <Button
-            android:id="@+id/delete_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:layout_marginEnd="6dp"
-            android:layout_marginRight="6dp"
-            android:text="UNFRIEND"
-            android:textSize="10sp"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:layout_constraintRight_creator="1"
-            tools:layout_constraintTop_creator="1" />
-    </LinearLayout>
+    <Button
+        android:id="@+id/delete_btn"
+        android:layout_width="93dp"
+        android:layout_height="38dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="0dp"
+        android:text="UNFRIEND"
+        android:textAlignment="center"
+        android:textSize="10sp"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_constraintRight_creator="1"
+        tools:layout_constraintTop_creator="1"
+        app:layout_constraintLeft_toRightOf="@+id/list_item_string1"
+        android:layout_marginLeft="0dp" />
 
 </android.support.constraint.ConstraintLayout>

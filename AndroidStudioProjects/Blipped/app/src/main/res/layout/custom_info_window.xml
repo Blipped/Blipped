@@ -28,7 +28,7 @@
             android:id="@+id/badge"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:layout_marginRight="5dp"
+            android:layout_marginRight="0dp"
             android:layout_weight="1"
             android:adjustViewBounds="true"
             android:scaleType="fitXY"

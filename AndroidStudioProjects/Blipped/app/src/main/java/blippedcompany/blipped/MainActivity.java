@@ -7,7 +7,14 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -87,6 +94,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.koushikdutta.ion.Ion;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Transformation;
@@ -94,11 +102,18 @@ import com.squareup.picasso.Transformation;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 
 import jp.wasabeef.picasso.transformations.CropCircleTransformation;
 
@@ -190,6 +205,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     HashMap<String,Blips> markerlist=new HashMap<>();
     HashMap<String,Marker> markerlist2=new HashMap<>();
     HashMap<String,Marker>gpslist=new HashMap<>();
+    HashMap<String,Bitmap>profilepictureslist=new HashMap<>();
+    String friendname;
 
     private Circle lastUserCircle;
     private long pulseDuration = 10;
@@ -216,6 +233,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Uri photoURI;
     Marker selected;
     String[] dataarray;
+    String profpicdownloadlink;
 
     boolean alreadyExecuted;
     ImageView profilepic;
@@ -228,20 +246,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.sidebar);
         friendarraylist = new ArrayList<String>();
         friendrequestlist = new ArrayList<String>();
         friendprofilepicarraylist = new ArrayList<String>();
         profilepicarraylist = new ArrayList<String>();
-        getFriendsList();
+
         DeclareThings();
         ShowFriendRequestCount();
 
 
         bottomNavigationView = (BottomNavigationView)
                 findViewById(R.id.bottom_navigation);
-
-
 
         search = (SearchView) findViewById(R.id.searchView);
         search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -274,7 +291,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
+    @Override
+    public void onDestroy() {
+        liveGPSEmail.removeValue();
+        locationManager.removeUpdates(locationListener);
+        locationListener = null;
+        super.onDestroy();
 
+    }
     public void DeclareThings() {
 
         //Toolbar
@@ -324,10 +348,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onMapReady(GoogleMap googleMap) throws NullPointerException {
-        alreadyExecuted = false;
+
         TextView userNameText = (TextView) findViewById(R.id.currentUserTxt);
         userNameText.setText("Welcome " + userID.getEmail());
 
+        getFriendsList();
         ImageButton editprofilepic = (ImageButton) findViewById(R.id.editprofilepicbutton);
         profilepic = (ImageView) findViewById(R.id.profilepic);
         loadprofilepic();
@@ -382,10 +407,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ShowBlipsPrivate();
         ShowGPSLocation();
 
-        liveGPSEmail.child("longitude").setValue(null);
-        liveGPSEmail.child("latitude").setValue(null);
-        liveGPSEmail.child("Creator").setValue(null);
-
 
 
         bottomNavigationView.setOnNavigationItemSelectedListener(
@@ -415,7 +436,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                                 }
                             }
-
 
 
                             case R.id.action_music:
@@ -548,8 +568,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onInfoWindowClick(final Marker marker) throws NullPointerException {
 
-            showImage(marker);
-
+                try {
+                    showImage(marker);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
 
             }
@@ -694,11 +717,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         .load(URL)
                         .into(userPhoto);
 
+
                 marker.showInfoWindow();
             }
         }
     }
 
+    public static Bitmap getBitmapFromURL(String src) {
+        try {
+            URL url = new URL(src);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+            return myBitmap;
+        } catch (IOException e) {
+            // Log exception
+            return null;
+        }
+    }
     public void takePicture() {
 
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -1052,7 +1090,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             e.printStackTrace();
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] data = baos.toByteArray();
         return data;
     }
@@ -1565,9 +1603,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             blipIcon,null,null,null,imgURL);
 
 
-
-
-
                     if (privatecheckbox.isChecked() &&
                             blipIcon.toLowerCase().contains("private".toLowerCase())
                             && (creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(creator))) {
@@ -1782,20 +1817,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
                  //Split String
-                String x = dataSnapshot.getKey().toString();
+               friendname = dataSnapshot.getKey().toString();
 
-                if(!friendarraylist.contains(x)){
+                if(!friendarraylist.contains( friendname)){
 
-                    friendarraylist.add(x);
+                    friendarraylist.add( friendname);
 
-                    DatabaseReference UsersxEmailxprofilepic = database.getReference("users").child(x).child("profilepic");
+                    DatabaseReference UsersxEmailxprofilepic = database.getReference("users").child(friendname).child("profilepic");
 
                     UsersxEmailxprofilepic.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             //Get Download link for profile pic
-                            String   profilepiclink =   dataSnapshot.child("MyProfilePic").getValue(String.class);
+                            String profilepiclink =   dataSnapshot.child("MyProfilePic").getValue(String.class);
                             friendprofilepicarraylist.add(profilepiclink);
+
+
+
                         }
 
                         @Override
@@ -2154,9 +2192,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else {
 
             super.onBackPressed();
-            liveGPSEmail.child("longitude").setValue(null);
-            liveGPSEmail.child("latitude").setValue(null);
-            liveGPSEmail.child("Creator").setValue(null);
+            liveGPSEmail.removeValue();
             locationManager.removeUpdates(locationListener);
             locationListener = null;
 
@@ -2691,7 +2727,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                            userName,
                            userName,
                            null,
-                           null,null,null,null,null);
+                           null,null,null,null,profpicdownloadlink);
 
                      liveGPS.child(userName).setValue(gpsblips);
 
@@ -2739,43 +2775,54 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
-                    Toast.makeText(MainActivity.this, "ChildAdded", Toast.LENGTH_SHORT).show();
-                    String xtest = dataSnapshot.child("Creator").getValue(String.class);
-                    Toast.makeText(MainActivity.this, xtest, Toast.LENGTH_SHORT).show();
-
-
-                    if(friendarraylist.contains(xtest)) {
-
+                    String creator = dataSnapshot.child("Creator").getValue(String.class);
+                    String imagedownloadlink = dataSnapshot.child("imageURL").getValue(String.class);
+                    if(friendarraylist.contains(creator)) {
+                           Bitmap mybitmap = null;
                         LatLng x = new LatLng(  dataSnapshot.child("latitude").getValue(Double.class),  dataSnapshot.child("longitude").getValue(Double.class));
+                        try {
+                            Bitmap bmImg = Ion.with(getApplicationContext())
+                                    .load(imagedownloadlink).withBitmap().placeholder(R.drawable.ic_menu_slideshow).asBitmap().get();
 
-                        gpsmarker = mMap.addMarker(new MarkerOptions()
-                                .position(x)// Set Marker
-                                .title(dataSnapshot.child("Creator").getValue(String.class))
-                                .snippet("Blank")
-                                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.public_sports)));
+                            gpsmarker = mMap.addMarker(new MarkerOptions()
+                                    .position(x)// Set Marker
+                                    .title(dataSnapshot.child("Creator").getValue(String.class))
+                                    .snippet(imagedownloadlink)
+                                    .icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(bmImg, 50, 50, false))));
+
+
+
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        } catch (ExecutionException e) {
+                            e.printStackTrace();
+                        }
+
+
 
                         gpsmarkerkey++;
                         gpslist.put(Integer.toString(gpsmarkerkey),gpsmarker);
                     }
 
-
-
-
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                Toast.makeText(MainActivity.this, "ChildChanged", Toast.LENGTH_SHORT).show();
 
-                LatLng x = new LatLng(  dataSnapshot.child("latitude").getValue(Double.class),  dataSnapshot.child("longitude").getValue(Double.class));
-                updategpsmarkerfromhashmap(x,dataSnapshot.child("Creator").getValue(String.class));
+                try {
+                    LatLng x = new LatLng(  dataSnapshot.child("latitude").getValue(Double.class),  dataSnapshot.child("longitude").getValue(Double.class));
+                    updategpsmarkerfromhashmap(x,dataSnapshot.child("Creator").getValue(String.class));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
             }
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
                 try {
                     LatLng x = new LatLng(  dataSnapshot.child("latitude").getValue(Double.class),  dataSnapshot.child("longitude").getValue(Double.class));
                    removegpsmarkerfromhashmap(x,dataSnapshot.child("Creator").getValue(String.class));
-                } catch (Exception e) {
+                } catch (NullPointerException e) {
                     e.printStackTrace();
                 }
             }
@@ -2790,27 +2837,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
-    }
-    public void getliveGPSdatathenplacemarker(DataSnapshot dataSnapshot){
-
-                for (String temp : friendarraylist) {
-
-                    if(true) {
-                        Toast.makeText(this, "Hello", Toast.LENGTH_SHORT).show();
-                        LatLng x = new LatLng(  dataSnapshot.child("latitude").getValue(Double.class),  dataSnapshot.child("longitude").getValue(Double.class));
-
-                        gpsmarker = mMap.addMarker(new MarkerOptions()
-                                .position(x)// Set Marker
-                                .title(dataSnapshot.child("Creator").getValue(String.class))
-                                .snippet("Blank")
-                                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.public_sports)));
-
-                        gpsmarkerkey++;
-                        gpslist.put(Integer.toString(gpsmarkerkey),gpsmarker);
-                    }
-
-                }
-
     }
 
     private void removegpsmarkerfromhashmap(LatLng delete,String creatorx){
@@ -3125,7 +3151,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
        UsersEmailPic.addValueEventListener(new ValueEventListener(){
            @Override
            public void onDataChange(DataSnapshot dataSnapshot) {
-             String profpicdownloadlink= dataSnapshot.child("MyProfilePic").getValue(String.class);
+               profpicdownloadlink= dataSnapshot.child("MyProfilePic").getValue(String.class);
 
                final Transformation transformation = new CropCircleTransformation();
                Picasso.with(getActivity())
@@ -3140,5 +3166,52 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
        });
    }
 
+    public void getAddress(double lat, double lng) {
+        Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+        try {
+            List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
+            Address obj = addresses.get(0);
+            String add = obj.getAddressLine(0);
+            add = add + "\n" + obj.getCountryName();
+            add = add + "\n" + obj.getCountryCode();
+            add = add + "\n" + obj.getAdminArea();
+            add = add + "\n" + obj.getPostalCode();
+            add = add + "\n" + obj.getSubAdminArea();
+            add = add + "\n" + obj.getLocality();
+            add = add + "\n" + obj.getSubThoroughfare();
+
+            Log.v("IGA", "Address" + add);
+            // Toast.makeText(this, "Address=>" + add,
+            // Toast.LENGTH_SHORT).show();
+
+            // TennisAppActivity.showDialog(add);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public Bitmap getCroppedBitmap(Bitmap bitmap) {
+        Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
+                bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(output);
+
+        final int color = 0xff424242;
+        final Paint paint = new Paint();
+        final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+        paint.setAntiAlias(true);
+        canvas.drawARGB(0, 0, 0, 0);
+        paint.setColor(color);
+        // canvas.drawRoundRect(rectF, roundPx, roundPx, paint);
+        canvas.drawCircle(bitmap.getWidth() / 2, bitmap.getHeight() / 2,
+                bitmap.getWidth() / 2, paint);
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+        canvas.drawBitmap(bitmap, rect, rect, paint);
+        //Bitmap _bmp = Bitmap.createScaledBitmap(output, 60, 60, false);
+        //return _bmp;
+        return output;
+    }
 }
 

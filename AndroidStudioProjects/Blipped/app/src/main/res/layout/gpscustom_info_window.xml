@@ -10,22 +10,23 @@
     <TextView
         android:id="@+id/title"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_weight="1"
         android:background="@android:color/holo_blue_light"
-        android:text="Title"
+        android:shadowColor="@color/common_google_signin_btn_text_dark_focused"
+        android:text="fsdfdsfsfds@mail.com"
         android:textAlignment="center"
         android:textColor="#ff000000"
-        android:textSize="10sp"
+        android:textSize="8sp"
         android:textStyle="bold" />
 
     <ImageView
         android:id="@+id/badge"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:layout_marginRight="5dp"
-        android:layout_weight="1"
+        android:layout_marginRight="0dp"
         android:adjustViewBounds="true"
+        android:cropToPadding="true"
         android:scaleType="fitXY"
         app:srcCompat="@drawable/ic_menu_gallery"></ImageView>
 
