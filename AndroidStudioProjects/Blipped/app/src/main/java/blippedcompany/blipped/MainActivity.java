@@ -96,6 +96,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 
@@ -144,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String TAG = "MainActivity";
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
-
+    Marker myMarker;
 
     Double cursor_coordinate_latitude;
     Double cursor_coordinate_longitude;
@@ -185,6 +186,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ArrayList<String> friendarraylist;
     ArrayList<String> friendprofilepicarraylist;
     ArrayList<String> profilepicarraylist;
+    ArrayList markerinfolist;
+    HashMap<String,Blips> markerlist=new HashMap<>();
+    HashMap<String,Marker> markerlist2=new HashMap<>();
+    HashMap<String,Marker>gpslist=new HashMap<>();
 
     private Circle lastUserCircle;
     private long pulseDuration = 10;
@@ -214,7 +219,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     boolean alreadyExecuted;
     ImageView profilepic;
-
+    int markerkey =0;
+    int gpsmarkerkey =0;
 
     BottomNavigationView bottomNavigationView;
 
@@ -228,7 +234,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         friendprofilepicarraylist = new ArrayList<String>();
         profilepicarraylist = new ArrayList<String>();
         getFriendsList();
-
         DeclareThings();
         ShowFriendRequestCount();
 
@@ -261,7 +266,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onClick(View v) {
 
                 mMap.clear();
-                ShowBlips();
+
                 //handle click
             }
         });
@@ -346,7 +351,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-
+        locationListen();
         mMap = googleMap;
         mMap.setTrafficEnabled(true);
         mMap.setMyLocationEnabled(true);
@@ -360,30 +365,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(!showGPSToggle.isChecked()){
 
-
-                    liveGPSEmail.child("longitude").setValue(null);
-                    liveGPSEmail.child("latitude").setValue(null);
-                    liveGPSEmail.child("Creator").setValue(null);
-                    locationManager.removeUpdates(locationListener);
-                    locationListener = null;
+                    liveGPSEmail.removeValue();
 
                 }
                 else{
 
-                    locationListen();
-                    ShowGPSLocation();
+
+
                 }
 
             }
         });
         checkboxlisteners();
 
-        ShowBlips();
+        ShowBlipsPublic();
+        ShowBlipsPrivate();
+        ShowGPSLocation();
+
         liveGPSEmail.child("longitude").setValue(null);
         liveGPSEmail.child("latitude").setValue(null);
         liveGPSEmail.child("Creator").setValue(null);
-        ShowGPSLocation();
-
 
 
 
@@ -654,16 +655,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
         // Put inormation into a single string with comma seperators
         Description = blipsadded.Creator+"123marcius"+ blipsadded.Details +"123marcius"+blipsadded.imageURL;
-     Marker t =   mMap.addMarker(new MarkerOptions() // Set Marker
+        myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
 
                 .position(newBlipCoordinates)
                 .title(blipsadded.BlipName)
                 .snippet(Description)
                 .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
+        markerlist2.put(Integer.toString(markerkey), myMarker);
+        dropPinEffect(myMarker);
 
-        if(!alreadyExecuted) {
-            dropPinEffect(t);
-        }
 
 
     }
@@ -876,7 +876,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
                                         dialog.cancel();
-                                        ShowBlips();
+
                                         filePathMap.clear();
 
 
@@ -902,7 +902,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
                         dialog.cancel();
-                        ShowBlips();
+
                         filePathMap.clear();
 
                     }
@@ -994,7 +994,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
 
                                         dialog.cancel();
-                                        ShowBlips();
+
                                         filePathMap.clear();
 
 
@@ -1021,7 +1021,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
 
                         dialog.cancel();
-                        ShowBlips();
                         filePathMap.clear();
 
                     }
@@ -1125,8 +1124,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
-    public void DeleteBlip(Marker marker) {
+
+    public void DeleteBlip(final Marker marker) {
         final LatLng coordinatetobedeleted = marker.getPosition();
+        selected.remove();
 
         BlipsPublic.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
                 new ValueEventListener() {
@@ -1166,6 +1167,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             String creator = datacollected.child("Creator").getValue(String.class);
 
                             if (datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude && creator.toLowerCase().contains(userName.toLowerCase())) {
+
                                 datacollected.getRef().removeValue();
                                 Toast.makeText(MainActivity.this, "Blip Deleted", Toast.LENGTH_SHORT).show();
                             }
@@ -1368,7 +1370,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         Blipsref.child("public").push().setValue(blips);//Add to public blips
 
                         dialog.cancel();
-                        ShowBlips();
+
                     }
                 } else if (privateradio.isChecked()) {
                     if (validateForm()) {
@@ -1434,9 +1436,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         Blipsref.child("private").push().setValue(blips);//Add to private blips
 
                         dialog.cancel();
-                        mMap.clear();
-                        ShowBlips();
-
 
                     }
 
@@ -1457,24 +1456,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private void ShowBlips() {
-        mMap.clear();
+    private void ShowBlipsPublic() {
 
 
-        Blipsref.addChildEventListener(new ChildEventListener() {
+        BlipsPublic.addChildEventListener(new ChildEventListener() {
 
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
 
-                for (DataSnapshot snapm : dataSnapshot.getChildren()) {
 
-                    Double latitude = snapm.child("latitude").getValue(Double.class);
-                    Double longitude = snapm.child("longitude").getValue(Double.class);
-                    String newBlipName = snapm.child("BlipName").getValue(String.class);
-                    String creator = snapm.child("Creator").getValue(String.class);
-                    String Details = snapm.child("Details").getValue(String.class);
-                    String blipIcon = snapm.child("Icon").getValue(String.class);
-                    String imgURL = snapm.child("imageURL").getValue(String.class);
+                    Double latitude = dataSnapshot.child("latitude").getValue(Double.class);
+                    Double longitude = dataSnapshot.child("longitude").getValue(Double.class);
+                    String newBlipName = dataSnapshot.child("BlipName").getValue(String.class);
+                    String creator = dataSnapshot.child("Creator").getValue(String.class);
+                    String Details = dataSnapshot.child("Details").getValue(String.class);
+                    String blipIcon = dataSnapshot.child("Icon").getValue(String.class);
+                    String imgURL = dataSnapshot.child("imageURL").getValue(String.class);
 
                     Blips blipsadded = new Blips(latitude,
                             longitude,
@@ -1499,29 +1496,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     }
 
-                }
+
+                     markerkey++;
+                     markerlist.put(Integer.toString(markerkey), blipsadded);
+
 
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
+
+
                 if (!search.isIconified()) {
                     Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
                 } else {
 
 
-                    ShowBlips();//Go back load all blips again
+
                 }
             }
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
+                Double latitude = dataSnapshot.child("latitude").getValue(Double.class);
+                Double longitude = dataSnapshot.child("longitude").getValue(Double.class);
                 if (!search.isIconified()) {
                     Toast.makeText(MainActivity.this, "Searchbox still focused", Toast.LENGTH_SHORT).show();
                 } else {
-
-                    ShowBlips();//Go back load all blips again
+                    LatLng coordinateremove = new LatLng(latitude,longitude);
+                    removemarkerfromhashmap(coordinateremove);
                 }
+
+
             }
 
             @Override
@@ -1534,7 +1540,151 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
-        alreadyExecuted = true;
+
+    }
+
+    private void ShowBlipsPrivate() {
+        BlipsPrivate.addChildEventListener(new ChildEventListener() {
+
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+
+                    Double latitude = dataSnapshot.child("latitude").getValue(Double.class);
+                    Double longitude = dataSnapshot.child("longitude").getValue(Double.class);
+                    String newBlipName = dataSnapshot.child("BlipName").getValue(String.class);
+                    String creator = dataSnapshot.child("Creator").getValue(String.class);
+                    String Details = dataSnapshot.child("Details").getValue(String.class);
+                    String blipIcon = dataSnapshot.child("Icon").getValue(String.class);
+                    String imgURL = dataSnapshot.child("imageURL").getValue(String.class);
+
+                    Blips blipsadded = new Blips(latitude,
+                            longitude,
+                            newBlipName,
+                            creator,
+                            Details,
+                            blipIcon,null,null,null,imgURL);
+
+
+
+
+
+                    if (privatecheckbox.isChecked() &&
+                            blipIcon.toLowerCase().contains("private".toLowerCase())
+                            && (creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(creator))) {
+
+                        categoryFilterPrivate(blipsadded);
+
+                    }
+
+
+                    if (publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase())) {
+
+                        categoryFilterPublic(blipsadded);
+
+                    }
+                markerkey++;
+                markerlist.put(Integer.toString(markerkey), blipsadded);
+
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
+                if (!search.isIconified()) {
+                    Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
+                } else {
+
+
+
+                }
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                Double latitude = dataSnapshot.child("latitude").getValue(Double.class);
+                Double longitude = dataSnapshot.child("longitude").getValue(Double.class);
+                if (!search.isIconified()) {
+                    Toast.makeText(MainActivity.this, "Searchbox still focused", Toast.LENGTH_SHORT).show();
+                } else {
+                    LatLng coordinateremove = new LatLng(latitude,longitude);
+                    removemarkerfromhashmap(coordinateremove);
+                }
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void reload(){
+        mMap.clear();
+        // Iterate through hashmap
+        for (Map.Entry<String, Blips> entry : markerlist.entrySet())
+        {
+            Blips value = markerlist.get(entry.getKey());
+
+            if (privatecheckbox.isChecked() &&
+                    value.Icon.toLowerCase().contains("private".toLowerCase())
+                    && (value.Creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(value.Creator))) {
+
+                categoryFilterPrivate(value);
+
+            }
+
+            if (publiccheckbox.isChecked() && value.Icon.toLowerCase().contains("public".toLowerCase())) {
+                categoryFilterPublic(value);
+            }
+
+        }
+        ShowGPSLocation();
+
+
+    }
+
+    private void removemarkerfromhashmap(LatLng delete){
+
+        try {
+            // Iterate through hashmap
+            for (Map.Entry<String, Blips> entry : markerlist.entrySet())
+            {
+                Blips value = markerlist.get(entry.getKey());
+                LatLng coordinatedeleted = new LatLng( value.latitude,value.longitude);
+
+                if(Objects.equals(delete, coordinatedeleted)){
+                    markerlist.remove(entry.getKey());
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            // Iterate through hashmap
+            for (Map.Entry<String, Marker> entry : markerlist2.entrySet())
+            {
+                Marker value = markerlist2.get(entry.getKey());
+
+                LatLng coordinatedeleted = new LatLng( value.getPosition().latitude,value.getPosition().longitude);
+
+                if(Objects.equals(delete, coordinatedeleted)){
+                    markerlist2.remove(entry.getKey());
+                    value.remove();
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     public void categoryFilterPrivate(Blips blipsadded) {
@@ -1810,8 +1960,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         publiccheckbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ShowGPSLocation();
-                ShowBlips();
+                reload();
+
+
                 //handle click
             }
         });
@@ -1819,9 +1970,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         privatecheckbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-                ShowGPSLocation();
-                ShowBlips();
+
                 //handle click
             }
         });
@@ -1829,18 +1980,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkboxArts.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-                ShowGPSLocation();
-                ShowBlips();
+
                 //handle click
             }
         });
         checkboxTravel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-                ShowGPSLocation();
-                ShowBlips();
+
                 //handle click
             }
         });
@@ -1848,9 +1999,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkboxSports.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-                ShowGPSLocation();
-                ShowBlips();
+
                 //handle click
             }
         });
@@ -1858,18 +2009,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkboxTransportation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-                ShowGPSLocation();
-                ShowBlips();
+
                 //handle click
             }
         });
         checkboxMedia.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-                ShowGPSLocation();
-                ShowBlips();
+
                 //handle click
             }
         });
@@ -1877,9 +2028,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkboxHoliday.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-                ShowGPSLocation();
-                ShowBlips();
+
                 //handle click
             }
         });
@@ -1887,18 +2038,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkboxHealth.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-                ShowGPSLocation();
-                ShowBlips();
+
                 //handle click
             }
         });
         checkboxSports.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-                ShowGPSLocation();
-                ShowBlips();
+
                 //handle click
             }
         });
@@ -1906,9 +2057,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkboxFood.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-                ShowGPSLocation();
-                ShowBlips();
                 //handle click
             }
         });
@@ -1916,45 +2066,42 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkboxCommunity.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-                ShowGPSLocation();
-                ShowBlips();
+
                 //handle click
             }
         });
         checkboxBusiness.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-                ShowGPSLocation();
-                ShowBlips();
+
                 //handle click
             }
         });
         checkboxFashion.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-                ShowGPSLocation();
-                ShowBlips();
                 //handle click
             }
         });
         checkboxMusic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-                ShowGPSLocation();
-                ShowBlips();
                 //handle click
             }
         });
         checkboxFamily.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reload();
 
-
-                ShowBlips();
                 //handle click
             }
         });
@@ -2296,7 +2443,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     notifyDataSetChanged();
                     item_notifications.setTitle("Friend Requests    " + list.size());
-                    ShowBlips();
+
                 }
             });
 
@@ -2310,7 +2457,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     notifyDataSetChanged();
                     DeleteFriendNotif(emailtobedeleted);
                     item_notifications.setTitle("Friend Requests    " + list.size());
-                    ShowBlips();
+
 
 
                 }
@@ -2538,18 +2685,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                if(showGPSToggle.isChecked()){
 
-                   liveGPSEmail.child("longitude").setValue(location.getLongitude());
-                   liveGPSEmail.child("latitude").setValue(location.getLatitude());
-                   liveGPSEmail.child("Creator").setValue(userName);
+
+                     Blips gpsblips = new Blips(location.getLatitude(),
+                           location.getLongitude(),
+                           userName,
+                           userName,
+                           null,
+                           null,null,null,null,null);
+
+                     liveGPS.child(userName).setValue(gpsblips);
+
 
                }
                else{
-                   liveGPSEmail.child("longitude").setValue(null);
-                   liveGPSEmail.child("latitude").setValue(null);
-                   liveGPSEmail.child("Creator").setValue(null);
 
-
-
+                       liveGPSEmail.removeValue();
                }
 
 
@@ -2584,64 +2734,146 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    public void ShowGPSLocation() {
-       liveGPS.addValueEventListener(new ValueEventListener(){
-               @Override
-               public void onDataChange(DataSnapshot dataSnapshot) {
-                   try {
-                       mMap.clear();
-                       ShowBlips();
+    public void ShowGPSLocation(){
+        liveGPS.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
-                       getliveGPSdatathenplacemarker(dataSnapshot);
-                   }
-                   catch (NullPointerException e){
-                       Toast.makeText(MainActivity.this, "No markers", Toast.LENGTH_SHORT).show();
-
-                   }
+                    Toast.makeText(MainActivity.this, "ChildAdded", Toast.LENGTH_SHORT).show();
+                    String xtest = dataSnapshot.child("Creator").getValue(String.class);
+                    Toast.makeText(MainActivity.this, xtest, Toast.LENGTH_SHORT).show();
 
 
-               }
-               @Override
-               public void onCancelled(DatabaseError databaseError) {
+                    if(friendarraylist.contains(xtest)) {
 
-               }
-       });
+                        LatLng x = new LatLng(  dataSnapshot.child("latitude").getValue(Double.class),  dataSnapshot.child("longitude").getValue(Double.class));
 
-
-    }
-
-    public void getliveGPSdatathenplacemarker(DataSnapshot dataSnapshot){
-        for (DataSnapshot snapm : dataSnapshot.getChildren()) {
-
-            try {
-
-                Double liveGPSlong = snapm.child("longitude").getValue(Double.class);
-                Double liveGPSlat = snapm.child("latitude").getValue(Double.class);
-                String creatorx = snapm.child("Creator").getValue(String.class);
-
-
-                for (String temp : friendarraylist) {
-                    if(creatorx.equals(temp)) {
-
-                        LatLng x = new LatLng(liveGPSlat, liveGPSlong);
-                        gpsmarker = mMap.addMarker(new MarkerOptions() // Set Marker
-                                .position(x)
-                                .title(creatorx)
+                        gpsmarker = mMap.addMarker(new MarkerOptions()
+                                .position(x)// Set Marker
+                                .title(dataSnapshot.child("Creator").getValue(String.class))
                                 .snippet("Blank")
                                 .icon(BitmapDescriptorFactory.fromResource(R.mipmap.public_sports)));
 
+                        gpsmarkerkey++;
+                        gpslist.put(Integer.toString(gpsmarkerkey),gpsmarker);
+                    }
+
+
+
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                Toast.makeText(MainActivity.this, "ChildChanged", Toast.LENGTH_SHORT).show();
+
+                LatLng x = new LatLng(  dataSnapshot.child("latitude").getValue(Double.class),  dataSnapshot.child("longitude").getValue(Double.class));
+                updategpsmarkerfromhashmap(x,dataSnapshot.child("Creator").getValue(String.class));
+            }
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                try {
+                    LatLng x = new LatLng(  dataSnapshot.child("latitude").getValue(Double.class),  dataSnapshot.child("longitude").getValue(Double.class));
+                   removegpsmarkerfromhashmap(x,dataSnapshot.child("Creator").getValue(String.class));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+    public void getliveGPSdatathenplacemarker(DataSnapshot dataSnapshot){
+
+                for (String temp : friendarraylist) {
+
+                    if(true) {
+                        Toast.makeText(this, "Hello", Toast.LENGTH_SHORT).show();
+                        LatLng x = new LatLng(  dataSnapshot.child("latitude").getValue(Double.class),  dataSnapshot.child("longitude").getValue(Double.class));
+
+                        gpsmarker = mMap.addMarker(new MarkerOptions()
+                                .position(x)// Set Marker
+                                .title(dataSnapshot.child("Creator").getValue(String.class))
+                                .snippet("Blank")
+                                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.public_sports)));
+
+                        gpsmarkerkey++;
+                        gpslist.put(Integer.toString(gpsmarkerkey),gpsmarker);
                     }
 
                 }
 
+    }
 
-            } catch (NullPointerException e) {
+    private void removegpsmarkerfromhashmap(LatLng delete,String creatorx){
 
-                locationListen();
+
+        try {
+            // Iterate through hashmap
+            for (Map.Entry<String, Marker> entry : gpslist.entrySet())
+            {
+                Marker value = gpslist.get(entry.getKey());
+
+
+                //Check if updated child is your friend
+
+                //If friend then
+                if(friendarraylist.contains(creatorx)) {
+                    gpslist.remove(entry.getKey()); //remove old data of friend in list using key
+                    value.remove();//update the marker
+
+
+                }
+
+
             }
 
-
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
+
+
+
+
+    }
+    private void updategpsmarkerfromhashmap(LatLng updatedcoordinate, String creatorx){
+
+        try {
+            // Iterate through hashmap
+            for (Map.Entry<String, Marker> entry : gpslist.entrySet())
+            {
+                Marker value = gpslist.get(entry.getKey());
+                LatLng coordinateupdated = new LatLng( value.getPosition().latitude,value.getPosition().longitude);
+
+                //Check if updated child is your friend
+
+                    //If friend then
+                    if(friendarraylist.contains(creatorx)) {
+                       //update the marker
+                        value.setPosition(updatedcoordinate);//update the marker
+                        gpslist.put(entry.getKey(),value);//save new data of friend
+
+
+                    }
+
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+
     }
 
     public void ShowFriendList() {
@@ -2730,7 +2962,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     DeleteFriend(friendtobedeleted);
                     Users.child(userName).child("Friends").child(friendtobedeleted).setValue(null);// Add to user's blips
                     Users.child(friendtobedeleted).child("Friends").child(userName).setValue(null);
-                    ShowBlips();
+
 
 
                 }
