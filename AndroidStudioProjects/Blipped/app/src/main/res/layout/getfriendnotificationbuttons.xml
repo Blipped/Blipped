@@ -18,7 +18,7 @@
         android:layout_weight="1"
         android:adjustViewBounds="true"
         android:background="@null"
-        android:scaleType="fitXY"
+        android:scaleType="fitCenter"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent"

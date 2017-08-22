@@ -7,12 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -65,6 +60,10 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -95,17 +94,11 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.koushikdutta.ion.Ion;
-import com.squareup.picasso.Callback;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Transformation;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -114,8 +107,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
-
-import jp.wasabeef.picasso.transformations.CropCircleTransformation;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
@@ -492,11 +483,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             }
 
 
-                            Picasso.with(getActivity())
-                                    .load(dataarray[2])
+
+                            RequestOptions options = new RequestOptions()
                                     .error(R.drawable.places_ic_clear)
-                                    .placeholder(R.drawable.ic_menu_slideshow)
-                                    .into(badge, new MarkerCallback(marker, dataarray[2], badge));
+                                    .placeholder(R.drawable.ic_menu_slideshow);
+                            Context context = getApplicationContext();
+
+                            Glide.with(context)
+                                    .load(dataarray[2])
+                                    .apply(options)
+                                    .into(badge);
 
 
                             TextView snippet = v.findViewById(R.id.snippet);
@@ -528,11 +524,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             badge = vgps.findViewById(R.id.badge);
                             //Split Information int array
 
-                            Picasso.with(getActivity())
-                                    .load(marker.getSnippet())
+
+                            RequestOptions options = new RequestOptions()
                                     .error(R.drawable.places_ic_clear)
-                                    .placeholder(R.drawable.ic_menu_slideshow)
-                                    .into(badge, new MarkerCallback(marker, marker.getSnippet(), badge));
+                                    .placeholder(R.drawable.ic_menu_slideshow);
+                            Context context = getApplicationContext();
+
+                            Glide.with(context)
+                                    .load(marker.getSnippet())
+                                    .apply(options)
+                                    .into(badge);
 
                             TextView title = vgps.findViewById(R.id.title);
                             title.setText(marker.getTitle());
@@ -603,11 +604,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
             dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-            Picasso.with(getActivity())
-                    .load(dataarray[2])
+            RequestOptions options = new RequestOptions()
                     .error(R.drawable.places_ic_clear)
-                    .placeholder(R.drawable.ic_menu_slideshow)
-                    .into(fullscreenimage, new MarkerCallback(marker, dataarray[2], fullscreenimage));
+                    .placeholder(R.drawable.ic_menu_slideshow);
+
+            Glide.with(getActivity())
+                    .load(dataarray[2])
+                    .apply(options)
+                    .into(fullscreenimage);
+
+
             mBuilder.setView(imagefull);
             final AlertDialog dialog = mBuilder.create();
 
@@ -691,52 +697,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    public class MarkerCallback implements Callback {
-        Marker marker=null;
-        String URL;
-        ImageView userPhoto;
-
-
-        MarkerCallback(Marker marker, String URL, ImageView userPhoto) {
-            this.marker=marker;
-            this.URL = URL;
-            this.userPhoto = userPhoto;
-        }
-
-        @Override
-        public void onError() {
-            //Log.e(getClass().getSimpleName(), "Error loading thumbnail!");
-        }
-
-        @Override
-        public void onSuccess() {
-            if (marker != null && marker.isInfoWindowShown()) {
-                marker.hideInfoWindow();
-
-                Picasso.with(getActivity())
-                        .load(URL)
-                        .into(userPhoto);
-
-
-                marker.showInfoWindow();
-            }
-        }
-    }
-
-    public static Bitmap getBitmapFromURL(String src) {
-        try {
-            URL url = new URL(src);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setDoInput(true);
-            connection.connect();
-            InputStream input = connection.getInputStream();
-            Bitmap myBitmap = BitmapFactory.decodeStream(input);
-            return myBitmap;
-        } catch (IOException e) {
-            // Log exception
-            return null;
-        }
-    }
     public void takePicture() {
 
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -753,6 +713,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         startActivityForResult(intent, 0);
 
     }
+
     public void AddBlip(LatLng point) {
         cursor_coordinate = new LatLng(point.latitude, point.longitude);// Set current click location to marker
         cursor_coordinate_latitude = point.latitude;
@@ -1080,6 +1041,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
     }
+
     public byte[] convertURItocompresseddata(Uri value){
 
         Scanner scanner = new Scanner();
@@ -1094,6 +1056,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         byte[] data = baos.toByteArray();
         return data;
     }
+
     public class Scanner {
 
         public Bitmap decodeBitmapUri(MainActivity ctx, Uri uri) throws FileNotFoundException {
@@ -1114,6 +1077,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     .openInputStream(uri), null, bmOptions);
         }
     }
+
     private void launchMediaScanIntent() {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         mediaScanIntent.setData(photoURI);
@@ -2456,10 +2420,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             ImageButton friendrequestviewprofile = view.findViewById(R.id.friendrequestviewprofile);
             try {
-                final Transformation transformation = new CropCircleTransformation();
-                Picasso.with(getActivity())
-                        .load(profilepicarraylist.get(position)).transform(transformation)
+
+                RequestOptions options = new RequestOptions()
+                        .circleCrop()
+                        .error(R.drawable.places_ic_clear)
+                        .placeholder(R.drawable.ic_menu_slideshow);
+                Context context = getApplicationContext();
+
+                Glide.with(context)
+                        .load(profilepicarraylist.get(position))
+                        .apply(options)
                         .into(friendrequestviewprofile);
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -2773,24 +2745,43 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void ShowGPSLocation(){
         liveGPS.addChildEventListener(new ChildEventListener() {
             @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            public void onChildAdded(final DataSnapshot dataSnapshot, String s) {
 
                     String creator = dataSnapshot.child("Creator").getValue(String.class);
-                    String imagedownloadlink = dataSnapshot.child("imageURL").getValue(String.class);
+                    final String imagedownloadlink = dataSnapshot.child("imageURL").getValue(String.class);
                     if(friendarraylist.contains(creator)) {
+
                            Bitmap mybitmap = null;
-                        LatLng x = new LatLng(  dataSnapshot.child("latitude").getValue(Double.class),  dataSnapshot.child("longitude").getValue(Double.class));
+                        final LatLng x = new LatLng(  dataSnapshot.child("latitude").getValue(Double.class),  dataSnapshot.child("longitude").getValue(Double.class));
                         try {
-                            Bitmap bmImg = Ion.with(getApplicationContext())
+
+
+                            final Bitmap bmImg = Ion.with(getApplicationContext())
                                     .load(imagedownloadlink).withBitmap().placeholder(R.drawable.ic_menu_slideshow).asBitmap().get();
 
-                            gpsmarker = mMap.addMarker(new MarkerOptions()
-                                    .position(x)// Set Marker
-                                    .title(dataSnapshot.child("Creator").getValue(String.class))
-                                    .snippet(imagedownloadlink)
-                                    .icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(bmImg, 50, 50, false))));
+                            RequestOptions options = new RequestOptions()
+                                    .circleCrop()
+                                    .error(R.drawable.places_ic_clear)
+                                    .placeholder(R.drawable.ic_menu_slideshow);
+                             Context context = getApplicationContext();
+
+                            Glide.with(context)
+                                    .asBitmap()
+                                    .load(imagedownloadlink)
+                                    .apply(options)
+                                    .into(new SimpleTarget<Bitmap>() {
+                                        @Override
+                                        public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
+
+                                            gpsmarker = mMap.addMarker(new MarkerOptions()
+                                                    .position(x)// Set Marker
+                                                    .title(dataSnapshot.child("Creator").getValue(String.class))
+                                                    .snippet(imagedownloadlink)
+                                                    .icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(resource, 50, 50, false))));
+                                        }
 
 
+                                    });
 
                         } catch (InterruptedException e) {
                             e.printStackTrace();
@@ -2965,10 +2956,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 namestext.setText(names.get(position)+".com");
 
                 ImageButton friendlistviewprofile = view.findViewById(R.id.friendlistviewprofile);
-                final Transformation transformation = new CropCircleTransformation();
-                Picasso.with(getActivity())
-                        .load(pictures.get(position)).transform(transformation)
+
+                RequestOptions options = new RequestOptions()
+                        .circleCrop()
+                        .error(R.drawable.places_ic_clear)
+                        .placeholder(R.drawable.ic_menu_slideshow);
+                Context context = getApplicationContext();
+
+                Glide.with(context)
+                        .load(pictures.get(position))
+                        .apply(options)
                         .into(friendlistviewprofile);
+
 
                 //Handle buttons and add onClickListeners
                 deleteBtn = view.findViewById(R.id.delete_btn);
@@ -3115,11 +3114,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                    dialog.cancel();
                                    filePathMap.clear();
 
-                                   Picasso.with(getActivity())
+
+                                   RequestOptions options = new RequestOptions()
+                                           .error(R.drawable.places_ic_clear)
+                                           .placeholder(R.drawable.ic_menu_slideshow);
+
+                                   Glide.with(getActivity())
                                            .load(imageURLLink)
+                                           .apply(options)
                                            .into(profilepic);
-
-
 
 
                                }
@@ -3153,9 +3156,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
            public void onDataChange(DataSnapshot dataSnapshot) {
                profpicdownloadlink= dataSnapshot.child("MyProfilePic").getValue(String.class);
 
-               final Transformation transformation = new CropCircleTransformation();
-               Picasso.with(getActivity())
-                       .load(profpicdownloadlink).transform(transformation)
+
+               RequestOptions options = new RequestOptions()
+                       .circleCrop()
+                       .error(R.drawable.places_ic_clear)
+                       .placeholder(R.drawable.ic_menu_slideshow);
+               Context context = getApplicationContext();
+
+               Glide.with(context)
+                       .load(profpicdownloadlink)
+                       .apply(options)
                        .into(profilepic);
 
            }
@@ -3192,26 +3202,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    public Bitmap getCroppedBitmap(Bitmap bitmap) {
-        Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
-                bitmap.getHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(output);
 
-        final int color = 0xff424242;
-        final Paint paint = new Paint();
-        final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
-
-        paint.setAntiAlias(true);
-        canvas.drawARGB(0, 0, 0, 0);
-        paint.setColor(color);
-        // canvas.drawRoundRect(rectF, roundPx, roundPx, paint);
-        canvas.drawCircle(bitmap.getWidth() / 2, bitmap.getHeight() / 2,
-                bitmap.getWidth() / 2, paint);
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-        canvas.drawBitmap(bitmap, rect, rect, paint);
-        //Bitmap _bmp = Bitmap.createScaledBitmap(output, 60, 60, false);
-        //return _bmp;
-        return output;
-    }
 }
 
