@@ -1,7 +1,9 @@
 package blippedcompany.blipped;
 
 import android.animation.ValueAnimator;
+import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -47,6 +49,7 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -58,6 +61,7 @@ import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -94,12 +98,15 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.koushikdutta.ion.Ion;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -163,6 +170,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     EditText mBlipName;
     EditText mDetails;
     Spinner mySpinner;
+    EditText timeedittext;
     CheckBox publiccheckbox;
     CheckBox privatecheckbox;
     CheckBox checkboxArts;
@@ -197,6 +205,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     HashMap<String,Marker> markerlist2=new HashMap<>();
     HashMap<String,Marker>gpslist=new HashMap<>();
     HashMap<String,Bitmap>profilepictureslist=new HashMap<>();
+    HashMap<String,Bitmap>blippictureslist=new HashMap<>();
     String friendname;
 
     private Circle lastUserCircle;
@@ -284,10 +293,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     @Override
     public void onDestroy() {
-        liveGPSEmail.removeValue();
-        locationManager.removeUpdates(locationListener);
-        locationListener = null;
+
         super.onDestroy();
+        if (locationManager != null) {
+            try {
+                liveGPSEmail.removeValue();
+                locationManager.removeUpdates(locationListener);
+                locationListener = null;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
     }
     public void DeclareThings() {
@@ -484,16 +500,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-                            RequestOptions options = new RequestOptions()
-                                    .error(R.drawable.places_ic_clear)
-                                    .placeholder(R.drawable.ic_menu_slideshow);
-                            Context context = getApplicationContext();
+                            if (dataarray[2] != null) {
+                                Picasso.with(getApplicationContext())
+                                        .load(dataarray[2])
+                                        .placeholder(R.drawable.ic_menu_slideshow)
+                                        .into(badge, new MarkerCallback(marker));
 
-                            Glide.with(context)
-                                    .load(dataarray[2])
-                                    .apply(options)
-                                    .into(badge);
-
+                            }
 
                             TextView snippet = v.findViewById(R.id.snippet);
                             TextView title = v.findViewById(R.id.title);
@@ -594,6 +607,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    public class MarkerCallback implements Callback {
+        Marker marker=null;
+
+        MarkerCallback(Marker marker) {
+            this.marker=marker;
+        }
+
+        @Override
+        public void onError() {
+            Log.e(getClass().getSimpleName(), "Error loading thumbnail!");
+        }
+
+        @Override
+        public void onSuccess() {
+            if (marker != null && marker.isInfoWindowShown()) {
+                marker.hideInfoWindow();
+                marker.showInfoWindow();
+            }
+        }
+    }
     public void showImage(Marker marker){
         View  imagefull = getLayoutInflater().inflate(R.layout.fullscreen_image, null);
         ImageView fullscreenimage = imagefull.findViewById(R.id.fullscreenimage);
@@ -697,6 +730,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    public void PlaceMarkernoanimation(final Blips blipsadded) {
+        LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
+        // Put inormation into a single string with comma seperators
+        Description = blipsadded.Creator+"123marcius"+ blipsadded.Details +"123marcius"+blipsadded.imageURL;
+        myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
+
+                .position(newBlipCoordinates)
+                .title(blipsadded.BlipName)
+                .snippet(Description)
+                .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
+
+
+
+
+
+    }
+
     public void takePicture() {
 
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -732,8 +782,71 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button chooseImg =  mBlipAddView.findViewById(R.id.chooseImg);
         Button takePhoto =  mBlipAddView.findViewById(R.id.takePhoto);
         imgView = mBlipAddView.findViewById(R.id.imgView);
+        final TextView timeedittext = mBlipAddView.findViewById(R.id.timeTextView);
+        final TextView dateedittext = mBlipAddView.findViewById(R.id.dateTextView);
         pd = new ProgressDialog(this);
         pd.setMessage("Uploading....");
+
+
+        timeedittext.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Calendar mcurrentTime = Calendar.getInstance();
+                int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
+                int minute = mcurrentTime.get(Calendar.MINUTE);
+
+                TimePickerDialog mTimePicker;
+                mTimePicker = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
+                        String AM_PM ;
+                        if(selectedHour < 12) {
+                           AM_PM = "AM";
+                        } else {
+                            AM_PM = "PM";
+                        }
+                        if(selectedHour==0 ){selectedHour = 12;}
+                        else if(selectedHour>12 ){selectedHour = selectedHour -12;}
+
+                        String min;
+                        if (selectedMinute < 10)
+                        {min = "0" + selectedMinute ;}
+                        else
+                        {min = String.valueOf(selectedMinute);}
+                        timeedittext.setText( selectedHour + ":" + min +" "+ AM_PM);  }}, hour, minute, false);
+
+                mTimePicker.setTitle("Select Time");
+                mTimePicker.show();
+
+            }
+        });
+
+       dateedittext.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Calendar mcurrentDate = Calendar.getInstance();
+                int day = mcurrentDate.get(Calendar.DAY_OF_MONTH);
+                int month = mcurrentDate.get(Calendar.MONTH);
+                int year = mcurrentDate.get(Calendar.YEAR);
+
+               DatePickerDialog mDatePicker;
+                mDatePicker = new DatePickerDialog(MainActivity.this, new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                       dateedittext.setText( month + "/" + day + "/" + year);
+                    }
+
+                }, year,month,day);
+
+                mDatePicker.setTitle("Select Time");
+                mDatePicker.show();
+
+            }
+        });
 
 
         chooseImg.setOnClickListener(new View.OnClickListener() {//Choose Image Button Click
@@ -772,6 +885,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 // checkedId is the RadioButton selected
             }
         });
+
 
 
         mBuilder.setView(mBlipAddView);
@@ -1460,8 +1574,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void ShowBlipsPublic() {
 
-
-        BlipsPublic.addChildEventListener(new ChildEventListener() {
+       BlipsPublic.addChildEventListener(new ChildEventListener() {
 
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
@@ -1474,6 +1587,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String Details = dataSnapshot.child("Details").getValue(String.class);
                     String blipIcon = dataSnapshot.child("Icon").getValue(String.class);
                     String imgURL = dataSnapshot.child("imageURL").getValue(String.class);
+
 
                     Blips blipsadded = new Blips(latitude,
                             longitude,
@@ -1634,12 +1748,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     value.Icon.toLowerCase().contains("private".toLowerCase())
                     && (value.Creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(value.Creator))) {
 
-                categoryFilterPrivate(value);
+                categoryFilterPrivatenoanimation(value);
 
             }
 
             if (publiccheckbox.isChecked() && value.Icon.toLowerCase().contains("public".toLowerCase())) {
-                categoryFilterPublic(value);
+                categoryFilterPublicnoanimation(value);
             }
 
         }
@@ -1774,6 +1888,94 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    public void categoryFilterPrivatenoanimation(Blips blipsadded) {
+
+        if (checkboxArts.isChecked() && blipsadded.Icon.toLowerCase().contains("art".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxBusiness.isChecked() && blipsadded.Icon.toLowerCase().contains("business".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxCommunity.isChecked() && blipsadded.Icon.toLowerCase().contains("community".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxFamily.isChecked() && blipsadded.Icon.toLowerCase().contains("family".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxFashion.isChecked() && blipsadded.Icon.toLowerCase().contains("fashion".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxFood.isChecked() && blipsadded.Icon.toLowerCase().contains("food".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxHealth.isChecked() && blipsadded.Icon.toLowerCase().contains("health".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxHoliday.isChecked() && blipsadded.Icon.toLowerCase().contains("holiday".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxMedia.isChecked() && blipsadded.Icon.toLowerCase().contains("media".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxTransportation.isChecked() && blipsadded.Icon.toLowerCase().contains("auto".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxTravel.isChecked() && blipsadded.Icon.toLowerCase().contains("travel".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxSports.isChecked() && blipsadded.Icon.toLowerCase().contains("sports".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxMusic.isChecked() && blipsadded.Icon.toLowerCase().contains("music".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+
+    }
+
+    public void categoryFilterPublicnoanimation(Blips blipsadded) {
+        if (checkboxArts.isChecked() && blipsadded.Icon.toLowerCase().contains("art".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxBusiness.isChecked() && blipsadded.Icon.toLowerCase().contains("business".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxCommunity.isChecked() && blipsadded.Icon.toLowerCase().contains("community".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxFamily.isChecked() && blipsadded.Icon.toLowerCase().contains("family".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxFashion.isChecked() && blipsadded.Icon.toLowerCase().contains("fashion".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxFood.isChecked() && blipsadded.Icon.toLowerCase().contains("food".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxHealth.isChecked() && blipsadded.Icon.toLowerCase().contains("health".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxHoliday.isChecked() && blipsadded.Icon.toLowerCase().contains("holiday".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxMedia.isChecked() && blipsadded.Icon.toLowerCase().contains("media".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxTransportation.isChecked() && blipsadded.Icon.toLowerCase().contains("auto".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxTravel.isChecked() && blipsadded.Icon.toLowerCase().contains("travel".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxSports.isChecked() && blipsadded.Icon.toLowerCase().contains("sports".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+        if (checkboxMusic.isChecked() && blipsadded.Icon.toLowerCase().contains("music".toLowerCase())) {
+            PlaceMarkernoanimation(blipsadded);
+        }
+
+
+    }
+
     private void getFriendsList() {
 
         UsersEmailFriends.addChildEventListener(new ChildEventListener() {
@@ -1871,6 +2073,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return null;
         } else {
             return str.substring(0, str.length() - 4);
+        }
+
+    }
+    private static String ReplacePeriodiWithComma(String str) {
+
+
+        if (str == null) {
+            return null;
+        } else {
+            return    str.replace(".", ",");
         }
 
     }
@@ -2844,8 +3056,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 //If friend then
                 if(friendarraylist.contains(creatorx)) {
-                    gpslist.remove(entry.getKey()); //remove old data of friend in list using key
                     value.remove();//update the marker
+                    gpslist.remove(entry.getKey()); //remove old data of friend in list using key
+                       reload();
 
 
                 }
