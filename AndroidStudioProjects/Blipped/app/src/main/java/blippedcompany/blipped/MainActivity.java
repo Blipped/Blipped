@@ -53,6 +53,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RadioButton;
@@ -105,8 +106,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -165,6 +170,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     String BlipName;
     String Details;
+    String BlipStartTime ;
+    String BlipStartDate;
+    String BlipEndTime ;
+    String BlipEndDate ;
+    Date BlipStartDateTime ;
+    Date BlipEndDateTime ;
+    DateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm aa", Locale.ENGLISH);
+
     EditText friendemailEt;
     String friendrequestemail;
     EditText mBlipName;
@@ -204,8 +217,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     HashMap<String,Blips> markerlist=new HashMap<>();
     HashMap<String,Marker> markerlist2=new HashMap<>();
     HashMap<String,Marker>gpslist=new HashMap<>();
-    HashMap<String,Bitmap>profilepictureslist=new HashMap<>();
-    HashMap<String,Bitmap>blippictureslist=new HashMap<>();
+
     String friendname;
 
     private Circle lastUserCircle;
@@ -782,12 +794,103 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button chooseImg =  mBlipAddView.findViewById(R.id.chooseImg);
         Button takePhoto =  mBlipAddView.findViewById(R.id.takePhoto);
         imgView = mBlipAddView.findViewById(R.id.imgView);
+
+
         final TextView timeedittext = mBlipAddView.findViewById(R.id.timeTextView);
         final TextView dateedittext = mBlipAddView.findViewById(R.id.dateTextView);
+        final TextView timeedittextEnd = mBlipAddView.findViewById(R.id.timeTextViewend);
+        final TextView dateedittextEnd = mBlipAddView.findViewById(R.id.dateTextViewend);
+        final TextView addendtimeEnd = mBlipAddView.findViewById(R.id.addendtimebutton);
+        final TextView removeendtimeEnd = mBlipAddView.findViewById(R.id.removeendtimebutton);
+        final LinearLayout endtimebar = mBlipAddView.findViewById(R.id.endtimebar);
+
         pd = new ProgressDialog(this);
         pd.setMessage("Uploading....");
 
+         BlipStartTime = null;
+         BlipStartDate = null;
+         BlipEndTime  = null;
+         BlipEndDate  = null;
 
+        Calendar mcurrentDate = Calendar.getInstance();
+        int day = mcurrentDate.get(Calendar.DAY_OF_MONTH);
+        int month = mcurrentDate.get(Calendar.MONTH);
+        int year = mcurrentDate.get(Calendar.YEAR);
+        int hour = mcurrentDate.get(Calendar.HOUR_OF_DAY);
+        int minute = mcurrentDate.get(Calendar.MINUTE);
+        String AM_PM ;
+        if(hour < 12) {
+            AM_PM = "AM";
+        } else {
+            AM_PM = "PM";
+        }
+        if(hour==0 ){hour = 12;}
+        else if(hour>12 ){hour = hour -12;}
+
+        String min;
+        if (minute < 10)
+        {min = "0" + minute ;}
+        else
+        {min = String.valueOf(minute);}
+
+        timeedittext.setText( hour + ":" + min +" "+ AM_PM);
+        dateedittext.setText( month + "/" + day + "/" + year);
+        BlipStartTime =( hour + ":" + min +" "+ AM_PM);
+        BlipStartDate =year+"-"+month+"-"+day;
+
+
+
+
+
+
+        addendtimeEnd.setOnClickListener(new View.OnClickListener() {// ADD END TIME BAR
+
+            @Override
+            public void onClick(View v) {
+                addendtimeEnd.setVisibility(View.GONE);
+                endtimebar.setVisibility(View.VISIBLE);
+
+                Calendar mcurrentDate = Calendar.getInstance();
+                int day = mcurrentDate.get(Calendar.DAY_OF_MONTH);
+                int month = mcurrentDate.get(Calendar.MONTH);
+                int year = mcurrentDate.get(Calendar.YEAR);
+                int hour = mcurrentDate.get(Calendar.HOUR_OF_DAY);
+                int minute = mcurrentDate.get(Calendar.MINUTE);
+                String AM_PM ;
+                if(hour < 12) {
+                    AM_PM = "AM";
+                } else {
+                    AM_PM = "PM";
+                }
+                if(hour==0 ){hour = 12;}
+                else if(hour>12 ){hour = hour -12;}
+
+                String min;
+                if (minute < 10)
+                {min = "0" + minute ;}
+                else
+                {min = String.valueOf(minute);}
+                timeedittextEnd.setText( hour+1 + ":" + min +" "+ AM_PM);
+                dateedittextEnd.setText( month + "/" + day + "/" + year);
+                BlipEndTime =( hour + ":" + min +" "+ AM_PM);
+                BlipEndDate =year+"-"+month+"-"+day;
+
+
+            }
+        });
+
+        removeendtimeEnd.setOnClickListener(new View.OnClickListener() {//REMOVE END TIME BAR
+
+            @Override
+            public void onClick(View v) {
+                BlipEndDate=null;
+                BlipEndTime=null;
+                BlipEndDateTime=null;
+                addendtimeEnd.setVisibility(View.VISIBLE);
+                endtimebar.setVisibility(View.GONE);
+
+            }
+        });
         timeedittext.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -801,6 +904,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mTimePicker = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
+
+
                         String AM_PM ;
                         if(selectedHour < 12) {
                            AM_PM = "AM";
@@ -815,7 +920,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         {min = "0" + selectedMinute ;}
                         else
                         {min = String.valueOf(selectedMinute);}
-                        timeedittext.setText( selectedHour + ":" + min +" "+ AM_PM);  }}, hour, minute, false);
+                        timeedittext.setText( selectedHour + ":" + min +" "+ AM_PM);
+
+                        BlipStartTime =( selectedHour + ":" + min +" "+ AM_PM);
+
+
+
+                    }
+                }, hour, minute, false);
 
                 mTimePicker.setTitle("Select Time");
                 mTimePicker.show();
@@ -837,9 +949,87 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mDatePicker = new DatePickerDialog(MainActivity.this, new DatePickerDialog.OnDateSetListener() {
                     @Override
                     public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                        BlipStartDate =year+"-"+month+"-"+day;
+                        Toast.makeText(MainActivity.this, BlipStartDate, Toast.LENGTH_SHORT).show();
                        dateedittext.setText( month + "/" + day + "/" + year);
                     }
 
+                }, year,month,day);
+
+                mDatePicker.setTitle("Select Time");
+                mDatePicker.show();
+
+            }
+        });
+
+        timeedittextEnd.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Calendar mcurrentTime = Calendar.getInstance();
+                int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
+                int minute = mcurrentTime.get(Calendar.MINUTE);
+
+                TimePickerDialog mTimePicker;
+                mTimePicker = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
+
+                        Toast.makeText(MainActivity.this, "Time setted", Toast.LENGTH_SHORT).show();
+
+
+                        String AM_PM ;
+                        if(selectedHour < 12) {
+                            AM_PM = "AM";
+                        } else {
+                            AM_PM = "PM";
+                        }
+                        if(selectedHour==0 ){selectedHour = 12;}
+                        else if(selectedHour>12 ){selectedHour = selectedHour -12;}
+
+                        String min;
+                        if (selectedMinute < 10)
+                        {min = "0" + selectedMinute ;}
+                        else
+                        {min = String.valueOf(selectedMinute);}
+
+
+                        timeedittextEnd.setText( selectedHour + ":" + min +" "+ AM_PM);
+                        BlipEndTime =( selectedHour + ":" + min +" "+ AM_PM);
+                        //Check if both start date and  start time are entered AND also end date/time
+
+
+
+
+
+                    }}, hour, minute, false);
+
+
+                mTimePicker.setTitle("Select Time");
+                mTimePicker.show();
+
+            }
+        });
+
+        dateedittextEnd.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Calendar mcurrentDate = Calendar.getInstance();
+                int day = mcurrentDate.get(Calendar.DAY_OF_MONTH);
+                int month = mcurrentDate.get(Calendar.MONTH);
+                int year = mcurrentDate.get(Calendar.YEAR);
+
+                DatePickerDialog mDatePicker;
+                mDatePicker = new DatePickerDialog(MainActivity.this, new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                        Toast.makeText(MainActivity.this, "Time setted", Toast.LENGTH_SHORT).show();
+                        BlipEndDate =year+"-"+month+"-"+day;
+                        dateedittextEnd.setText( month + "/" + day + "/" + year);
+                    }
                 }, year,month,day);
 
                 mDatePicker.setTitle("Select Time");
@@ -874,7 +1064,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 if (publicradio.isChecked()) {
                     privateradio.setChecked(false);
-                    mySpinner.setAdapter(new MyCustomAdapterPublic(MainActivity.this, R.layout.row, CustomBlips));//Change to Public Spinnes
+                    mySpinner.setAdapter(new MyCustomAdapterPublic(MainActivity.this, R.layout.row, CustomBlips));
 
                 } else if (privateradio.isChecked()) {
                     publicradio.setChecked(false);
@@ -896,256 +1086,304 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View view) {
 
+                Boolean TimeRangeIsValid= false;
 
-                BlipName = mBlipName.getText().toString();
+                if(BlipEndDate !=null && BlipEndTime!=null){
 
+                    try {
+                        BlipStartDateTime = format.parse(BlipStartDate+" "+BlipStartTime);//Then parse
+                        BlipEndDateTime = format.parse(BlipEndDate+" "+BlipEndTime);//Then parse
 
-                if (publicradio.isChecked()) {
-
-                    if (validateForm()) {
-
-                        Details = mDetails.getText().toString();
-                        String dropboxvalue = mySpinner.getSelectedItem().toString();
-
-
-                        if (Objects.equals(dropboxvalue, "Arts")) {
-                            blipIcon = "public_art";
-                        } else if (Objects.equals(dropboxvalue, "Transportation")) {
-                            blipIcon = "public_autoboatsair";
-
-                        } else if (Objects.equals(dropboxvalue, "Business")) {
-                            blipIcon = "public_business";
-
-                        } else if (Objects.equals(dropboxvalue, "Community")) {
-                            blipIcon = "public_community";
-
-                        } else if (Objects.equals(dropboxvalue, "Family & Education")) {
-                            blipIcon = "public_family";
-
-                        } else if (Objects.equals(dropboxvalue, "Fashion")) {
-                            blipIcon = "public_fashion";
-
-                        } else if (Objects.equals(dropboxvalue, "Media")) {
-                            blipIcon = "public_filmandmedia";
-
-                        } else if (Objects.equals(dropboxvalue, "Travel")) {
-                            blipIcon = "public_travelandoutdoor";
-
-                        } else if (Objects.equals(dropboxvalue, "Food")) {
-                            blipIcon = "public_foodanddrinks";
-
-                        } else if (Objects.equals(dropboxvalue, "Health")) {
-                            blipIcon = "public_health";
-
-                        } else if (Objects.equals(dropboxvalue, "Holiday")) {
-                            blipIcon = "public_holidaysandcelebrations";
-
-                        } else if (Objects.equals(dropboxvalue, "Music")) {
-                            blipIcon = "public_music";
-
-                        } else if (Objects.equals(dropboxvalue, "Sports")) {
-                            blipIcon = "public_sportsandfitness";
-
-                        } else {
-                            blipIcon = "ic_launcher_round";
+                        if(BlipStartDateTime.before(BlipEndDateTime)){
+                            TimeRangeIsValid = true;
+                        }
+                        else{
+                            TimeRangeIsValid = false;
+                            Toast.makeText(MainActivity.this, "Invalid Range", Toast.LENGTH_SHORT).show();
                         }
 
-
-                        //Place Data
-                        final DatabaseReference addblippushref =  Users.child(userName).child("Blips").push();// Add to user's blips
-                        final String blipkey =  addblippushref.getKey();
-
-
-                        if(filePath != null) {
-
-                            //uploading the image
-                            for (String name : filePathMap.keySet()){
-                                pd.show();
-                                Uri value = filePathMap.get(name);
-
-
-
-                                StorageReference childRefKey = storageRef.child("BlipPhotos").child(blipkey);
-                                uploadTask = childRefKey.child(filePath.getLastPathSegment()).putBytes(convertURItocompresseddata(value));
-
-                                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                    @Override
-                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                        pd.dismiss();
-                                        Toast.makeText(MainActivity.this, "Upload successful", Toast.LENGTH_SHORT).show();
-                                        //get the download URL like this:
-                                        @SuppressWarnings("VisibleForTests")
-                                        Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                                        //and you can convert it to string like this:
-                                        imageURLLink = downloadUrl.toString();
-
-                                        Blips blips = new Blips(cursor_coordinate_latitude,
-                                                cursor_coordinate_longitude,
-                                                BlipName,
-                                                userName,
-                                                Details,
-                                                blipIcon,null,null,null,imageURLLink);
-                                        addblippushref.setValue(blips);
-                                        Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
-
-                                        dialog.cancel();
-
-                                        filePathMap.clear();
-
-
-                                    }
-                                }).addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        pd.dismiss();
-                                        Toast.makeText(MainActivity.this, "Upload Failed -> " + e, Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-
-
-                            }
-                        }
-                        Blips blips = new Blips(cursor_coordinate_latitude,
-                                cursor_coordinate_longitude,
-                                BlipName,
-                                userName,
-                                Details,
-                                blipIcon,null,null,null,imageURLLink);
-                        addblippushref.setValue(blips);
-                        Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
-
-                        dialog.cancel();
-
-                        filePathMap.clear();
-
-                    }
-                } else if (privateradio.isChecked()) {
-                    if (validateForm()) {
-
-
-                        Details = mDetails.getText().toString();
-                        String dropboxvalue = mySpinner.getSelectedItem().toString();
-
-
-                        if (Objects.equals(dropboxvalue, "Arts")) {//
-                            blipIcon = "private_art";
-                        } else if (Objects.equals(dropboxvalue, "Transportation")) {//
-                            blipIcon = "private_autoboatsair";
-
-                        } else if (Objects.equals(dropboxvalue, "Business")) {//
-                            blipIcon = "private_business";
-
-                        } else if (Objects.equals(dropboxvalue, "Community")) {//
-                            blipIcon = "private_community";
-
-                        } else if (Objects.equals(dropboxvalue, "Family & Education")) {//
-                            blipIcon = "private_family";
-
-                        } else if (Objects.equals(dropboxvalue, "Fashion")) {//
-                            blipIcon = "private_fashion";
-
-                        } else if (Objects.equals(dropboxvalue, "Media")) {//
-                            blipIcon = "private_filmandmedia";
-
-                        } else if (Objects.equals(dropboxvalue, "Travel")) {//
-                            blipIcon = "private_travelandoutdoor";
-
-                        } else if (Objects.equals(dropboxvalue, "Food")) {//
-                            blipIcon = "private_foodanddrinks";
-
-                        } else if (Objects.equals(dropboxvalue, "Health")) {//
-                            blipIcon = "private_health";
-
-                        } else if (Objects.equals(dropboxvalue, "Holiday")) {
-                            blipIcon = "private_holidaysandcelebrations";
-
-                        } else if (Objects.equals(dropboxvalue, "Music")) {
-                            blipIcon = "private_music";
-
-                        } else if (Objects.equals(dropboxvalue, "Sports")) {
-                            blipIcon = "private_sportsandfitness";
-
-                        } else {
-                            blipIcon = "ic_launcher_round";
-                        }
-
-
-                        //Place Data
-                        final DatabaseReference addblippushref =  Users.child(userName).child("Blips").push();// Add to user's blips
-                        final String blipkey =  addblippushref.getKey();
-
-
-                        if(filePath != null) {
-
-                            //uploading the image
-                            for (String name : filePathMap.keySet()){
-                                pd.show();
-                                Uri value = filePathMap.get(name);
-
-
-                                StorageReference childRefKey = storageRef.child("BlipPhotos").child(blipkey);
-
-                                uploadTask = childRefKey.child(filePath.getLastPathSegment()).putBytes( convertURItocompresseddata(value));
-                                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                    @Override
-                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                        pd.dismiss();
-                                        Toast.makeText(MainActivity.this, "Upload successful", Toast.LENGTH_SHORT).show();
-                                        //get the download URL like this:
-                                        @SuppressWarnings("VisibleForTests")
-                                        Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                                        //and you can convert it to string like this:
-                                        imageURLLink = downloadUrl.toString();
-                                        blips = new Blips(cursor_coordinate_latitude,
-                                                cursor_coordinate_longitude,
-                                                BlipName,
-                                                userName,
-                                                Details,
-                                                blipIcon,null,null,null,imageURLLink);
-
-                                        addblippushref.setValue(blips);
-                                        Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
-
-                                        dialog.cancel();
-
-                                        filePathMap.clear();
-
-
-                                    }
-                                }).addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        pd.dismiss();
-                                        Toast.makeText(MainActivity.this, "Upload Failed -> " + e, Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-
-
-                            }
-                        }
-                        blips = new Blips(cursor_coordinate_latitude,
-                                cursor_coordinate_longitude,
-                                BlipName,
-                                userName,
-                                Details,
-                                blipIcon,null,null,null,imageURLLink);
-
-                        addblippushref.setValue(blips);
-                        Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
-
-                        dialog.cancel();
-                        filePathMap.clear();
-
+                    } catch (ParseException e) {
+                        Toast.makeText(MainActivity.this, "Parse Error", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
                     }
 
+                }
 
+                else{
+                   TimeRangeIsValid = true;
                 }
 
 
 
 
+                if(TimeRangeIsValid) {
+
+                    BlipName = mBlipName.getText().toString();
+                    if (publicradio.isChecked()) {
+
+                        if (validateForm()) {
+
+                            Details = mDetails.getText().toString();
+                            String dropboxvalue = mySpinner.getSelectedItem().toString();
+
+
+                            if (Objects.equals(dropboxvalue, "Arts")) {
+                                blipIcon = "public_art";
+                            } else if (Objects.equals(dropboxvalue, "Transportation")) {
+                                blipIcon = "public_autoboatsair";
+
+                            } else if (Objects.equals(dropboxvalue, "Business")) {
+                                blipIcon = "public_business";
+
+                            } else if (Objects.equals(dropboxvalue, "Community")) {
+                                blipIcon = "public_community";
+
+                            } else if (Objects.equals(dropboxvalue, "Family & Education")) {
+                                blipIcon = "public_family";
+
+                            } else if (Objects.equals(dropboxvalue, "Fashion")) {
+                                blipIcon = "public_fashion";
+
+                            } else if (Objects.equals(dropboxvalue, "Media")) {
+                                blipIcon = "public_filmandmedia";
+
+                            } else if (Objects.equals(dropboxvalue, "Travel")) {
+                                blipIcon = "public_travelandoutdoor";
+
+                            } else if (Objects.equals(dropboxvalue, "Food")) {
+                                blipIcon = "public_foodanddrinks";
+
+                            } else if (Objects.equals(dropboxvalue, "Health")) {
+                                blipIcon = "public_health";
+
+                            } else if (Objects.equals(dropboxvalue, "Holiday")) {
+                                blipIcon = "public_holidaysandcelebrations";
+
+                            } else if (Objects.equals(dropboxvalue, "Music")) {
+                                blipIcon = "public_music";
+
+                            } else if (Objects.equals(dropboxvalue, "Sports")) {
+                                blipIcon = "public_sportsandfitness";
+
+                            } else {
+                                blipIcon = "ic_launcher_round";
+                            }
+
+
+                            final DatabaseReference addblippushref = Users.child(userName).child("Blips").push();// Add to user's blips
+                            final String blipkey = addblippushref.getKey();
+
+
+                            if (filePath != null) {
+
+                                //uploading the image
+                                for (String name : filePathMap.keySet()) {
+                                    pd.show();
+                                    Uri value = filePathMap.get(name);
+
+
+                                    StorageReference childRefKey = storageRef.child("BlipPhotos").child(blipkey);
+                                    uploadTask = childRefKey.child(filePath.getLastPathSegment()).putBytes(convertURItocompresseddata(value));
+
+                                    uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                        @Override
+                                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                            pd.dismiss();
+                                            Toast.makeText(MainActivity.this, "Upload successful", Toast.LENGTH_SHORT).show();
+                                            //get the download URL like this:
+                                            @SuppressWarnings("VisibleForTests")
+                                            Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                            //and you can convert it to string like this:
+                                            imageURLLink = downloadUrl.toString();
+
+
+                                            Blips blips = new Blips(cursor_coordinate_latitude,
+                                                    cursor_coordinate_longitude,
+                                                    BlipName,
+                                                    userName,
+                                                    Details,
+                                                    blipIcon,
+                                                    getCurrentDateTime(),
+                                                    BlipStartDate + " " + BlipStartTime,
+                                                    BlipEndDate + " " + BlipEndTime,
+                                                    imageURLLink);
+                                            addblippushref.setValue(blips);
+                                            Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
+
+                                            dialog.cancel();
+
+                                            filePathMap.clear();
+
+
+                                        }
+                                    }).addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            pd.dismiss();
+                                            Toast.makeText(MainActivity.this, "Upload Failed -> " + e, Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+
+
+                                }
+                            }
+                            Blips blips = new Blips(cursor_coordinate_latitude,
+                                    cursor_coordinate_longitude,
+                                    BlipName,
+                                    userName,
+                                    Details,
+                                    blipIcon,
+                                    getCurrentDateTime(),
+                                    BlipStartDate + " " + BlipStartTime,
+                                    BlipEndDate + " " + BlipEndTime,
+                                    imageURLLink);
+                            addblippushref.setValue(blips);
+                            Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
+
+                            dialog.cancel();
+
+                            filePathMap.clear();
+
+                        }
+                    } else if (privateradio.isChecked()) {
+                        if (validateForm()) {
+
+
+                            Details = mDetails.getText().toString();
+                            String dropboxvalue = mySpinner.getSelectedItem().toString();
+
+
+                            if (Objects.equals(dropboxvalue, "Arts")) {//
+                                blipIcon = "private_art";
+                            } else if (Objects.equals(dropboxvalue, "Transportation")) {//
+                                blipIcon = "private_autoboatsair";
+
+                            } else if (Objects.equals(dropboxvalue, "Business")) {//
+                                blipIcon = "private_business";
+
+                            } else if (Objects.equals(dropboxvalue, "Community")) {//
+                                blipIcon = "private_community";
+
+                            } else if (Objects.equals(dropboxvalue, "Family & Education")) {//
+                                blipIcon = "private_family";
+
+                            } else if (Objects.equals(dropboxvalue, "Fashion")) {//
+                                blipIcon = "private_fashion";
+
+                            } else if (Objects.equals(dropboxvalue, "Media")) {//
+                                blipIcon = "private_filmandmedia";
+
+                            } else if (Objects.equals(dropboxvalue, "Travel")) {//
+                                blipIcon = "private_travelandoutdoor";
+
+                            } else if (Objects.equals(dropboxvalue, "Food")) {//
+                                blipIcon = "private_foodanddrinks";
+
+                            } else if (Objects.equals(dropboxvalue, "Health")) {//
+                                blipIcon = "private_health";
+
+                            } else if (Objects.equals(dropboxvalue, "Holiday")) {
+                                blipIcon = "private_holidaysandcelebrations";
+
+                            } else if (Objects.equals(dropboxvalue, "Music")) {
+                                blipIcon = "private_music";
+
+                            } else if (Objects.equals(dropboxvalue, "Sports")) {
+                                blipIcon = "private_sportsandfitness";
+
+                            } else {
+                                blipIcon = "ic_launcher_round";
+                            }
+
+
+                            //Place Data
+                            final DatabaseReference addblippushref = Users.child(userName).child("Blips").push();// Add to user's blips
+                            final String blipkey = addblippushref.getKey();
+
+
+                            if (filePath != null) {
+
+                                //uploading the image
+                                for (String name : filePathMap.keySet()) {
+                                    pd.show();
+                                    Uri value = filePathMap.get(name);
+
+
+                                    StorageReference childRefKey = storageRef.child("BlipPhotos").child(blipkey);
+
+                                    uploadTask = childRefKey.child(filePath.getLastPathSegment()).putBytes(convertURItocompresseddata(value));
+                                    uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                        @Override
+                                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                            pd.dismiss();
+                                            Toast.makeText(MainActivity.this, "Upload successful", Toast.LENGTH_SHORT).show();
+                                            //get the download URL like this:
+                                            @SuppressWarnings("VisibleForTests")
+                                            Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                            //and you can convert it to string like this:
+                                            imageURLLink = downloadUrl.toString();
+                                            blips = new Blips(cursor_coordinate_latitude,
+                                                    cursor_coordinate_longitude,
+                                                    BlipName,
+                                                    userName,
+                                                    Details,
+                                                    blipIcon,
+                                                    getCurrentDateTime(),
+                                                    BlipStartDate + " " + BlipStartTime,
+                                                    BlipEndDate + " " + BlipEndTime,
+                                                    imageURLLink);
+
+                                            addblippushref.setValue(blips);
+                                            Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
+
+                                            dialog.cancel();
+
+                                            filePathMap.clear();
+
+
+                                        }
+                                    }).addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            pd.dismiss();
+                                            Toast.makeText(MainActivity.this, "Upload Failed -> " + e, Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+
+
+                                }
+                            }
+                            blips = new Blips(cursor_coordinate_latitude,
+                                    cursor_coordinate_longitude,
+                                    BlipName,
+                                    userName,
+                                    Details,
+                                    blipIcon,
+                                    getCurrentDateTime(),
+                                    BlipStartDate + " " + BlipStartTime,
+                                    BlipEndDate + " " + BlipEndTime,
+                                    imageURLLink);
+
+                            addblippushref.setValue(blips);
+                            Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
+
+                            dialog.cancel();
+                            filePathMap.clear();
+
+                        }
+
+
+                    }
+                }
+
+
             }
         });
+
+
+
+
+
 
         mCancelBlip.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1154,6 +1392,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
+    }
+
+    public String getCurrentDateTime(){
+        Calendar mcurrentDate = Calendar.getInstance();
+        int day = mcurrentDate.get(Calendar.DAY_OF_MONTH);
+        int month = mcurrentDate.get(Calendar.MONTH);
+        int year = mcurrentDate.get(Calendar.YEAR);
+        int hour = mcurrentDate.get(Calendar.HOUR_OF_DAY);
+        int minute = mcurrentDate.get(Calendar.MINUTE);
+        String AM_PM ;
+        if(hour < 12) {
+            AM_PM = "AM";
+        } else {
+            AM_PM = "PM";
+        }
+        if(hour==0 ){hour = 12;}
+        else if(hour>12 ){hour = hour -12;}
+
+        String min;
+        if (minute < 10)
+        {min = "0" + minute ;}
+        else
+        {min = String.valueOf(minute);}
+        String  dateCreated= ( year + "-" + month + "-" + day)+" "+( hour + ":" + min +" "+ AM_PM);
+        return dateCreated;
+
     }
 
     public byte[] convertURItocompresseddata(Uri value){
@@ -1480,7 +1744,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 BlipName,
                                 userName,
                                 Details,
-                                blipIcon,null,null,null,imageURLLink);
+                                blipIcon,BlipStartDate+BlipStartTime,
+                                BlipStartDate+" "+BlipStartTime,
+                                BlipEndDate+" "+BlipEndTime,
+                                imageURLLink);
 
                         Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
                         Blipsref.child("public").push().setValue(blips);//Add to public blips
@@ -1546,7 +1813,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 BlipName,
                                 userName,
                                 Details,
-                                blipIcon,null,null,null,imageURLLink);
+                                blipIcon,BlipStartDate+BlipStartTime,
+                                BlipStartDate+" "+BlipStartTime,
+                                BlipEndDate+" "+BlipEndTime,
+                                imageURLLink);
                         Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
 
                         Blipsref.child("private").push().setValue(blips);//Add to private blips
