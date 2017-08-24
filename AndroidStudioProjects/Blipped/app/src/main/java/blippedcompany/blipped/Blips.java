@@ -19,6 +19,8 @@ import com.google.firebase.database.IgnoreExtraProperties;
     public String StartTime;
     public String EndTime;
     public String imageURL;
+    public String allowedfriends;
+    public Boolean isSuperPrivate;
 
 
     public String key;
@@ -37,7 +39,9 @@ import com.google.firebase.database.IgnoreExtraProperties;
                  String DateCreated,
                  String StartTime,
                  String EndTime,
-                 String imageURL) {
+                 String imageURL,
+                 String allowedfriends,
+                 Boolean isSuperPrivate) {
 
 
 
@@ -51,6 +55,8 @@ import com.google.firebase.database.IgnoreExtraProperties;
         this.StartTime= StartTime;
         this.EndTime= EndTime;
         this.imageURL= imageURL;
+        this.allowedfriends= allowedfriends;
+        this.isSuperPrivate=isSuperPrivate;
     }
 
 

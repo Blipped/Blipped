@@ -93,7 +93,7 @@
                         android:layout_height="125dp"
                         android:adjustViewBounds="true"
                         android:scaleType="fitXY"
-                        app:srcCompat="@mipmap/theme"
+                        app:srcCompat="@mipmap/theme2"
                         tools:layout_editor_absoluteX="280dp"
                         tools:layout_editor_absoluteY="275dp" />
 
@@ -175,126 +175,134 @@
                     tools:layout_editor_absoluteX="16dp"
                     tools:layout_editor_absoluteY="132dp" />
 
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                </GridLayout>
+
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="horizontal"
-                    android:padding="5dp">
+                    android:orientation="horizontal">
 
                     <TextView
                         android:id="@+id/textView5"
-                        android:layout_width="70dp"
-                        android:layout_height="wrap_content"
-
+                        android:layout_width="0px"
+                        android:layout_height="match_parent"
                         android:layout_alignBottom="@+id/detailsEt"
                         android:layout_toStartOf="@+id/detailsEt"
                         android:layout_weight="1"
+                        android:elevation="3dp"
                         android:text="Start Time"
+                        android:textAlignment="center"
                         android:textColor="@color/common_google_signin_btn_text_dark_focused"
-                        android:textSize="12sp"
+                        android:textSize="14sp"
                         tools:layout_editor_absoluteX="16dp"
                         tools:layout_editor_absoluteY="132dp" />
 
                     <TextView
                         android:id="@+id/timeTextView"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0px"
                         android:layout_height="wrap_content"
-                        android:layout_margin="0dp"
+                        android:layout_weight="1"
+                        android:autoText="false"
                         android:contentDescription="12:00 AM "
-                        android:ems="4"
-                        android:focusable="false"
-                        android:padding="0dp"
+                        android:elevation="5dp"
                         android:text="12:00 AM "
                         android:textAlignment="center"
                         android:textColor="@color/common_google_signin_btn_text_dark_focused"
-                        android:textSize="12sp" />
+                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/dateTextView"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0px"
                         android:layout_height="wrap_content"
-                        android:layout_margin="0dp"
-                        android:layout_marginLeft="0dp"
-                        android:ems="4"
+                        android:layout_weight="1"
+                        android:autoText="true"
+                        android:elegantTextHeight="false"
+                        android:elevation="5dp"
                         android:focusable="false"
-                        android:padding="0dp"
                         android:text="1/1/2017"
                         android:textAlignment="center"
                         android:textColor="@color/common_google_signin_btn_text_dark_focused"
-                        android:textSize="12sp" />
+                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/addendtimebutton"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0px"
                         android:layout_height="wrap_content"
-                        android:layout_margin="0dp"
-                        android:layout_marginStart="2dp"
                         android:layout_weight="1"
-                        android:text=" +End TIme"
+                        android:autoText="true"
+                        android:text="+End Time"
+                        android:textAlignment="center"
                         android:textColor="@android:color/holo_blue_bright"
-                        android:textSize="12sp"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
+
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/endtimebar"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="horizontal"
-                    android:padding="5dp"
                     android:visibility="gone">
 
                     <TextView
                         android:id="@+id/EndTImeText"
-                        android:layout_width="70dp"
-                        android:layout_height="wrap_content"
+                        android:layout_width="0px"
+                        android:layout_height="match_parent"
                         android:layout_alignBottom="@+id/detailsEt"
                         android:layout_toStartOf="@+id/detailsEt"
                         android:layout_weight="1"
+                        android:autoText="true"
+                        android:elevation="5dp"
                         android:text="End Time"
+                        android:textAlignment="center"
                         android:textColor="@color/common_google_signin_btn_text_dark_focused"
-                        android:textSize="12sp"
+                        android:textSize="14sp"
                         tools:layout_editor_absoluteX="16dp"
                         tools:layout_editor_absoluteY="132dp" />
 
                     <TextView
                         android:id="@+id/timeTextViewend"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0px"
                         android:layout_height="wrap_content"
-                        android:layout_margin="0dp"
-
-                        android:ems="4"
+                        android:layout_weight="1"
+                        android:autoText="false"
+                        android:elevation="5dp"
                         android:focusable="false"
-                        android:padding="0dp"
                         android:text="12:00 AM "
                         android:textAlignment="center"
                         android:textColor="@color/common_google_signin_btn_text_dark_focused"
-                        android:textSize="12sp" />
+                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/dateTextViewend"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0px"
                         android:layout_height="wrap_content"
-                        android:layout_margin="0dp"
-                        android:layout_marginLeft="0dp"
+                        android:layout_weight="1"
+                        android:autoText="true"
                         android:background="@color/common_google_signin_btn_text_dark_pressed"
-                        android:ems="4"
+                        android:elevation="5dp"
                         android:focusable="false"
                         android:padding="0dp"
                         android:text="1/1/2017"
                         android:textAlignment="center"
                         android:textColor="@color/common_google_signin_btn_text_dark_focused"
-                        android:textSize="12sp" />
+                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/removeendtimebutton"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0px"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="2dp"
                         android:layout_weight="1"
-                        android:text=" No End Time"
+                        android:autoText="true"
+                        android:text="Remove"
+                        android:textAlignment="center"
                         android:textColor="@android:color/holo_blue_bright"
-                        android:textSize="12sp"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -322,7 +330,7 @@
                         android:id="@+id/groupRadio"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="0.70"
+                        android:layout_weight="0.5"
                         tools:layout_editor_absoluteX="144dp"
                         tools:layout_editor_absoluteY="212dp">
 
@@ -346,10 +354,23 @@
                             android:layout_alignEnd="@+id/cancelblip_button"
                             android:layout_below="@+id/iconsSpinner"
                             android:layout_weight="1"
-                            android:text="Private"
+                            android:text="Only Friends"
                             android:textSize="14sp"
                             tools:layout_editor_absoluteX="222dp"
                             tools:layout_editor_absoluteY="284dp" />
+
+                        <RadioButton
+                            android:id="@+id/SuperPrivateRadio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignEnd="@+id/cancelblip_button"
+                            android:layout_below="@+id/iconsSpinner"
+                            android:layout_weight="1"
+                            android:text="Only Selected"
+                            android:textSize="14sp"
+                            tools:layout_editor_absoluteX="222dp"
+                            tools:layout_editor_absoluteY="284dp" />
+
                     </RadioGroup>
 
                     <Spinner
@@ -358,11 +379,37 @@
                         android:layout_height="28dp"
                         android:layout_below="@+id/detailsEt"
                         android:layout_toEndOf="@+id/addblip_button"
-                        android:layout_weight="1"
+                        android:layout_weight="2"
                         tools:layout_editor_absoluteX="144dp"
                         tools:layout_editor_absoluteY="255dp" />
 
                 </LinearLayout>
+
+                <TextView
+                    android:id="@+id/SuperPrivateText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+
+                    android:layout_alignStart="@+id/addblip_button"
+                    android:layout_alignTop="@+id/iconsSpinner"
+                    android:layout_weight="0.70"
+                    android:text="Can Only be seen by:"
+                    android:textColor="@color/common_google_signin_btn_text_dark_focused"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    tools:layout_editor_absoluteX="35dp"
+                    tools:layout_editor_absoluteY="208dp" />
+
+                <MultiAutoCompleteTextView
+                    android:id="@+id/allowfriendsedittext"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:allowUndo="true"
+                    android:autoLink="none"
+                    android:autoText="true"
+                    android:hint="Enter friend's email here.."
+                    android:isScrollContainer="true"
+                    android:visibility="gone" />
 
                 <LinearLayout
                     android:id="@+id/addcancel"

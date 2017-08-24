@@ -56,6 +56,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.MultiAutoCompleteTextView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.SearchView;
@@ -177,6 +178,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Date BlipStartDateTime ;
     Date BlipEndDateTime ;
     DateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm aa", Locale.ENGLISH);
+    Boolean isSuperPrivate = false;
+    String allowedfriends;
 
     EditText friendemailEt;
     String friendrequestemail;
@@ -201,6 +204,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     CheckBox checkboxMusic;
     RadioButton publicradio;
     RadioButton privateradio;
+    RadioButton SuperPrivateradio;
     String[] CustomBlips = {"Arts", "Transportation", "Business",
             "Community", "Family & Education", "Fashion", "Media", "Food", "Health", "Holiday", "Music", "Sports", "Travel"};
     String blipIcon;
@@ -524,7 +528,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             TextView title = v.findViewById(R.id.title);
                             title.setText(marker.getTitle());
                             snippet.setText("Creator: " + dataarray[0] + "\n" +
-                                    "Details: " + dataarray[1] + "\n");
+                                    "Details: " + dataarray[1] + "\n"+
+                                    "Date Created: " + dataarray[3] + "\n"+
+                                    "Start Time:" + dataarray[4] + "\n"+
+                                    "End Time:" + dataarray[5] );
 
                             return v;
 
@@ -612,9 +619,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
-
-
-
 
 
     }
@@ -728,33 +732,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void PlaceMarker(final Blips blipsadded) {
         LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
         // Put inormation into a single string with comma seperators
-        Description = blipsadded.Creator+"123marcius"+ blipsadded.Details +"123marcius"+blipsadded.imageURL;
-        myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
+        Description = blipsadded.Creator+"123marcius"+ blipsadded.Details +"123marcius"+blipsadded.imageURL
+                +"123marcius"+blipsadded.DateCreated+"123marcius"+blipsadded.StartTime+"123marcius"+blipsadded.EndTime;
 
+        myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
                 .position(newBlipCoordinates)
                 .title(blipsadded.BlipName)
                 .snippet(Description)
                 .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
+
         markerlist2.put(Integer.toString(markerkey), myMarker);
         dropPinEffect(myMarker);
-
-
 
     }
 
     public void PlaceMarkernoanimation(final Blips blipsadded) {
         LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
         // Put inormation into a single string with comma seperators
-        Description = blipsadded.Creator+"123marcius"+ blipsadded.Details +"123marcius"+blipsadded.imageURL;
+        Description = blipsadded.Creator+"123marcius"+  //0
+                blipsadded.Details +"123marcius"+       //1
+                blipsadded.imageURL +"123marcius"+      //2
+                blipsadded.DateCreated+"123marcius"+    //3
+                blipsadded.StartTime+"123marcius"+      //4
+                blipsadded.EndTime;                     //5
         myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
 
                 .position(newBlipCoordinates)
                 .title(blipsadded.BlipName)
                 .snippet(Description)
                 .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
-
-
-
 
 
     }
@@ -790,10 +796,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button mCancelBlip = mBlipAddView.findViewById(R.id.cancelblip_button);
         publicradio = mBlipAddView.findViewById(R.id.publicRadio);
         privateradio = mBlipAddView.findViewById(R.id.privateRadio);
+        SuperPrivateradio = mBlipAddView.findViewById(R.id.SuperPrivateRadio);
         mySpinner = mBlipAddView.findViewById(R.id.iconsSpinner);
         Button chooseImg =  mBlipAddView.findViewById(R.id.chooseImg);
         Button takePhoto =  mBlipAddView.findViewById(R.id.takePhoto);
         imgView = mBlipAddView.findViewById(R.id.imgView);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_dropdown_item_1line, friendarraylist);
+        final MultiAutoCompleteTextView allowedfriendsmultiline = mBlipAddView.findViewById(R.id.allowfriendsedittext);
+
+        allowedfriendsmultiline.setAdapter(adapter);
+        allowedfriendsmultiline.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
 
 
         final TextView timeedittext = mBlipAddView.findViewById(R.id.timeTextView);
@@ -847,7 +861,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onClick(View v) {
-                addendtimeEnd.setVisibility(View.GONE);
+                addendtimeEnd.setVisibility(View.INVISIBLE);
                 endtimebar.setVisibility(View.VISIBLE);
 
                 Calendar mcurrentDate = Calendar.getInstance();
@@ -1000,9 +1014,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         //Check if both start date and  start time are entered AND also end date/time
 
 
-
-
-
                     }}, hour, minute, false);
 
 
@@ -1063,13 +1074,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 if (publicradio.isChecked()) {
-                    privateradio.setChecked(false);
+                    isSuperPrivate=false;
                     mySpinner.setAdapter(new MyCustomAdapterPublic(MainActivity.this, R.layout.row, CustomBlips));
+                    allowedfriendsmultiline.setVisibility(View.GONE);
 
                 } else if (privateradio.isChecked()) {
-                    publicradio.setChecked(false);
+                    isSuperPrivate=false;
                     mySpinner.setAdapter(new MyCustomAdapterPrivate(MainActivity.this, R.layout.row, CustomBlips));//Change to Private Spinner
 
+
+                }
+                else if (SuperPrivateradio.isChecked()) {
+                    mySpinner.setAdapter(new MyCustomAdapterPrivate(MainActivity.this, R.layout.row, CustomBlips));//Change to Private Spinner
+                    isSuperPrivate=true;
+                    allowedfriendsmultiline.setVisibility(View.VISIBLE);
                 }
 
                 // checkedId is the RadioButton selected
@@ -1112,9 +1130,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 else{
                    TimeRangeIsValid = true;
                 }
-
-
-
 
                 if(TimeRangeIsValid) {
 
@@ -1206,7 +1221,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                                     getCurrentDateTime(),
                                                     BlipStartDate + " " + BlipStartTime,
                                                     BlipEndDate + " " + BlipEndTime,
-                                                    imageURLLink);
+                                                    imageURLLink,
+                                                    null,
+                                                    false);
                                             addblippushref.setValue(blips);
                                             Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
@@ -1236,7 +1253,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     getCurrentDateTime(),
                                     BlipStartDate + " " + BlipStartTime,
                                     BlipEndDate + " " + BlipEndTime,
-                                    imageURLLink);
+                                    imageURLLink,
+                                    null,
+                                    false);
                             addblippushref.setValue(blips);
                             Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
@@ -1245,7 +1264,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             filePathMap.clear();
 
                         }
-                    } else if (privateradio.isChecked()) {
+                    } else if (privateradio.isChecked() || SuperPrivateradio.isChecked()) {
                         if (validateForm()) {
 
 
@@ -1331,7 +1350,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                                     getCurrentDateTime(),
                                                     BlipStartDate + " " + BlipStartTime,
                                                     BlipEndDate + " " + BlipEndTime,
-                                                    imageURLLink);
+                                                    imageURLLink,
+                                                    allowedfriendsmultiline.getText().toString(),
+                                                    isSuperPrivate);
 
                                             addblippushref.setValue(blips);
                                             Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
@@ -1362,7 +1383,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     getCurrentDateTime(),
                                     BlipStartDate + " " + BlipStartTime,
                                     BlipEndDate + " " + BlipEndTime,
-                                    imageURLLink);
+                                    imageURLLink,
+                                    allowedfriendsmultiline.getText().toString(),
+                                    isSuperPrivate);
 
                             addblippushref.setValue(blips);
                             Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
@@ -1371,17 +1394,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             filePathMap.clear();
 
                         }
-
-
                     }
                 }
 
 
             }
         });
-
-
-
 
 
 
@@ -1564,6 +1582,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 });
 
     }
+
     public void EditBlip(final Marker marker) {
 
         final LatLng coordinatetobeupdated = marker.getPosition();
@@ -1584,6 +1603,237 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mySpinner = mBlipAddView.findViewById(R.id.iconsSpinner);
         TextView x = mBlipAddView.findViewById(R.id.blipdetailstextview);
         x.setText("Edit Blip Details");
+
+        Button chooseImg =  mBlipAddView.findViewById(R.id.chooseImg);
+        Button takePhoto =  mBlipAddView.findViewById(R.id.takePhoto);
+        imgView = mBlipAddView.findViewById(R.id.imgView);
+
+
+        final TextView timeedittext = mBlipAddView.findViewById(R.id.timeTextView);
+        final TextView dateedittext = mBlipAddView.findViewById(R.id.dateTextView);
+        final TextView timeedittextEnd = mBlipAddView.findViewById(R.id.timeTextViewend);
+        final TextView dateedittextEnd = mBlipAddView.findViewById(R.id.dateTextViewend);
+        final TextView addendtimeEnd = mBlipAddView.findViewById(R.id.addendtimebutton);
+        final TextView removeendtimeEnd = mBlipAddView.findViewById(R.id.removeendtimebutton);
+        final LinearLayout endtimebar = mBlipAddView.findViewById(R.id.endtimebar);
+
+        pd = new ProgressDialog(this);
+        pd.setMessage("Uploading....");
+
+
+        addendtimeEnd.setOnClickListener(new View.OnClickListener() {// ADD END TIME BAR
+
+            @Override
+            public void onClick(View v) {
+                addendtimeEnd.setVisibility(View.GONE);
+                endtimebar.setVisibility(View.VISIBLE);
+
+                Calendar mcurrentDate = Calendar.getInstance();
+                int day = mcurrentDate.get(Calendar.DAY_OF_MONTH);
+                int month = mcurrentDate.get(Calendar.MONTH);
+                int year = mcurrentDate.get(Calendar.YEAR);
+                int hour = mcurrentDate.get(Calendar.HOUR_OF_DAY);
+                int minute = mcurrentDate.get(Calendar.MINUTE);
+                String AM_PM ;
+                if(hour < 12) {
+                    AM_PM = "AM";
+                } else {
+                    AM_PM = "PM";
+                }
+                if(hour==0 ){hour = 12;}
+                else if(hour>12 ){hour = hour -12;}
+
+                String min;
+                if (minute < 10)
+                {min = "0" + minute ;}
+                else
+                {min = String.valueOf(minute);}
+                timeedittextEnd.setText( hour+1 + ":" + min +" "+ AM_PM);
+                dateedittextEnd.setText( month + "/" + day + "/" + year);
+                BlipEndTime =( hour + ":" + min +" "+ AM_PM);
+                BlipEndDate =year+"-"+month+"-"+day;
+
+
+            }
+        });
+
+        removeendtimeEnd.setOnClickListener(new View.OnClickListener() {//REMOVE END TIME BAR
+
+            @Override
+            public void onClick(View v) {
+                BlipEndDate=null;
+                BlipEndTime=null;
+                BlipEndDateTime=null;
+                addendtimeEnd.setVisibility(View.VISIBLE);
+                endtimebar.setVisibility(View.GONE);
+
+            }
+        });
+        timeedittext.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Calendar mcurrentTime = Calendar.getInstance();
+                int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
+                int minute = mcurrentTime.get(Calendar.MINUTE);
+
+                TimePickerDialog mTimePicker;
+                mTimePicker = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
+
+
+                        String AM_PM ;
+                        if(selectedHour < 12) {
+                            AM_PM = "AM";
+                        } else {
+                            AM_PM = "PM";
+                        }
+                        if(selectedHour==0 ){selectedHour = 12;}
+                        else if(selectedHour>12 ){selectedHour = selectedHour -12;}
+
+                        String min;
+                        if (selectedMinute < 10)
+                        {min = "0" + selectedMinute ;}
+                        else
+                        {min = String.valueOf(selectedMinute);}
+                        timeedittext.setText( selectedHour + ":" + min +" "+ AM_PM);
+
+                        BlipStartTime =( selectedHour + ":" + min +" "+ AM_PM);
+
+
+
+                    }
+                }, hour, minute, false);
+
+                mTimePicker.setTitle("Select Time");
+                mTimePicker.show();
+
+            }
+        });
+
+        dateedittext.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Calendar mcurrentDate = Calendar.getInstance();
+                int day = mcurrentDate.get(Calendar.DAY_OF_MONTH);
+                int month = mcurrentDate.get(Calendar.MONTH);
+                int year = mcurrentDate.get(Calendar.YEAR);
+
+                DatePickerDialog mDatePicker;
+                mDatePicker = new DatePickerDialog(MainActivity.this, new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                        BlipStartDate =year+"-"+month+"-"+day;
+                        Toast.makeText(MainActivity.this, BlipStartDate, Toast.LENGTH_SHORT).show();
+                        dateedittext.setText( month + "/" + day + "/" + year);
+                    }
+
+                }, year,month,day);
+
+                mDatePicker.setTitle("Select Time");
+                mDatePicker.show();
+
+            }
+        });
+
+        timeedittextEnd.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Calendar mcurrentTime = Calendar.getInstance();
+                int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
+                int minute = mcurrentTime.get(Calendar.MINUTE);
+
+                TimePickerDialog mTimePicker;
+                mTimePicker = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
+
+                        Toast.makeText(MainActivity.this, "Time setted", Toast.LENGTH_SHORT).show();
+
+
+                        String AM_PM ;
+                        if(selectedHour < 12) {
+                            AM_PM = "AM";
+                        } else {
+                            AM_PM = "PM";
+                        }
+                        if(selectedHour==0 ){selectedHour = 12;}
+                        else if(selectedHour>12 ){selectedHour = selectedHour -12;}
+
+                        String min;
+                        if (selectedMinute < 10)
+                        {min = "0" + selectedMinute ;}
+                        else
+                        {min = String.valueOf(selectedMinute);}
+
+
+                        timeedittextEnd.setText( selectedHour + ":" + min +" "+ AM_PM);
+                        BlipEndTime =( selectedHour + ":" + min +" "+ AM_PM);
+                        //Check if both start date and  start time are entered AND also end date/time
+
+
+
+
+
+                    }}, hour, minute, false);
+
+
+                mTimePicker.setTitle("Select Time");
+                mTimePicker.show();
+
+            }
+        });
+
+        dateedittextEnd.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Calendar mcurrentDate = Calendar.getInstance();
+                int day = mcurrentDate.get(Calendar.DAY_OF_MONTH);
+                int month = mcurrentDate.get(Calendar.MONTH);
+                int year = mcurrentDate.get(Calendar.YEAR);
+
+                DatePickerDialog mDatePicker;
+                mDatePicker = new DatePickerDialog(MainActivity.this, new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                        Toast.makeText(MainActivity.this, "Time setted", Toast.LENGTH_SHORT).show();
+                        BlipEndDate =year+"-"+month+"-"+day;
+                        dateedittextEnd.setText( month + "/" + day + "/" + year);
+                    }
+                }, year,month,day);
+
+                mDatePicker.setTitle("Select Time");
+                mDatePicker.show();
+
+            }
+        });
+
+
+        chooseImg.setOnClickListener(new View.OnClickListener() {//Choose Image Button Click
+            @Override
+            public void onClick(View v) {
+                Intent pickPhoto = new Intent(Intent.ACTION_PICK,
+                        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(pickPhoto , 1);//one can be replaced with any action code
+
+            }
+        });
+
+        takePhoto.setOnClickListener(new View.OnClickListener() {//Choose Image Button Click
+            @Override
+            public void onClick(View v) {
+
+                takePicture();
+            }
+        });
 
         RadioGroup radioGroup = mBlipAddView.findViewById(R.id.groupRadio);
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -1684,6 +1934,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View view) {
                 DeleteBlip(marker);
+                Blips blipsedit;
                 BlipName = mBlipName.getText().toString();
 
                 if (publicradio.isChecked()) {
@@ -1739,20 +1990,83 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         //Place Data
 
+                        final DatabaseReference addblippushref = Users.child(userName).child("Blips").push();// Add to user's blips
+                        final String blipkey = addblippushref.getKey();
+
+
+                        if (filePath != null) {
+
+                            //uploading the image
+                            for (String name : filePathMap.keySet()) {
+                                pd.show();
+                                Uri value = filePathMap.get(name);
+
+
+                                StorageReference childRefKey = storageRef.child("BlipPhotos").child(blipkey);
+                                uploadTask = childRefKey.child(filePath.getLastPathSegment()).putBytes(convertURItocompresseddata(value));
+
+                                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                        pd.dismiss();
+                                        Toast.makeText(MainActivity.this, "Upload successful", Toast.LENGTH_SHORT).show();
+                                        //get the download URL like this:
+                                        @SuppressWarnings("VisibleForTests")
+                                        Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                        //and you can convert it to string like this:
+                                        imageURLLink = downloadUrl.toString();
+
+
+                                        Blips blips = new Blips(cursor_coordinate_latitude,
+                                                cursor_coordinate_longitude,
+                                                BlipName,
+                                                userName,
+                                                Details,
+                                                blipIcon,
+                                                getCurrentDateTime(),
+                                                BlipStartDate + " " + BlipStartTime,
+                                                BlipEndDate + " " + BlipEndTime,
+                                                imageURLLink,
+                                                null,
+                                                false);
+                                        addblippushref.setValue(blips);
+                                        Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
+
+                                        dialog.cancel();
+
+                                        filePathMap.clear();
+
+
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        pd.dismiss();
+                                        Toast.makeText(MainActivity.this, "Upload Failed -> " + e, Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+
+
+                            }
+                        }
                         Blips blips = new Blips(cursor_coordinate_latitude,
                                 cursor_coordinate_longitude,
                                 BlipName,
                                 userName,
                                 Details,
-                                blipIcon,BlipStartDate+BlipStartTime,
-                                BlipStartDate+" "+BlipStartTime,
-                                BlipEndDate+" "+BlipEndTime,
-                                imageURLLink);
-
-                        Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
-                        Blipsref.child("public").push().setValue(blips);//Add to public blips
+                                blipIcon,
+                                getCurrentDateTime(),
+                                BlipStartDate + " " + BlipStartTime,
+                                BlipEndDate + " " + BlipEndTime,
+                                imageURLLink,
+                                null,
+                                false);
+                        addblippushref.setValue(blips);
+                        Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
                         dialog.cancel();
+
+                        filePathMap.clear();
 
                     }
                 } else if (privateradio.isChecked()) {
@@ -1807,21 +2121,82 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                         //Place Data
+                        final DatabaseReference addblippushref = Users.child(userName).child("Blips").push();// Add to user's blips
+                        final String blipkey = addblippushref.getKey();
 
-                        Blips blips = new Blips(cursor_coordinate_latitude,
+                        if (filePath != null) {
+
+                            //uploading the image
+                            for (String name : filePathMap.keySet()) {
+                                pd.show();
+                                Uri value = filePathMap.get(name);
+
+
+                                StorageReference childRefKey = storageRef.child("BlipPhotos").child(blipkey);
+
+                                uploadTask = childRefKey.child(filePath.getLastPathSegment()).putBytes(convertURItocompresseddata(value));
+                                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                        pd.dismiss();
+                                        Toast.makeText(MainActivity.this, "Upload successful", Toast.LENGTH_SHORT).show();
+                                        //get the download URL like this:
+                                        @SuppressWarnings("VisibleForTests")
+                                        Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                        //and you can convert it to string like this:
+                                        imageURLLink = downloadUrl.toString();
+                                        blips = new Blips(cursor_coordinate_latitude,
+                                                cursor_coordinate_longitude,
+                                                BlipName,
+                                                userName,
+                                                Details,
+                                                blipIcon,
+                                                getCurrentDateTime(),
+                                                BlipStartDate + " " + BlipStartTime,
+                                                BlipEndDate + " " + BlipEndTime,
+                                                imageURLLink,
+                                                null,
+                                                null);
+
+                                        addblippushref.setValue(blips);
+                                        Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
+
+                                        dialog.cancel();
+
+                                        filePathMap.clear();
+
+
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        pd.dismiss();
+                                        Toast.makeText(MainActivity.this, "Upload Failed -> " + e, Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+
+
+                            }
+                        }
+                        blips = new Blips(cursor_coordinate_latitude,
                                 cursor_coordinate_longitude,
                                 BlipName,
                                 userName,
                                 Details,
-                                blipIcon,BlipStartDate+BlipStartTime,
-                                BlipStartDate+" "+BlipStartTime,
-                                BlipEndDate+" "+BlipEndTime,
-                                imageURLLink);
-                        Users.child(userName).child("Blips").push().setValue(blips);// Add to user's blips
+                                blipIcon,
+                                getCurrentDateTime(),
+                                BlipStartDate + " " + BlipStartTime,
+                                BlipEndDate + " " + BlipEndTime,
+                                imageURLLink,
+                                null,
+                                null);
 
-                        Blipsref.child("private").push().setValue(blips);//Add to private blips
+                        addblippushref.setValue(blips);
+                        Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
 
                         dialog.cancel();
+                        filePathMap.clear();
+
 
                     }
 
@@ -1857,6 +2232,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String Details = dataSnapshot.child("Details").getValue(String.class);
                     String blipIcon = dataSnapshot.child("Icon").getValue(String.class);
                     String imgURL = dataSnapshot.child("imageURL").getValue(String.class);
+                    String DateCreated = dataSnapshot.child("DateCreated").getValue(String.class);
+                    String StartTime= dataSnapshot.child("StartTime").getValue(String.class);
+                    String EndTime = dataSnapshot.child("EndTime").getValue(String.class);
+                    String allowedfriends= dataSnapshot.child("allowedfriends").getValue(String.class);
+                    Boolean isSuperPrivate = dataSnapshot.child("isSuperPrivate").getValue(Boolean.class);
 
 
                     Blips blipsadded = new Blips(latitude,
@@ -1864,16 +2244,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             newBlipName,
                             creator,
                             Details,
-                            blipIcon,null,null,null,imgURL);
+                            blipIcon,
+                            DateCreated,
+                            StartTime,
+                            EndTime,
+                            imgURL,
+                            allowedfriends,
+                            isSuperPrivate);
 
 
-                    if (privatecheckbox.isChecked() &&
-                            blipIcon.toLowerCase().contains("private".toLowerCase())
-                            && (creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(creator))) {
-
-                        categoryFilterPrivate(blipsadded);
-
-                    }
 
 
                     if (publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase())) {
@@ -1942,29 +2321,50 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String Details = dataSnapshot.child("Details").getValue(String.class);
                     String blipIcon = dataSnapshot.child("Icon").getValue(String.class);
                     String imgURL = dataSnapshot.child("imageURL").getValue(String.class);
-
-                    Blips blipsadded = new Blips(latitude,
-                            longitude,
-                            newBlipName,
-                            creator,
-                            Details,
-                            blipIcon,null,null,null,imgURL);
+                    String DateCreated = dataSnapshot.child("DateCreated").getValue(String.class);
+                    String StartTime= dataSnapshot.child("StartTime").getValue(String.class);
+                    String EndTime = dataSnapshot.child("EndTime").getValue(String.class);
+                    String allowedfriends= dataSnapshot.child("allowedfriends").getValue(String.class);
+                    Boolean isSuperPrivate = dataSnapshot.child("isSuperPrivate").getValue(Boolean.class);
 
 
-                    if (privatecheckbox.isChecked() &&
-                            blipIcon.toLowerCase().contains("private".toLowerCase())
-                            && (creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(creator))) {
+                Blips blipsadded = new Blips(latitude,
+                        longitude,
+                        newBlipName,
+                        creator,
+                        Details,
+                        blipIcon,
+                        DateCreated,
+                        StartTime,
+                        EndTime,
+                        imgURL,
+                        allowedfriends,
+                        isSuperPrivate);
+
+                try {
+                    if(blipsadded.isSuperPrivate){//If it is super private
+
+                        if (privatecheckbox.isChecked() &&
+                                (blipsadded.Creator.toLowerCase().contains(userName.toLowerCase()) ||//If this blips is yours
+                                        ( friendarraylist.contains(blipsadded.Creator) && blipsadded.allowedfriends.contains(userName) ) )      ) //Ot if you are part of allowed friends and is your firend
+                        {
+
+                            categoryFilterPrivate(blipsadded);
+
+                        }
+
+                    }
+
+                    else  if ((blipsadded.Creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(blipsadded.Creator))) {
 
                         categoryFilterPrivate(blipsadded);
 
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
 
-                    if (publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase())) {
-
-                        categoryFilterPublic(blipsadded);
-
-                    }
                 markerkey++;
                 markerlist.put(Integer.toString(markerkey), blipsadded);
 
@@ -2014,13 +2414,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         {
             Blips value = markerlist.get(entry.getKey());
 
-            if (privatecheckbox.isChecked() &&
-                    value.Icon.toLowerCase().contains("private".toLowerCase())
-                    && (value.Creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(value.Creator))) {
+            try {
+                if(value.isSuperPrivate){//If it is super private
 
-                categoryFilterPrivatenoanimation(value);
+                    if (privatecheckbox.isChecked() &&
+                            (value.Creator.toLowerCase().contains(userName.toLowerCase()) ||//If this blips is yours
+                                    ( friendarraylist.contains(value.Creator) && value.allowedfriends.contains(userName) ) )      ) //Ot if you are part of allowed friends and is your firend
+                    {
 
+                        categoryFilterPrivatenoanimation(value);
+
+                    }
+
+                }
+
+                else if (privatecheckbox.isChecked() && value.Icon.toLowerCase().contains("private".toLowerCase()) &&  ( friendarraylist.contains(value.Creator)
+                        || value.Creator.toLowerCase().contains(userName.toLowerCase()) )   ) {
+
+                    categoryFilterPrivatenoanimation(value);
+                }
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+
 
             if (publiccheckbox.isChecked() && value.Icon.toLowerCase().contains("public".toLowerCase())) {
                 categoryFilterPublicnoanimation(value);
@@ -2326,8 +2744,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         boolean valid = true;
 
 
-        if (TextUtils.isEmpty(friendrequestemail) || friendrequestemail.length() < 5) {
-            friendemailEt.setError("Required.");
+        if (TextUtils.isEmpty(friendrequestemail) || friendrequestemail.length() < 7) {
+            friendemailEt.setError("Required");
             valid = false;
         } else {
             friendemailEt.setError(null);
@@ -2346,6 +2764,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
     }
+
     private static String ReplacePeriodiWithComma(String str) {
 
 
@@ -2359,85 +2778,51 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void blipsupdateontextchange(final String query) {
         mMap.clear();
-
-        BlipsPublic.orderByChild("BlipName").addListenerForSingleValueEvent(new ValueEventListener() {
-
-
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                for (DataSnapshot snapm : dataSnapshot.getChildren()) {
-
-                    Double latitude = snapm.child("latitude").getValue(Double.class);
-                    Double longitude = snapm.child("longitude").getValue(Double.class);
-                    String newBlipName = snapm.child("BlipName").getValue(String.class);
-                    String creator = snapm.child("Creator").getValue(String.class);
-                    String Details = snapm.child("Details").getValue(String.class);
-                    String blipIcon = snapm.child("Icon").getValue(String.class);
-                    String imgURL = snapm.child("imageURL").getValue(String.class);
-
-                    Blips blipsadded = new Blips(latitude,
-                            longitude,
-                            newBlipName,
-                            creator,
-                            Details,
-                            blipIcon,null,null,null,imgURL);
-
-                    if (newBlipName.toUpperCase().startsWith(query.toUpperCase())) {
-                        PlaceMarker(blipsadded);
-                    }
+        Toast.makeText(this, query, Toast.LENGTH_SHORT).show();
+        // Iterate through hashmap
+        for (Map.Entry<String, Blips> entry : markerlist.entrySet())
+        {
+            Blips value = markerlist.get(entry.getKey());
+            if (value.BlipName.toUpperCase().startsWith(query.toUpperCase() )  ) {
 
 
-                }
-            }
+                try {
+                    if(value.isSuperPrivate){//If it is super private
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+                        if (privatecheckbox.isChecked() &&
+                                (value.Creator.toLowerCase().contains(userName.toLowerCase()) ||//If this blips is yours
+                                        ( friendarraylist.contains(value.Creator) && value.allowedfriends.contains(userName) ) )      ) //Ot if you are part of allowed friends and is your firend
+                        {
 
-            }
+                            categoryFilterPrivatenoanimation(value);
 
-        });
-
-        BlipsPrivate.orderByChild("BlipName").addListenerForSingleValueEvent(new ValueEventListener() {
-
-
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                for (DataSnapshot snapm : dataSnapshot.getChildren()) {
-
-
-                    Double latitude = snapm.child("latitude").getValue(Double.class);
-                    Double longitude = snapm.child("longitude").getValue(Double.class);
-                    String newBlipName = snapm.child("BlipName").getValue(String.class);
-                    String creator = snapm.child("Creator").getValue(String.class);
-                    String Details = snapm.child("Details").getValue(String.class);
-                    String blipIcon = snapm.child("Icon").getValue(String.class);
-                    String imgURL = snapm.child("imageURL").getValue(String.class);
-                    Blips blipsadded = new Blips(latitude,
-                            longitude,
-                            newBlipName,
-                            creator,
-                            Details,
-                            blipIcon,null,null,null,imgURL);
-
-                    if (newBlipName.toUpperCase().startsWith(query.toUpperCase()) && (creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(creator))) {
-
-                        PlaceMarker(blipsadded);
+                        }
 
                     }
 
+                    else if (privatecheckbox.isChecked() && value.Icon.toLowerCase().contains("private".toLowerCase()) &&  ( friendarraylist.contains(value.Creator)
+                            || value.Creator.toLowerCase().contains(userName.toLowerCase()) )   ) {
 
+                        categoryFilterPrivatenoanimation(value);
+                    }
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
+
+
+                if (publiccheckbox.isChecked() && value.Icon.toLowerCase().contains("public".toLowerCase())) {
+                    categoryFilterPublicnoanimation(value);
+                }
+
             }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
 
-            }
+        }
+        ShowGPSLocation();
 
 
-        });
     }
 
     public void checkboxlisteners() {
@@ -3180,8 +3565,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                            location.getLongitude(),
                            userName,
                            userName,
-                           null,
-                           null,null,null,null,profpicdownloadlink);
+                             null,
+                             null,
+                             null,
+                             null,
+                             null,
+                             profpicdownloadlink,
+                             null,
+                             null);
 
                      liveGPS.child(userName).setValue(gpsblips);
 
