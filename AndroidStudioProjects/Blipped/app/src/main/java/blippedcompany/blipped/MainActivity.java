@@ -59,6 +59,7 @@ import android.widget.ListView;
 import android.widget.MultiAutoCompleteTextView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.Switch;
@@ -99,7 +100,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.koushikdutta.ion.Ion;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
@@ -119,7 +119,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
+
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
@@ -153,6 +155,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DatabaseReference BlipsPrivate = database.getReference("blips").child("private");
     DatabaseReference UsersEmailFriends = database.getReference("users").child(userName).child("Friends");
     DatabaseReference UsersEmailPic = database.getReference("users").child(userName).child("profilepic");
+    DatabaseReference UsersEmailBlips = database.getReference("users").child(userName).child("Blips");
 
     DatabaseReference UsersEmailFriendRequests = database.getReference("users").child(userName).child("FriendRequests");
     DatabaseReference liveGPSEmail = database.getReference("liveGPS").child(userName);
@@ -202,6 +205,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     CheckBox checkboxHoliday;
     CheckBox checkboxTravel;
     CheckBox checkboxMusic;
+    ScrollView filterscroll;
     RadioButton publicradio;
     RadioButton privateradio;
     RadioButton SuperPrivateradio;
@@ -220,6 +224,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ArrayList markerinfolist;
     HashMap<String,Blips> markerlist=new HashMap<>();
     HashMap<String,Marker> markerlist2=new HashMap<>();
+    HashMap<String,Blips> mymarkerlist=new HashMap<>();
     HashMap<String,Marker>gpslist=new HashMap<>();
 
     String friendname;
@@ -257,6 +262,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     int gpsmarkerkey =0;
 
     BottomNavigationView bottomNavigationView;
+    int bottomnavheight;
+
+
+    Boolean showmyplacesmode=false;
+    TextView backtonormalview;
 
 
     @Override
@@ -272,11 +282,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DeclareThings();
         ShowFriendRequestCount();
 
-
+        backtonormalview = (TextView) findViewById(R.id.backtonormalmodebutton);
+        filterscroll = (ScrollView) findViewById(R.id.filterscroll);
+        backtonormalview.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showmyplacesmode=false;
+                backtonormalview.setVisibility(GONE);
+                reload();
+            }
+        });
         bottomNavigationView = (BottomNavigationView)
                 findViewById(R.id.bottom_navigation);
 
+
         search = (SearchView) findViewById(R.id.searchView);
+
+
         search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -293,14 +315,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         });
-
-        search.setOnClickListener(new View.OnClickListener() {
+        search.setOnSearchClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View view) {
+                filterscroll.setVisibility(VISIBLE);
+            }
+        });
 
-                mMap.clear();
-
-                //handle click
+        search.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                filterscroll.setVisibility(GONE);
+                return false;
             }
         });
 
@@ -441,7 +467,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 try {
                                     if (selected.getSnippet().contains(userName)) {
                                         DeleteBlip(selected);
-                                        bottomNavigationView.setVisibility(View.GONE);
+                                        bottomNavigationView.setVisibility(GONE);
                                         break;
                                     }
                                 } catch (NullPointerException e) {
@@ -479,12 +505,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
-                if (bottomNavigationView.getVisibility() == View.VISIBLE) {
+                if (bottomNavigationView.getVisibility() == VISIBLE) {
                     Animation bottomDown = AnimationUtils.loadAnimation(getApplicationContext(),
                             R.anim.bottom_down);
                     mMap.setPadding(0, 0, 0, 0);
                     bottomNavigationView.startAnimation(bottomDown);
-                    bottomNavigationView.setVisibility(View.GONE);
+                    bottomNavigationView.setVisibility(GONE);
                 } else {
                     // Either gone or invisible
                 }
@@ -581,14 +607,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     });
 
                 }
-
-
-
+                bottomnavheight =bottomNavigationView.getHeight();
+                mMap.setPadding(0, 0, 0, bottomnavheight );
                 Animation bottomUp = AnimationUtils.loadAnimation(getApplicationContext(),
                         R.anim.bottom_up);
-                mMap.setPadding(0, 0, 0, 100);
+
                 bottomNavigationView.startAnimation(bottomUp);
-                bottomNavigationView.setVisibility(View.VISIBLE);
+                bottomNavigationView.setVisibility(VISIBLE);
+
                 selected = marker;
 
                 return false;
@@ -730,37 +756,74 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void PlaceMarker(final Blips blipsadded) {
-        LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
-        // Put inormation into a single string with comma seperators
-        Description = blipsadded.Creator+"123marcius"+ blipsadded.Details +"123marcius"+blipsadded.imageURL
-                +"123marcius"+blipsadded.DateCreated+"123marcius"+blipsadded.StartTime+"123marcius"+blipsadded.EndTime;
+        if (showmyplacesmode==false) {//If user is not viewing his places, do as normal
 
-        myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
-                .position(newBlipCoordinates)
-                .title(blipsadded.BlipName)
-                .snippet(Description)
-                .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
+                    LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
+                    // Put inormation into a single string with comma seperators
+                    Description = blipsadded.Creator+"123marcius"+ blipsadded.Details +"123marcius"+blipsadded.imageURL
+                            +"123marcius"+blipsadded.DateCreated+"123marcius"+blipsadded.StartTime+"123marcius"+blipsadded.EndTime;
 
-        markerlist2.put(Integer.toString(markerkey), myMarker);
-        dropPinEffect(myMarker);
+                    myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
+                            .position(newBlipCoordinates)
+                            .title(blipsadded.BlipName)
+                            .snippet(Description)
+                            .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
+
+                    markerlist2.put(Integer.toString(markerkey), myMarker);
+                    dropPinEffect(myMarker);
+        } else {//If user is still viewing
+
+            LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
+            // Put inormation into a single string with comma seperators
+            Description = blipsadded.Creator+"123marcius"+ blipsadded.Details +"123marcius"+blipsadded.imageURL
+                    +"123marcius"+blipsadded.DateCreated+"123marcius"+blipsadded.StartTime+"123marcius"+blipsadded.EndTime;
+
+            myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
+                    .position(newBlipCoordinates)
+                    .title(blipsadded.BlipName)
+                    .snippet(Description)
+                    .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
+
+            dropPinEffect(myMarker);
+        }
 
     }
 
     public void PlaceMarkernoanimation(final Blips blipsadded) {
-        LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
-        // Put inormation into a single string with comma seperators
-        Description = blipsadded.Creator+"123marcius"+  //0
-                blipsadded.Details +"123marcius"+       //1
-                blipsadded.imageURL +"123marcius"+      //2
-                blipsadded.DateCreated+"123marcius"+    //3
-                blipsadded.StartTime+"123marcius"+      //4
-                blipsadded.EndTime;                     //5
-        myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
 
-                .position(newBlipCoordinates)
-                .title(blipsadded.BlipName)
-                .snippet(Description)
-                .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
+
+        if (showmyplacesmode==false) {
+            LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
+            // Put inormation into a single string with comma seperators
+            Description = blipsadded.Creator+"123marcius"+  //0
+                    blipsadded.Details +"123marcius"+       //1
+                    blipsadded.imageURL +"123marcius"+      //2
+                    blipsadded.DateCreated+"123marcius"+    //3
+                    blipsadded.StartTime+"123marcius"+      //4
+                    blipsadded.EndTime;                     //5
+            myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
+
+                    .position(newBlipCoordinates)
+                    .title(blipsadded.BlipName)
+                    .snippet(Description)
+                    .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
+        } else {//If user is still viewing
+
+            LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
+            // Put inormation into a single string with comma seperators
+            Description = blipsadded.Creator+"123marcius"+ blipsadded.Details +"123marcius"+blipsadded.imageURL
+                    +"123marcius"+blipsadded.DateCreated+"123marcius"+blipsadded.StartTime+"123marcius"+blipsadded.EndTime;
+
+            myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
+                    .position(newBlipCoordinates)
+                    .title(blipsadded.BlipName)
+                    .snippet(Description)
+                    .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
+
+            dropPinEffect(myMarker);
+
+
+        }
 
 
     }
@@ -821,8 +884,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         pd = new ProgressDialog(this);
         pd.setMessage("Uploading....");
 
-         BlipStartTime = null;
-         BlipStartDate = null;
+
          BlipEndTime  = null;
          BlipEndDate  = null;
 
@@ -862,7 +924,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
                 addendtimeEnd.setVisibility(View.INVISIBLE);
-                endtimebar.setVisibility(View.VISIBLE);
+                endtimebar.setVisibility(VISIBLE);
 
                 Calendar mcurrentDate = Calendar.getInstance();
                 int day = mcurrentDate.get(Calendar.DAY_OF_MONTH);
@@ -884,7 +946,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 {min = "0" + minute ;}
                 else
                 {min = String.valueOf(minute);}
-                timeedittextEnd.setText( hour+1 + ":" + min +" "+ AM_PM);
+                timeedittextEnd.setText( hour+ ":" + min +" "+ AM_PM);
                 dateedittextEnd.setText( month + "/" + day + "/" + year);
                 BlipEndTime =( hour + ":" + min +" "+ AM_PM);
                 BlipEndDate =year+"-"+month+"-"+day;
@@ -900,8 +962,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 BlipEndDate=null;
                 BlipEndTime=null;
                 BlipEndDateTime=null;
-                addendtimeEnd.setVisibility(View.VISIBLE);
-                endtimebar.setVisibility(View.GONE);
+                addendtimeEnd.setVisibility(VISIBLE);
+                endtimebar.setVisibility(GONE);
 
             }
         });
@@ -1070,24 +1132,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         RadioGroup radioGroup = mBlipAddView.findViewById(R.id.groupRadio);
+       final TextView superprivatetext = mBlipAddView.findViewById(R.id.SuperPrivateText);
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 if (publicradio.isChecked()) {
                     isSuperPrivate=false;
                     mySpinner.setAdapter(new MyCustomAdapterPublic(MainActivity.this, R.layout.row, CustomBlips));
-                    allowedfriendsmultiline.setVisibility(View.GONE);
+                    allowedfriendsmultiline.setVisibility(GONE);
+                    superprivatetext.setVisibility(GONE);
 
                 } else if (privateradio.isChecked()) {
                     isSuperPrivate=false;
                     mySpinner.setAdapter(new MyCustomAdapterPrivate(MainActivity.this, R.layout.row, CustomBlips));//Change to Private Spinner
-
+                    superprivatetext.setVisibility(GONE);
 
                 }
                 else if (SuperPrivateradio.isChecked()) {
                     mySpinner.setAdapter(new MyCustomAdapterPrivate(MainActivity.this, R.layout.row, CustomBlips));//Change to Private Spinner
                     isSuperPrivate=true;
-                    allowedfriendsmultiline.setVisibility(View.VISIBLE);
+                    allowedfriendsmultiline.setVisibility(VISIBLE);
+                    superprivatetext.setVisibility(VISIBLE);
                 }
 
                 // checkedId is the RadioButton selected
@@ -1117,6 +1182,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         }
                         else{
                             TimeRangeIsValid = false;
+
                             Toast.makeText(MainActivity.this, "Invalid Range", Toast.LENGTH_SHORT).show();
                         }
 
@@ -1625,8 +1691,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onClick(View v) {
-                addendtimeEnd.setVisibility(View.GONE);
-                endtimebar.setVisibility(View.VISIBLE);
+                addendtimeEnd.setVisibility(GONE);
+                endtimebar.setVisibility(VISIBLE);
 
                 Calendar mcurrentDate = Calendar.getInstance();
                 int day = mcurrentDate.get(Calendar.DAY_OF_MONTH);
@@ -1664,8 +1730,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 BlipEndDate=null;
                 BlipEndTime=null;
                 BlipEndDateTime=null;
-                addendtimeEnd.setVisibility(View.VISIBLE);
-                endtimebar.setVisibility(View.GONE);
+                addendtimeEnd.setVisibility(VISIBLE);
+                endtimebar.setVisibility(GONE);
 
             }
         });
@@ -2217,6 +2283,94 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    private void ShowMyBlips() {
+
+        UsersEmailBlips.addChildEventListener(new ChildEventListener() {
+
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+
+
+                Double latitude = dataSnapshot.child("latitude").getValue(Double.class);
+                Double longitude = dataSnapshot.child("longitude").getValue(Double.class);
+                String newBlipName = dataSnapshot.child("BlipName").getValue(String.class);
+                String creator = dataSnapshot.child("Creator").getValue(String.class);
+                String Details = dataSnapshot.child("Details").getValue(String.class);
+                String blipIcon = dataSnapshot.child("Icon").getValue(String.class);
+                String imgURL = dataSnapshot.child("imageURL").getValue(String.class);
+                String DateCreated = dataSnapshot.child("DateCreated").getValue(String.class);
+                String StartTime= dataSnapshot.child("StartTime").getValue(String.class);
+                String EndTime = dataSnapshot.child("EndTime").getValue(String.class);
+                String allowedfriends= dataSnapshot.child("allowedfriends").getValue(String.class);
+                Boolean isSuperPrivate = dataSnapshot.child("isSuperPrivate").getValue(Boolean.class);
+
+
+                Blips blipsadded = new Blips(latitude,
+                        longitude,
+                        newBlipName,
+                        creator,
+                        Details,
+                        blipIcon,
+                        DateCreated,
+                        StartTime,
+                        EndTime,
+                        imgURL,
+                        allowedfriends,
+                        isSuperPrivate);
+
+
+
+
+                if (publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase())) {
+                    categoryFilterPublic(blipsadded);
+                }
+
+                markerkey++;
+                mymarkerlist.put(Integer.toString(markerkey), blipsadded);
+
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
+
+
+                if (!search.isIconified()) {
+                    Toast.makeText(MainActivity.this, "Searchbox still  focused", Toast.LENGTH_SHORT).show();
+                } else {
+
+
+
+                }
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                Double latitude = dataSnapshot.child("latitude").getValue(Double.class);
+                Double longitude = dataSnapshot.child("longitude").getValue(Double.class);
+                if (!search.isIconified()) {
+                    Toast.makeText(MainActivity.this, "Searchbox still focused", Toast.LENGTH_SHORT).show();
+                } else {
+                    LatLng coordinateremove = new LatLng(latitude,longitude);
+                    removemarkerfromhashmap(coordinateremove);
+                }
+
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+
     private void ShowBlipsPublic() {
 
        BlipsPublic.addChildEventListener(new ChildEventListener() {
@@ -2256,11 +2410,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                     if (publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase())) {
-
                         categoryFilterPublic(blipsadded);
-
                     }
-
 
                      markerkey++;
                      markerlist.put(Integer.toString(markerkey), blipsadded);
@@ -2405,47 +2556,90 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
+
+
     }
 
     private void reload(){
         mMap.clear();
         // Iterate through hashmap
-        for (Map.Entry<String, Blips> entry : markerlist.entrySet())
-        {
-            Blips value = markerlist.get(entry.getKey());
+        if (showmyplacesmode==false) {
 
-            try {
-                if(value.isSuperPrivate){//If it is super private
+            for (Map.Entry<String, Blips> entry : markerlist.entrySet())
+            {
+                Blips value = markerlist.get(entry.getKey());
 
-                    if (privatecheckbox.isChecked() &&
-                            (value.Creator.toLowerCase().contains(userName.toLowerCase()) ||//If this blips is yours
-                                    ( friendarraylist.contains(value.Creator) && value.allowedfriends.contains(userName) ) )      ) //Ot if you are part of allowed friends and is your firend
-                    {
+                try {
+                    if(value.isSuperPrivate){//If it is super private
 
-                        categoryFilterPrivatenoanimation(value);
+                        if (privatecheckbox.isChecked() &&
+                                (value.Creator.toLowerCase().contains(userName.toLowerCase()) ||//If this blips is yours
+                                        ( friendarraylist.contains(value.Creator) && value.allowedfriends.contains(userName) ) )      ) //Ot if you are part of allowed friends and is your firend
+                        {
+
+                            categoryFilterPrivatenoanimation(value);
+
+                        }
 
                     }
 
+                    else if (privatecheckbox.isChecked() && value.Icon.toLowerCase().contains("private".toLowerCase()) &&  ( friendarraylist.contains(value.Creator)
+                            || value.Creator.toLowerCase().contains(userName.toLowerCase()) )   ) {
+
+                        categoryFilterPrivatenoanimation(value);
+                    }
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
 
-                else if (privatecheckbox.isChecked() && value.Icon.toLowerCase().contains("private".toLowerCase()) &&  ( friendarraylist.contains(value.Creator)
-                        || value.Creator.toLowerCase().contains(userName.toLowerCase()) )   ) {
 
-                    categoryFilterPrivatenoanimation(value);
+                if (publiccheckbox.isChecked() && value.Icon.toLowerCase().contains("public".toLowerCase())) {
+                    categoryFilterPublicnoanimation(value);
+                }
+
+            }
+            ShowGPSLocation();
+        } else {
+            for (Map.Entry<String, Blips> entry : mymarkerlist.entrySet())
+            {
+                Blips value = mymarkerlist.get(entry.getKey());
+
+                try {
+                    if(value.isSuperPrivate){//If it is super private
+
+                        if (privatecheckbox.isChecked() &&
+                                (value.Creator.toLowerCase().contains(userName.toLowerCase()) ||//If this blips is yours
+                                        ( friendarraylist.contains(value.Creator) && value.allowedfriends.contains(userName) ) )      ) //Ot if you are part of allowed friends and is your firend
+                        {
+
+                            categoryFilterPrivatenoanimation(value);
+
+                        }
+
+                    }
+
+                    else if (privatecheckbox.isChecked() && value.Icon.toLowerCase().contains("private".toLowerCase()) &&  ( friendarraylist.contains(value.Creator)
+                            || value.Creator.toLowerCase().contains(userName.toLowerCase()) )   ) {
+
+                        categoryFilterPrivatenoanimation(value);
+                    }
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
 
 
-            } catch (Exception e) {
-                e.printStackTrace();
+                if (publiccheckbox.isChecked() && value.Icon.toLowerCase().contains("public".toLowerCase())) {
+                    categoryFilterPublicnoanimation(value);
+                }
+
             }
 
-
-            if (publiccheckbox.isChecked() && value.Icon.toLowerCase().contains("public".toLowerCase())) {
-                categoryFilterPublicnoanimation(value);
-            }
 
         }
-        ShowGPSLocation();
 
 
     }
@@ -3081,6 +3275,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ShowFriendList();
 
         } else if (id == R.id.nav_manage) {
+            backtonormalview.setVisibility(VISIBLE);
+            showmyplacesmode=true;
+            mMap.clear();
+            ShowMyBlips();
 
         } else if (id == R.id.nav_share) {
 
@@ -3626,16 +3824,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                            Bitmap mybitmap = null;
                         final LatLng x = new LatLng(  dataSnapshot.child("latitude").getValue(Double.class),  dataSnapshot.child("longitude").getValue(Double.class));
-                        try {
 
-
-                            final Bitmap bmImg = Ion.with(getApplicationContext())
-                                    .load(imagedownloadlink).withBitmap().placeholder(R.drawable.ic_menu_slideshow).asBitmap().get();
 
                             RequestOptions options = new RequestOptions()
                                     .circleCrop()
                                     .error(R.drawable.places_ic_clear)
-                                    .placeholder(R.drawable.ic_menu_slideshow);
+                                    .placeholder(R.drawable.ic_clockicon);
                              Context context = getApplicationContext();
 
                             Glide.with(context)
@@ -3656,11 +3850,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                                     });
 
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        } catch (ExecutionException e) {
-                            e.printStackTrace();
-                        }
+
 
 
 
