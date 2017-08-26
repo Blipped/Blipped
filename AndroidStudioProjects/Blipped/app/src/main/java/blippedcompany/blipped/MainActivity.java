@@ -181,6 +181,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     String BlipEndDate ;
     Date BlipStartDateTime ;
     Date BlipEndDateTime ;
+    Boolean goingStatus;
     DateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm aa", Locale.ENGLISH);
     Boolean isSuperPrivate = false;
     String allowedfriends;
@@ -270,6 +271,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     Boolean showmyplacesmode=false;
     TextView backtonormalview;
+    String key = null;
+    Button goingbutton;
 
 
 
@@ -500,7 +503,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             }
 
 
-                            case R.id.action_music:
+                            case R.id.action_music:{}
 
                         }
                         return true;
@@ -618,6 +621,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 selected = marker;
 
+
+
                 return false;
             }
         });
@@ -656,8 +661,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         TextView BlipInfoEndTime = mBlipInfoView.findViewById(R.id.BlipInfoEndTime);
         TextView BlipInfoDetails = mBlipInfoView.findViewById(R.id.BlipInfoDetails);
         TextView BlipInfoCreatedIn = mBlipInfoView.findViewById(R.id.BlipInfoCreatedIn);
+        final  Button goingbutton = mBlipInfoView.findViewById(R.id.goingbutton);
+
+
+
+
 
         dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+        goingStatus=false;
+        getkey(marker,dataarray[6]);
 
         String[] startdatetime = new String[0];
         String[] startyearmonthday = new String[0];
@@ -731,8 +743,50 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
+
+
+        goingbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(dataarray[6].equals("Public")){
+                    if(goingStatus){
+                        BlipsPublic.child(key).child("Attending List").child(userName).setValue(null);
+                        goingbutton.setText("Not Going");
+                        goingStatus=false;
+                    }
+                    else{
+                        BlipsPublic.child(key).child("Attending List").child(userName).setValue(1);
+                        goingbutton.setText("Going");
+                        goingStatus=true;
+                    }
+
+                }
+
+                if(dataarray[6].equals("Private")){
+                    if(goingStatus){
+                        BlipsPrivate.child(key).child("Attending List").child(userName).setValue(null);
+                        goingbutton.setText("Not Going");
+                        goingStatus=false;
+                    }
+                    else{
+                        BlipsPrivate.child(key).child("Attending List").child(userName).setValue(1);
+                        goingbutton.setText("Going");
+                        goingStatus=true;
+                    }
+
+                }
+
+
+            }
+        });
+
         BlipInfoDetails.setText(dataarray[1]);
         BlipInfoCreatedIn.setText(dataarray[3]);
+
+
+
+
+
 
         mBuilder.setView(mBlipInfoView);
         final AlertDialog dialog = mBuilder.create();
@@ -4449,6 +4503,119 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    public void getkey(Marker marker,String PublicPrivate){
 
+
+    Double longitude= marker.getPosition().longitude;
+
+        if (PublicPrivate.equals("Public")) {
+            Blipsref.child("public").orderByChild("longitude")
+                    .equalTo(longitude)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
+
+                                key = childSnapshot.getKey();
+                                checkifattendingpublic(key);
+                                Toast.makeText(MainActivity.this, "public", Toast.LENGTH_SHORT).show();
+                            }
+
+
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }});
+        } else {
+            Blipsref.child("private").orderByChild("longitude")
+                    .equalTo(longitude)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
+                                key = childSnapshot.getKey();
+                                checkifattendingprivate(key);
+                                Toast.makeText(MainActivity.this, "private", Toast.LENGTH_SHORT).show();
+                            }
+
+
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }});
+
+        }
+
+
+
+    }
+
+    public void checkifattendingprivate(String key){
+        
+
+
+        Blipsref.child("private")
+                .child(key)
+                .child("Attending List")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if(dataSnapshot.hasChild(userName)){
+                            Toast.makeText(MainActivity.this, "You are already attending", Toast.LENGTH_SHORT).show();
+                            goingStatus=true;
+
+
+
+                        }
+                        else{
+
+                            Toast.makeText(MainActivity.this, "You are not attending", Toast.LENGTH_SHORT).show();
+                            goingStatus=false;
+                        }
+
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }});
+
+
+    }
+    public void checkifattendingpublic(String key){
+
+
+        Blipsref.child("public")
+                .child(key)
+                .child("Attending List")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if(dataSnapshot.hasChild(userName)){
+                            Toast.makeText(MainActivity.this, "You are already attending", Toast.LENGTH_SHORT).show();
+                            goingStatus=true;
+
+
+                        }
+                        else{
+                            Toast.makeText(MainActivity.this, "You not already attending", Toast.LENGTH_SHORT).show();
+                            goingStatus=false;
+                        }
+
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }});
+
+
+    }
 }
 

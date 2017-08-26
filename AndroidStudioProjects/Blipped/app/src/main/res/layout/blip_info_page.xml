@@ -116,6 +116,7 @@
                         android:textColor="?attr/actionModeSplitBackground"
                         android:textSize="12sp"
                         android:textStyle="bold" />
+
                 </LinearLayout>
 
             </LinearLayout>
@@ -130,7 +131,7 @@
                 <ImageView
                     android:id="@+id/clockimage"
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginLeft="0dp"
                     android:adjustViewBounds="true"
                     android:padding="0dp"
@@ -151,6 +152,7 @@
                         android:layout_height="match_parent"
                         android:layout_marginLeft="15dp"
                         android:layout_weight="1"
+                        android:autoText="true"
                         android:padding="0dp"
                         android:paddingLeft="0dp"
                         android:text="Starts at 5 PM - 10 PM" />
@@ -161,9 +163,19 @@
                         android:layout_height="match_parent"
                         android:layout_marginLeft="15dp"
                         android:layout_weight="1"
+                        android:autoText="true"
                         android:padding="0dp"
                         android:text="Ends at 5 PM - 10 PM" />
+
                 </LinearLayout>
+
+                <Button
+                    android:id="@+id/goingbutton"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Going"
+                 />
 
             </LinearLayout>
 
@@ -174,7 +186,7 @@
                 android:layout_marginLeft="5dp"
                 android:paddingLeft="10dp"
                 android:text="Details"
-                android:textColor="@android:color/holo_blue_light"
+                android:textColor="?attr/actionModeSplitBackground"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -182,9 +194,11 @@
                 android:id="@+id/BlipInfoDetails"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:linksClickable="true"
                 android:paddingLeft="15dp"
                 android:paddingRight="15dp"
-                android:text='"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."' />
+                android:text='"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."'
+                android:textColorLink="@android:color/holo_blue_dark" />
 
             <TextView
                 android:id="@+id/BlipInfoCreatedIn"
