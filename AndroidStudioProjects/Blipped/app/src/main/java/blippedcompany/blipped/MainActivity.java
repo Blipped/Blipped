@@ -108,6 +108,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.DateFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -212,6 +213,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     String[] CustomBlips = {"Arts", "Transportation", "Business",
             "Community", "Family & Education", "Fashion", "Media", "Food", "Health", "Holiday", "Music", "Sports", "Travel"};
     String blipIcon;
+    String PublicPrivate;
+    String Category;
     ArrayList<String> friendrequestlist;
     NavigationView navigationView;
     Menu nv;
@@ -269,10 +272,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     TextView backtonormalview;
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        liveGPSEmail.onDisconnect().setValue(null);
         setContentView(R.layout.sidebar);
         friendarraylist = new ArrayList<String>();
         friendrequestlist = new ArrayList<String>();
@@ -339,7 +343,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onDestroy();
         if (locationManager != null) {
             try {
-                liveGPSEmail.removeValue();
+                liveGPSEmail.setValue(null);
                 locationManager.removeUpdates(locationListener);
                 locationListener = null;
             } catch (Exception e) {
@@ -348,6 +352,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
     }
+    @Override
+    protected void onStop() {
+        super.onStop();  // Always call the superclass method first
+        liveGPSEmail.setValue(null);
+        locationManager.removeUpdates(locationListener);
+        locationListener = null;
+
+    }
+
     public void DeclareThings() {
 
         //Toolbar
@@ -439,7 +452,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(!showGPSToggle.isChecked()){
 
-                    liveGPSEmail.removeValue();
+                    liveGPSEmail.setValue(null);
 
                 }
                 else{
@@ -545,19 +558,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             if (dataarray[2] != null) {
                                 Picasso.with(getApplicationContext())
                                         .load(dataarray[2])
-                                        .placeholder(R.drawable.ic_menu_slideshow)
+                                        .error(R.mipmap.error)
+                                        .placeholder(R.mipmap.placeholderimage)
                                         .into(badge, new MarkerCallback(marker));
 
                             }
 
-                            TextView snippet = v.findViewById(R.id.snippet);
+
                             TextView title = v.findViewById(R.id.title);
                             title.setText(marker.getTitle());
-                            snippet.setText("Creator: " + dataarray[0] + "\n" +
-                                    "Details: " + dataarray[1] + "\n"+
-                                    "Date Created: " + dataarray[3] + "\n"+
-                                    "Start Time:" + dataarray[4] + "\n"+
-                                    "End Time:" + dataarray[5] );
+
 
                             return v;
 
@@ -579,19 +589,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         @Override
                         public View getInfoWindow(final Marker marker) {
                             vgps = getLayoutInflater().inflate(R.layout.gpscustom_info_window, null);
-                            badge = vgps.findViewById(R.id.badge);
+
                             //Split Information int array
 
 
-                            RequestOptions options = new RequestOptions()
-                                    .error(R.drawable.places_ic_clear)
-                                    .placeholder(R.drawable.ic_menu_slideshow);
-                            Context context = getApplicationContext();
-
-                            Glide.with(context)
-                                    .load(marker.getSnippet())
-                                    .apply(options)
-                                    .into(badge);
 
                             TextView title = vgps.findViewById(R.id.title);
                             title.setText(marker.getTitle());
@@ -625,15 +626,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //When map is infolong clicked
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
-            public void onInfoWindowClick(final Marker marker) throws NullPointerException {
-
-                try {
-                    showImage(marker);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-
+            public void onInfoWindowClick(final Marker marker) {
+                   ShowBlipInfo(marker);
             }
         });
 
@@ -648,7 +642,104 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
+    public void ShowBlipInfo(final Marker marker)  {
 
+        AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
+        View mBlipInfoView = getLayoutInflater().inflate(R.layout.blip_info_page, null);
+
+        ImageButton BlipInfoImage = mBlipInfoView.findViewById(R.id.BlipInfoPhoto);
+        TextView BlipInfoMonth = mBlipInfoView.findViewById(R.id.BlipInfoMonth);
+        TextView BlipInfoDay = mBlipInfoView.findViewById(R.id.BlipInfoDay);
+        TextView BlipInfoTitle = mBlipInfoView.findViewById(R.id.BlipInfoTitle);
+        TextView BlipInfoCategoryandHost = mBlipInfoView.findViewById(R.id.BlipInfoCategoryandHost);
+        TextView BlipInfoStartTime = mBlipInfoView.findViewById(R.id.BlipInfoStartTIme);
+        TextView BlipInfoEndTime = mBlipInfoView.findViewById(R.id.BlipInfoEndTime);
+        TextView BlipInfoDetails = mBlipInfoView.findViewById(R.id.BlipInfoDetails);
+        TextView BlipInfoCreatedIn = mBlipInfoView.findViewById(R.id.BlipInfoCreatedIn);
+
+        dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+
+        String[] startdatetime = new String[0];
+        String[] startyearmonthday = new String[0];
+
+
+        if (dataarray[4]!=null) {
+            startdatetime = dataarray[4].split(" ");
+            String startdate= startdatetime[0];
+            startyearmonthday = startdate.split("-");
+            String syear = startyearmonthday[0];
+            String smonth = startyearmonthday[1];
+            String sday = startyearmonthday[2];
+            String samonth = new DateFormatSymbols().getMonths()[Integer.parseInt(smonth) -1];
+
+            String starttime= startdatetime[1];
+            String[] starthourmin = starttime.split(":");
+            String shour = starthourmin[0];
+            String smin = starthourmin[1];
+
+
+            String startampm= startdatetime[2];
+            BlipInfoStartTime.setText("Starts at "+shour+":"+smin+" "+startampm+" "+ samonth +" "+sday+","+syear);
+            BlipInfoMonth.setText(samonth);
+            BlipInfoDay.setText(sday);
+        }
+
+        if(!dataarray[5].contains("null")){
+            String[] enddatetime = new String[0];
+            String[] endyearmonthday = new String[0];
+
+           enddatetime = dataarray[5].split(" ");
+            String enddate= enddatetime[0];
+            endyearmonthday = enddate.split("-");
+            String eyear = endyearmonthday[0];
+            String emonth = endyearmonthday[1];
+            String eday = endyearmonthday[2];
+            String eamonth = new DateFormatSymbols().getMonths()[Integer.parseInt(emonth) -1];
+
+            String endtime= enddatetime[1];
+            String[] endhourmin = endtime.split(":");
+            String ehour = endhourmin[0];
+            String emin = endhourmin[1];
+
+
+            String endampm= enddatetime[2];
+            BlipInfoEndTime.setText("Ends at "+ehour+":"+emin+" "+endampm+" "+ eamonth +" "+eday+","+eyear);
+      }
+      else{
+            BlipInfoEndTime.setVisibility(View.INVISIBLE);
+        }
+
+
+        BlipInfoTitle.setText(marker.getTitle());
+        BlipInfoCategoryandHost.setText(dataarray[6]+"  "+dataarray[7]+"  " +"Hosted by "+dataarray[0]);
+
+        if (dataarray[2] != null) {
+            RequestOptions options = new RequestOptions()
+                    .error(R.mipmap.background1)
+                    .placeholder(R.mipmap.background1);
+
+            Glide.with(getActivity())
+                    .load(dataarray[2])
+                    .apply(options)
+                    .into(BlipInfoImage);
+
+        }
+        BlipInfoImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showImage(marker);
+            }
+        });
+
+        BlipInfoDetails.setText(dataarray[1]);
+        BlipInfoCreatedIn.setText(dataarray[3]);
+
+        mBuilder.setView(mBlipInfoView);
+        final AlertDialog dialog = mBuilder.create();
+        dialog.show();
+
+
+    }
     public class MarkerCallback implements Callback {
         Marker marker=null;
 
@@ -680,8 +771,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
             RequestOptions options = new RequestOptions()
-                    .error(R.drawable.places_ic_clear)
-                    .placeholder(R.drawable.ic_menu_slideshow);
+                    .error(R.mipmap.error)
+                    .placeholder(R.mipmap.placeholderimage);
 
             Glide.with(getActivity())
                     .load(dataarray[2])
@@ -760,9 +851,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
                     // Put inormation into a single string with comma seperators
-                    Description = blipsadded.Creator+"123marcius"+ blipsadded.Details +"123marcius"+blipsadded.imageURL
-                            +"123marcius"+blipsadded.DateCreated+"123marcius"+blipsadded.StartTime+"123marcius"+blipsadded.EndTime;
-
+                    Description = blipsadded.Creator+"123marcius"+
+                            blipsadded.Details +"123marcius"+
+                            blipsadded.imageURL +"123marcius"+
+                            blipsadded.DateCreated+"123marcius"+
+                            blipsadded.StartTime+"123marcius"+
+                            blipsadded.EndTime+"123marcius"+
+                            blipsadded.PublicPrivate +"123marcius"+
+                            blipsadded.Category +"123marcius";
                     myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
                             .position(newBlipCoordinates)
                             .title(blipsadded.BlipName)
@@ -795,12 +891,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (showmyplacesmode==false) {
             LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
             // Put inormation into a single string with comma seperators
-            Description = blipsadded.Creator+"123marcius"+  //0
-                    blipsadded.Details +"123marcius"+       //1
-                    blipsadded.imageURL +"123marcius"+      //2
-                    blipsadded.DateCreated+"123marcius"+    //3
-                    blipsadded.StartTime+"123marcius"+      //4
-                    blipsadded.EndTime;                     //5
+            Description = blipsadded.Creator+"123marcius"+
+                    blipsadded.Details +"123marcius"+
+                    blipsadded.imageURL +"123marcius"+
+                    blipsadded.DateCreated+"123marcius"+
+                    blipsadded.StartTime+"123marcius"+
+                    blipsadded.EndTime+"123marcius"+
+                    blipsadded.PublicPrivate +"123marcius"+
+                    blipsadded.Category +"123marcius";
             myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
 
                     .position(newBlipCoordinates)
@@ -1177,6 +1275,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         BlipStartDateTime = format.parse(BlipStartDate+" "+BlipStartTime);//Then parse
                         BlipEndDateTime = format.parse(BlipEndDate+" "+BlipEndTime);//Then parse
 
+
                         if(BlipStartDateTime.before(BlipEndDateTime)){
                             TimeRangeIsValid = true;
                         }
@@ -1208,44 +1307,46 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             String dropboxvalue = mySpinner.getSelectedItem().toString();
 
 
-                            if (Objects.equals(dropboxvalue, "Arts")) {
+                                                       if (Objects.equals(dropboxvalue, "Arts")) {
                                 blipIcon = "public_art";
+                                Category="Arts";
                             } else if (Objects.equals(dropboxvalue, "Transportation")) {
                                 blipIcon = "public_autoboatsair";
-
+                                Category="Transportation";
                             } else if (Objects.equals(dropboxvalue, "Business")) {
                                 blipIcon = "public_business";
-
+                                Category="Business";
                             } else if (Objects.equals(dropboxvalue, "Community")) {
                                 blipIcon = "public_community";
-
+                                Category="Business";
                             } else if (Objects.equals(dropboxvalue, "Family & Education")) {
                                 blipIcon = "public_family";
-
+                                Category="Family & Education";
                             } else if (Objects.equals(dropboxvalue, "Fashion")) {
                                 blipIcon = "public_fashion";
-
+                                Category="Fashion";
                             } else if (Objects.equals(dropboxvalue, "Media")) {
                                 blipIcon = "public_filmandmedia";
-
+                                Category="Media";
                             } else if (Objects.equals(dropboxvalue, "Travel")) {
                                 blipIcon = "public_travelandoutdoor";
-
+                                Category="Travel";
                             } else if (Objects.equals(dropboxvalue, "Food")) {
                                 blipIcon = "public_foodanddrinks";
-
+                                Category="Food";
                             } else if (Objects.equals(dropboxvalue, "Health")) {
                                 blipIcon = "public_health";
+                                Category="Health";
 
                             } else if (Objects.equals(dropboxvalue, "Holiday")) {
                                 blipIcon = "public_holidaysandcelebrations";
-
+                                Category= "Holiday";
                             } else if (Objects.equals(dropboxvalue, "Music")) {
                                 blipIcon = "public_music";
-
+                                Category="Music";
                             } else if (Objects.equals(dropboxvalue, "Sports")) {
                                 blipIcon = "public_sportsandfitness";
-
+                                Category="Sports";
                             } else {
                                 blipIcon = "ic_launcher_round";
                             }
@@ -1289,7 +1390,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                                     BlipEndDate + " " + BlipEndTime,
                                                     imageURLLink,
                                                     null,
-                                                    false);
+                                                    false,
+                                                    "Public",
+                                                    Category);
                                             addblippushref.setValue(blips);
                                             Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
@@ -1325,7 +1428,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         BlipEndDate + " " + BlipEndTime,
                                         null,
                                         null,
-                                        false);
+                                        false,
+                                        "Public",
+                                        Category);
                                 addblippushref.setValue(blips);
                                 Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
@@ -1335,6 +1440,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 filePath=null;
                             }
                         }
+
+
+
                     } else if (privateradio.isChecked() || SuperPrivateradio.isChecked()) {
                         if (validateForm()) {
 
@@ -1343,44 +1451,45 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             String dropboxvalue = mySpinner.getSelectedItem().toString();
 
 
-                            if (Objects.equals(dropboxvalue, "Arts")) {//
+                            if (Objects.equals(dropboxvalue, "Arts")) {
                                 blipIcon = "private_art";
-                            } else if (Objects.equals(dropboxvalue, "Transportation")) {//
+                                Category="Arts";
+                            } else if (Objects.equals(dropboxvalue, "Transportation")) {
                                 blipIcon = "private_autoboatsair";
-
-                            } else if (Objects.equals(dropboxvalue, "Business")) {//
+                                Category="Transportation";
+                            } else if (Objects.equals(dropboxvalue, "Business")) {
                                 blipIcon = "private_business";
-
-                            } else if (Objects.equals(dropboxvalue, "Community")) {//
+                                Category="Business";
+                            } else if (Objects.equals(dropboxvalue, "Community")) {
                                 blipIcon = "private_community";
-
-                            } else if (Objects.equals(dropboxvalue, "Family & Education")) {//
+                                Category="Business";
+                            } else if (Objects.equals(dropboxvalue, "Family & Education")) {
                                 blipIcon = "private_family";
-
-                            } else if (Objects.equals(dropboxvalue, "Fashion")) {//
+                                Category="Family & Education";
+                            } else if (Objects.equals(dropboxvalue, "Fashion")) {
                                 blipIcon = "private_fashion";
-
-                            } else if (Objects.equals(dropboxvalue, "Media")) {//
+                                Category="Fashion";
+                            } else if (Objects.equals(dropboxvalue, "Media")) {
                                 blipIcon = "private_filmandmedia";
-
-                            } else if (Objects.equals(dropboxvalue, "Travel")) {//
+                                Category="Media";
+                            } else if (Objects.equals(dropboxvalue, "Travel")) {
                                 blipIcon = "private_travelandoutdoor";
-
-                            } else if (Objects.equals(dropboxvalue, "Food")) {//
+                                Category="Travel";
+                            } else if (Objects.equals(dropboxvalue, "Food")) {
                                 blipIcon = "private_foodanddrinks";
-
-                            } else if (Objects.equals(dropboxvalue, "Health")) {//
+                                Category="Food";
+                            } else if (Objects.equals(dropboxvalue, "Health")) {
                                 blipIcon = "private_health";
-
+                                Category="Health";
                             } else if (Objects.equals(dropboxvalue, "Holiday")) {
                                 blipIcon = "private_holidaysandcelebrations";
-
+                                Category= "Holiday";
                             } else if (Objects.equals(dropboxvalue, "Music")) {
                                 blipIcon = "private_music";
-
+                                Category="Music";
                             } else if (Objects.equals(dropboxvalue, "Sports")) {
                                 blipIcon = "private_sportsandfitness";
-
+                                Category="Sports";
                             } else {
                                 blipIcon = "ic_launcher_round";
                             }
@@ -1423,7 +1532,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                                     BlipEndDate + " " + BlipEndTime,
                                                     imageURLLink,
                                                     allowedfriendsmultiline.getText().toString(),
-                                                    isSuperPrivate);
+                                                    isSuperPrivate,
+                                                    "Private",
+                                                    Category);
 
                                             addblippushref.setValue(blips);
                                             Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
@@ -1461,7 +1572,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         BlipEndDate + " " + BlipEndTime,
                                         null,
                                         allowedfriendsmultiline.getText().toString(),
-                                        isSuperPrivate);
+                                        isSuperPrivate,
+                                        "Private",
+                                        Category);
 
                                 addblippushref.setValue(blips);
                                 Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
@@ -1568,7 +1681,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     try {
                         Scanner scanner = new Scanner();
                         Bitmap bitmap = scanner.decodeBitmapUri(MainActivity.this, photoURI);
-
                         imgView.setImageBitmap(bitmap);
 
                         filePath = photoURI;
@@ -1588,8 +1700,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case 1:
                 if(resultCode == RESULT_OK){
                     Uri selectedImage = data.getData();
-
                     imgView.setImageURI(selectedImage);
+
                     filePath = data.getData();
                     filePathMap.put(filePath.getLastPathSegment(),filePath);
 
@@ -2025,42 +2137,44 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         if (Objects.equals(dropboxvalue, "Arts")) {
                             blipIcon = "public_art";
+                            Category="Arts";
                         } else if (Objects.equals(dropboxvalue, "Transportation")) {
                             blipIcon = "public_autoboatsair";
-
+                            Category="Transportation";
                         } else if (Objects.equals(dropboxvalue, "Business")) {
                             blipIcon = "public_business";
-
+                            Category="Business";
                         } else if (Objects.equals(dropboxvalue, "Community")) {
                             blipIcon = "public_community";
-
+                            Category="Business";
                         } else if (Objects.equals(dropboxvalue, "Family & Education")) {
                             blipIcon = "public_family";
-
+                            Category="Family & Education";
                         } else if (Objects.equals(dropboxvalue, "Fashion")) {
                             blipIcon = "public_fashion";
-
+                            Category="Fashion";
                         } else if (Objects.equals(dropboxvalue, "Media")) {
                             blipIcon = "public_filmandmedia";
-
+                            Category="Media";
                         } else if (Objects.equals(dropboxvalue, "Travel")) {
                             blipIcon = "public_travelandoutdoor";
-
+                            Category="Travel";
                         } else if (Objects.equals(dropboxvalue, "Food")) {
                             blipIcon = "public_foodanddrinks";
-
+                            Category="Food";
                         } else if (Objects.equals(dropboxvalue, "Health")) {
                             blipIcon = "public_health";
+                            Category="Health";
 
                         } else if (Objects.equals(dropboxvalue, "Holiday")) {
                             blipIcon = "public_holidaysandcelebrations";
-
+                            Category= "Holiday";
                         } else if (Objects.equals(dropboxvalue, "Music")) {
                             blipIcon = "public_music";
-
+                            Category="Music";
                         } else if (Objects.equals(dropboxvalue, "Sports")) {
                             blipIcon = "public_sportsandfitness";
-
+                            Category="Sports";
                         } else {
                             blipIcon = "ic_launcher_round";
                         }
@@ -2106,7 +2220,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                                 BlipEndDate + " " + BlipEndTime,
                                                 imageURLLink,
                                                 null,
-                                                false);
+                                                false,
+                                                "Public",
+                                                Category);
                                         addblippushref.setValue(blips);
                                         Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
@@ -2146,7 +2262,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     BlipEndDate + " " + BlipEndTime,
                                     null,
                                     null,
-                                    false);
+                                    false,
+                                    "Public",
+                                    Category);
                             addblippushref.setValue(blips);
                             Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
@@ -2164,44 +2282,45 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         String dropboxvalue = mySpinner.getSelectedItem().toString();
 
 
-                        if (Objects.equals(dropboxvalue, "Arts")) {//
+                        if (Objects.equals(dropboxvalue, "Arts")) {
                             blipIcon = "private_art";
-                        } else if (Objects.equals(dropboxvalue, "Transportation")) {//
+                            Category="Arts";
+                        } else if (Objects.equals(dropboxvalue, "Transportation")) {
                             blipIcon = "private_autoboatsair";
-
-                        } else if (Objects.equals(dropboxvalue, "Business")) {//
+                            Category="Transportation";
+                        } else if (Objects.equals(dropboxvalue, "Business")) {
                             blipIcon = "private_business";
-
-                        } else if (Objects.equals(dropboxvalue, "Community")) {//
+                            Category="Business";
+                        } else if (Objects.equals(dropboxvalue, "Community")) {
                             blipIcon = "private_community";
-
-                        } else if (Objects.equals(dropboxvalue, "Family & Education")) {//
+                            Category="Business";
+                        } else if (Objects.equals(dropboxvalue, "Family & Education")) {
                             blipIcon = "private_family";
-
-                        } else if (Objects.equals(dropboxvalue, "Fashion")) {//
+                            Category="Family & Education";
+                        } else if (Objects.equals(dropboxvalue, "Fashion")) {
                             blipIcon = "private_fashion";
-
-                        } else if (Objects.equals(dropboxvalue, "Media")) {//
+                            Category="Fashion";
+                        } else if (Objects.equals(dropboxvalue, "Media")) {
                             blipIcon = "private_filmandmedia";
-
-                        } else if (Objects.equals(dropboxvalue, "Travel")) {//
+                            Category="Media";
+                        } else if (Objects.equals(dropboxvalue, "Travel")) {
                             blipIcon = "private_travelandoutdoor";
-
-                        } else if (Objects.equals(dropboxvalue, "Food")) {//
+                            Category="Travel";
+                        } else if (Objects.equals(dropboxvalue, "Food")) {
                             blipIcon = "private_foodanddrinks";
-
-                        } else if (Objects.equals(dropboxvalue, "Health")) {//
+                            Category="Food";
+                        } else if (Objects.equals(dropboxvalue, "Health")) {
                             blipIcon = "private_health";
-
+                            Category="Health";
                         } else if (Objects.equals(dropboxvalue, "Holiday")) {
                             blipIcon = "private_holidaysandcelebrations";
-
+                            Category= "Holiday";
                         } else if (Objects.equals(dropboxvalue, "Music")) {
                             blipIcon = "private_music";
-
+                            Category="Music";
                         } else if (Objects.equals(dropboxvalue, "Sports")) {
                             blipIcon = "private_sportsandfitness";
-
+                            Category="Sports";
                         } else {
                             blipIcon = "ic_launcher_round";
                         }
@@ -2243,7 +2362,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                                 BlipEndDate + " " + BlipEndTime,
                                                 imageURLLink,
                                                 null,
-                                                null);
+                                                isSuperPrivate,
+                                                "Private",
+                                                Category);
 
                                         addblippushref.setValue(blips);
                                         Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
@@ -2280,8 +2401,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                                             BlipEndDate + " " + BlipEndTime,
                                                             null,
                                                             null,
-                                                            null);
-
+                                                            isSuperPrivate,
+                                                            "Private",
+                                                            Category);
                             addblippushref.setValue(blips);
                             Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
 
@@ -2331,7 +2453,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 String EndTime = dataSnapshot.child("EndTime").getValue(String.class);
                 String allowedfriends= dataSnapshot.child("allowedfriends").getValue(String.class);
                 Boolean isSuperPrivate = dataSnapshot.child("isSuperPrivate").getValue(Boolean.class);
-
+                String PublicPrivate = dataSnapshot.child("PublicPrivate").getValue(String.class);
+                String Category= dataSnapshot.child("Category").getValue(String.class);
 
                 Blips blipsadded = new Blips(latitude,
                         longitude,
@@ -2344,7 +2467,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         EndTime,
                         imgURL,
                         allowedfriends,
-                        isSuperPrivate);
+                        isSuperPrivate,
+                        PublicPrivate,
+                        Category);
 
 
 
@@ -2440,21 +2565,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String EndTime = dataSnapshot.child("EndTime").getValue(String.class);
                     String allowedfriends= dataSnapshot.child("allowedfriends").getValue(String.class);
                     Boolean isSuperPrivate = dataSnapshot.child("isSuperPrivate").getValue(Boolean.class);
+                String PublicPrivate = dataSnapshot.child("PublicPrivate").getValue(String.class);
+                String Category= dataSnapshot.child("Category").getValue(String.class);
 
-
-                    Blips blipsadded = new Blips(latitude,
-                            longitude,
-                            newBlipName,
-                            creator,
-                            Details,
-                            blipIcon,
-                            DateCreated,
-                            StartTime,
-                            EndTime,
-                            imgURL,
-                            allowedfriends,
-                            isSuperPrivate);
-
+                Blips blipsadded = new Blips(latitude,
+                        longitude,
+                        newBlipName,
+                        creator,
+                        Details,
+                        blipIcon,
+                        DateCreated,
+                        StartTime,
+                        EndTime,
+                        imgURL,
+                        allowedfriends,
+                        isSuperPrivate,
+                        PublicPrivate,
+                        Category);
 
 
 
@@ -2526,7 +2653,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String EndTime = dataSnapshot.child("EndTime").getValue(String.class);
                     String allowedfriends= dataSnapshot.child("allowedfriends").getValue(String.class);
                     Boolean isSuperPrivate = dataSnapshot.child("isSuperPrivate").getValue(Boolean.class);
-
+                    String PublicPrivate = dataSnapshot.child("PublicPrivate").getValue(String.class);
+                    String Category= dataSnapshot.child("Category").getValue(String.class);
 
                 Blips blipsadded = new Blips(latitude,
                         longitude,
@@ -2539,7 +2667,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         EndTime,
                         imgURL,
                         allowedfriends,
-                        isSuperPrivate);
+                        isSuperPrivate,
+                        PublicPrivate,
+                        Category);
 
                 try {
                     if(blipsadded.isSuperPrivate){//If it is super private
@@ -3266,7 +3396,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else {
 
             super.onBackPressed();
-            liveGPSEmail.removeValue();
+            liveGPSEmail.setValue(null);
             locationManager.removeUpdates(locationListener);
             locationListener = null;
 
@@ -3336,6 +3466,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             liveGPSEmail.child("longitude").setValue(null);
             liveGPSEmail.child("latitude").setValue(null);
             liveGPSEmail.child("Creator").setValue(null);
+            liveGPSEmail.setValue(null);
             mAuth.signOut();
             Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
 
@@ -3537,8 +3668,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 RequestOptions options = new RequestOptions()
                         .circleCrop()
-                        .error(R.drawable.places_ic_clear)
-                        .placeholder(R.drawable.ic_menu_slideshow);
+                        .error(R.mipmap.error)
+                        .placeholder(R.mipmap.placeholderimage);
                 Context context = getApplicationContext();
 
                 Glide.with(context)
@@ -3819,7 +3950,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                              null,
                              profpicdownloadlink,
                              null,
-                             null);
+                             null,
+                             null,
+                             null
+                           );
 
                      liveGPS.child(userName).setValue(gpsblips);
 
@@ -3827,7 +3961,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                }
                else{
 
-                       liveGPSEmail.removeValue();
+                   liveGPSEmail.setValue(null);
                }
 
 
@@ -3877,8 +4011,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             RequestOptions options = new RequestOptions()
                                     .circleCrop()
-                                    .error(R.drawable.places_ic_clear)
-                                    .placeholder(R.drawable.ic_clockicon);
+                                    .error(R.mipmap.error)
+                                    .placeholder(R.mipmap.placeholderimage);
                              Context context = getApplicationContext();
 
                             Glide.with(context)
@@ -4072,8 +4206,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 RequestOptions options = new RequestOptions()
                         .circleCrop()
-                        .error(R.drawable.places_ic_clear)
-                        .placeholder(R.drawable.ic_menu_slideshow);
+                        .error(R.mipmap.error)
+                        .placeholder(R.mipmap.placeholderimage);
                 Context context = getApplicationContext();
 
                 Glide.with(context)
@@ -4229,8 +4363,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                                    RequestOptions options = new RequestOptions()
-                                           .error(R.drawable.places_ic_clear)
-                                           .placeholder(R.drawable.ic_menu_slideshow);
+                                           .error(R.mipmap.error)
+                                           .placeholder(R.mipmap.placeholderimage);
 
                                    Glide.with(getActivity())
                                            .load(imageURLLink)
@@ -4272,8 +4406,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                RequestOptions options = new RequestOptions()
                        .circleCrop()
-                       .error(R.drawable.places_ic_clear)
-                       .placeholder(R.drawable.ic_menu_slideshow);
+                       .error(R.mipmap.error)
+                       .placeholder(R.mipmap.placeholderimage);
                Context context = getApplicationContext();
 
                Glide.with(context)

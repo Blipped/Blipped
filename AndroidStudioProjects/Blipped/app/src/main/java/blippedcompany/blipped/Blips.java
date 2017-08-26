@@ -21,6 +21,8 @@ import com.google.firebase.database.IgnoreExtraProperties;
     public String imageURL;
     public String allowedfriends;
     public Boolean isSuperPrivate;
+    public String PublicPrivate;
+    public String Category;
 
 
     public String key;
@@ -41,7 +43,9 @@ import com.google.firebase.database.IgnoreExtraProperties;
                  String EndTime,
                  String imageURL,
                  String allowedfriends,
-                 Boolean isSuperPrivate) {
+                 Boolean isSuperPrivate,
+                 String PublicPrivate,
+                 String Category) {
 
 
 
@@ -57,6 +61,8 @@ import com.google.firebase.database.IgnoreExtraProperties;
         this.imageURL= imageURL;
         this.allowedfriends= allowedfriends;
         this.isSuperPrivate=isSuperPrivate;
+        this.PublicPrivate=PublicPrivate;
+        this.Category=Category;
     }
 
 
