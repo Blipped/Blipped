@@ -240,7 +240,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-    Uri filePath;
+    Uri filePath=null;
     ImageView imgView;
     ProgressDialog pd;
     HashMap<String,Uri> filePathMap = new HashMap<>();
@@ -1296,6 +1296,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                             dialog.cancel();
 
                                             filePathMap.clear();
+                                            filePath=null;
 
 
                                         }
@@ -1304,31 +1305,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         public void onFailure(@NonNull Exception e) {
                                             pd.dismiss();
                                             Toast.makeText(MainActivity.this, "Upload Failed -> " + e, Toast.LENGTH_SHORT).show();
+                                            filePathMap.clear();
+                                            filePath=null;
                                         }
                                     });
 
 
                                 }
                             }
-                            Blips blips = new Blips(cursor_coordinate_latitude,
-                                    cursor_coordinate_longitude,
-                                    BlipName,
-                                    userName,
-                                    Details,
-                                    blipIcon,
-                                    getCurrentDateTime(),
-                                    BlipStartDate + " " + BlipStartTime,
-                                    BlipEndDate + " " + BlipEndTime,
-                                    imageURLLink,
-                                    null,
-                                    false);
-                            addblippushref.setValue(blips);
-                            Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
+                            else {
+                                Blips blips = new Blips(cursor_coordinate_latitude,
+                                        cursor_coordinate_longitude,
+                                        BlipName,
+                                        userName,
+                                        Details,
+                                        blipIcon,
+                                        getCurrentDateTime(),
+                                        BlipStartDate + " " + BlipStartTime,
+                                        BlipEndDate + " " + BlipEndTime,
+                                        null,
+                                        null,
+                                        false);
+                                addblippushref.setValue(blips);
+                                Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
-                            dialog.cancel();
+                                dialog.cancel();
 
-                            filePathMap.clear();
-
+                                filePathMap.clear();
+                                filePath=null;
+                            }
                         }
                     } else if (privateradio.isChecked() || SuperPrivateradio.isChecked()) {
                         if (validateForm()) {
@@ -1426,6 +1431,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                             dialog.cancel();
 
                                             filePathMap.clear();
+                                            filePath=null;
 
 
                                         }
@@ -1434,31 +1440,37 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         public void onFailure(@NonNull Exception e) {
                                             pd.dismiss();
                                             Toast.makeText(MainActivity.this, "Upload Failed -> " + e, Toast.LENGTH_SHORT).show();
+                                            filePathMap.clear();
+                                            filePath=null;
+
                                         }
                                     });
 
 
                                 }
                             }
-                            blips = new Blips(cursor_coordinate_latitude,
-                                    cursor_coordinate_longitude,
-                                    BlipName,
-                                    userName,
-                                    Details,
-                                    blipIcon,
-                                    getCurrentDateTime(),
-                                    BlipStartDate + " " + BlipStartTime,
-                                    BlipEndDate + " " + BlipEndTime,
-                                    imageURLLink,
-                                    allowedfriendsmultiline.getText().toString(),
-                                    isSuperPrivate);
+                            else {
+                                blips = new Blips(cursor_coordinate_latitude,
+                                        cursor_coordinate_longitude,
+                                        BlipName,
+                                        userName,
+                                        Details,
+                                        blipIcon,
+                                        getCurrentDateTime(),
+                                        BlipStartDate + " " + BlipStartTime,
+                                        BlipEndDate + " " + BlipEndTime,
+                                        null,
+                                        allowedfriendsmultiline.getText().toString(),
+                                        isSuperPrivate);
 
-                            addblippushref.setValue(blips);
-                            Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
+                                addblippushref.setValue(blips);
+                                Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
 
-                            dialog.cancel();
-                            filePathMap.clear();
+                                dialog.cancel();
+                                filePathMap.clear();
+                                filePath=null;
 
+                            }
                         }
                     }
                 }
@@ -2099,8 +2111,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
                                         dialog.cancel();
-
                                         filePathMap.clear();
+                                        filePath=null;
+                                        imageURLLink=null;
+
 
 
                                     }
@@ -2109,31 +2123,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     public void onFailure(@NonNull Exception e) {
                                         pd.dismiss();
                                         Toast.makeText(MainActivity.this, "Upload Failed -> " + e, Toast.LENGTH_SHORT).show();
+                                        filePathMap.clear();
+                                        filePath=null;
+                                        imageURLLink=null;
+
+
                                     }
                                 });
 
 
                             }
                         }
-                        Blips blips = new Blips(cursor_coordinate_latitude,
-                                cursor_coordinate_longitude,
-                                BlipName,
-                                userName,
-                                Details,
-                                blipIcon,
-                                getCurrentDateTime(),
-                                BlipStartDate + " " + BlipStartTime,
-                                BlipEndDate + " " + BlipEndTime,
-                                imageURLLink,
-                                null,
-                                false);
-                        addblippushref.setValue(blips);
-                        Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
+                        else {
+                            Blips blips = new Blips(cursor_coordinate_latitude,
+                                    cursor_coordinate_longitude,
+                                    BlipName,
+                                    userName,
+                                    Details,
+                                    blipIcon,
+                                    getCurrentDateTime(),
+                                    BlipStartDate + " " + BlipStartTime,
+                                    BlipEndDate + " " + BlipEndTime,
+                                    null,
+                                    null,
+                                    false);
+                            addblippushref.setValue(blips);
+                            Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
-                        dialog.cancel();
-
-                        filePathMap.clear();
-
+                            dialog.cancel();
+                            filePathMap.clear();
+                            filePath=null;
+                            imageURLLink=null;
+                        }
                     }
                 } else if (privateradio.isChecked()) {
                     if (validateForm()) {
@@ -2228,8 +2249,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
 
                                         dialog.cancel();
-
                                         filePathMap.clear();
+                                        filePath=null;
+                                        imageURLLink=null;
 
 
                                     }
@@ -2244,24 +2266,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             }
                         }
-                        blips = new Blips(cursor_coordinate_latitude,
-                                cursor_coordinate_longitude,
-                                BlipName,
-                                userName,
-                                Details,
-                                blipIcon,
-                                getCurrentDateTime(),
-                                BlipStartDate + " " + BlipStartTime,
-                                BlipEndDate + " " + BlipEndTime,
-                                imageURLLink,
-                                null,
-                                null);
 
-                        addblippushref.setValue(blips);
-                        Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
+                        else{
 
-                        dialog.cancel();
-                        filePathMap.clear();
+                            blips = new Blips(cursor_coordinate_latitude,
+                                                            cursor_coordinate_longitude,
+                                                            BlipName,
+                                                            userName,
+                                                            Details,
+                                                            blipIcon,
+                                                            getCurrentDateTime(),
+                                                            BlipStartDate + " " + BlipStartTime,
+                                                            BlipEndDate + " " + BlipEndTime,
+                                                            null,
+                                                            null,
+                                                            null);
+
+                            addblippushref.setValue(blips);
+                            Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
+
+                            dialog.cancel();
+                            filePathMap.clear();
+                            filePath=null;
+                            imageURLLink=null;
+                        }
 
 
                     }
@@ -2324,7 +2352,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase())) {
                     categoryFilterPublic(blipsadded);
                 }
+                try {
+                    if(blipsadded.isSuperPrivate){//If it is super private
 
+                        if (privatecheckbox.isChecked() &&
+                                (blipsadded.Creator.toLowerCase().contains(userName.toLowerCase()) ||//If this blips is yours
+                                        ( friendarraylist.contains(blipsadded.Creator) && blipsadded.allowedfriends.contains(userName) ) )      ) //Ot if you are part of allowed friends and is your firend
+                        {
+
+                            categoryFilterPrivate(blipsadded);
+
+                        }
+
+                    }
+
+                    else  if ((blipsadded.Creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(blipsadded.Creator))) {
+
+                        categoryFilterPrivate(blipsadded);
+
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 markerkey++;
                 mymarkerlist.put(Integer.toString(markerkey), blipsadded);
 

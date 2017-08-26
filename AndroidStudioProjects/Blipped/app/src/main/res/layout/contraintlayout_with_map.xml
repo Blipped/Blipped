@@ -259,7 +259,6 @@
         android:id="@+id/backtonormalmodebutton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="90dp"
         android:drawableLeft="@drawable/ic_menu_send"
         android:text="Back to Default View"
         android:visibility="gone"
