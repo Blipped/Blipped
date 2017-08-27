@@ -14,23 +14,31 @@
             android:id="@+id/nav_friendlist"
             android:icon="@android:drawable/ic_menu_my_calendar"
             android:title="Friend List" />
+
+        <item android:title="My Locations">
+             <menu>
+                <item
+                    android:id="@+id/nav_manage"
+                    android:icon="@android:drawable/ic_menu_myplaces"
+                    android:title="My Events" />
+                <item
+                    android:id="@+id/nav_completed"
+                    android:icon="@drawable/ic_menu_share"
+                    android:title="Attended Events" />
+                 <item
+                     android:id="@+id/nav_planned"
+                     android:icon="@drawable/ic_menu_share"
+                     android:title="Planned Events" />
+
+            </menu>
+        </item>
+
         <item
-            android:id="@+id/nav_manage"
-            android:icon="@android:drawable/ic_menu_myplaces"
-            android:title="My Locations" />
+            android:id="@+id/nav_signout"
+            android:icon="@drawable/places_ic_clear"
+            android:title="Sign Out" />
+
     </group>
 
-    <item android:title="Communicate">
-        <menu>
-            <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
-            <item
-                android:id="@+id/nav_signout"
-                android:icon="@drawable/places_ic_clear"
-                android:title="Sign Out" />
-        </menu>
-    </item>
 
 </menu>

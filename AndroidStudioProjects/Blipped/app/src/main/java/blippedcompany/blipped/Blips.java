@@ -3,6 +3,8 @@ package blippedcompany.blipped;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.database.IgnoreExtraProperties;
 
+import java.util.ArrayList;
+
 /**
  * Created by Marcius Jude on 7/10/2017.
  */
@@ -23,6 +25,7 @@ import com.google.firebase.database.IgnoreExtraProperties;
     public Boolean isSuperPrivate;
     public String PublicPrivate;
     public String Category;
+    public ArrayList<String> AttendedList;
 
 
     public String key;
@@ -45,7 +48,8 @@ import com.google.firebase.database.IgnoreExtraProperties;
                  String allowedfriends,
                  Boolean isSuperPrivate,
                  String PublicPrivate,
-                 String Category) {
+                 String Category,
+                 ArrayList<String> AttendedList) {
 
 
 
@@ -63,6 +67,7 @@ import com.google.firebase.database.IgnoreExtraProperties;
         this.isSuperPrivate=isSuperPrivate;
         this.PublicPrivate=PublicPrivate;
         this.Category=Category;
+        this.AttendedList=AttendedList;
     }
 
 

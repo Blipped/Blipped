@@ -157,6 +157,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DatabaseReference UsersEmailFriends = database.getReference("users").child(userName).child("Friends");
     DatabaseReference UsersEmailPic = database.getReference("users").child(userName).child("profilepic");
     DatabaseReference UsersEmailBlips = database.getReference("users").child(userName).child("Blips");
+    DatabaseReference UsersEmailBlipsAttended = database.getReference("users").child(userName).child("BlipsAttended");
+    DatabaseReference UsersEmailBlipsPlanned = database.getReference("users").child(userName).child("BlipsPlanned");
 
     DatabaseReference UsersEmailFriendRequests = database.getReference("users").child(userName).child("FriendRequests");
     DatabaseReference liveGPSEmail = database.getReference("liveGPS").child(userName);
@@ -225,10 +227,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ArrayList<String> friendarraylist;
     ArrayList<String> friendprofilepicarraylist;
     ArrayList<String> profilepicarraylist;
+    ArrayList<String> attendinglist;
     ArrayList markerinfolist;
     HashMap<String,Blips> markerlist=new HashMap<>();
     HashMap<String,Marker> markerlist2=new HashMap<>();
     HashMap<String,Blips> mymarkerlist=new HashMap<>();
+    HashMap<String,Blips> mymarkerlistattending=new HashMap<>();
+    HashMap<String,Blips> mymarkerlistplanning=new HashMap<>();
     HashMap<String,Marker>gpslist=new HashMap<>();
 
     String friendname;
@@ -267,13 +272,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     BottomNavigationView bottomNavigationView;
     int bottomnavheight;
-    Boolean goingStatus;
+    Boolean goingStatus=false;
 
 
-    Boolean showmyplacesmode=false;
+    int showmyplacesmode=0;
     TextView backtonormalview;
     String key = null;
     Button goingbutton;
+    Blips blipsattended;
 
 
 
@@ -287,6 +293,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         friendrequestlist = new ArrayList<String>();
         friendprofilepicarraylist = new ArrayList<String>();
         profilepicarraylist = new ArrayList<String>();
+        attendinglist = new ArrayList<String>();
 
         DeclareThings();
         ShowFriendRequestCount();
@@ -296,7 +303,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         backtonormalview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showmyplacesmode=false;
+                showmyplacesmode=0;
                 backtonormalview.setVisibility(GONE);
                 reload();
             }
@@ -350,7 +357,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             try {
                 liveGPSEmail.setValue(null);
                 locationManager.removeUpdates(locationListener);
-                locationListener = null;
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -361,8 +368,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onStop() {
         super.onStop();  // Always call the superclass method first
         liveGPSEmail.setValue(null);
-        locationManager.removeUpdates(locationListener);
-        locationListener = null;
+
+
 
     }
 
@@ -432,7 +439,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -482,30 +488,44 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                         switch (item.getItemId()) {
                             case R.id.action_delete: {
-                                try {
-                                    if (selected.getSnippet().contains(userName)) {
-                                        DeleteBlip(selected);
-                                        bottomNavigationView.setVisibility(GONE);
-                                        break;
+                                    try {
+                                        if (selected.getSnippet().contains(userName)) {
+                                            if (showmyplacesmode==0) {
+                                               DeleteBlip(selected);
+                                            }
+                                            else{
+                                                Toast.makeText(MainActivity.this, "Cannot Delete Blip in this Mode", Toast.LENGTH_SHORT).show();
+                                            }
+
+                                            bottomNavigationView.setVisibility(GONE);
+                                            break;
+                                        }
+                                    } catch (NullPointerException e) {
+                                        Toast.makeText(MainActivity.this, "No marker selected", Toast.LENGTH_SHORT).show();
                                     }
-                                } catch (NullPointerException e) {
-                                    Toast.makeText(MainActivity.this, "No marker selected", Toast.LENGTH_SHORT).show();
-                                }
                             }
 
                             case R.id.action_edit: {
-                                try {
-                                    if (selected.getSnippet().contains(userName)) {
-                                        EditBlip(selected);
-                                        break;
-                                    }
-                                } catch (NullPointerException e) {
+                                    try {
+                                        if (selected.getSnippet().contains(userName)) {
+                                            if (showmyplacesmode==0) {
+                                               EditBlip(selected);
+                                            }
+                                            else{
+                                                Toast.makeText(MainActivity.this, "Cannot Edit Blip in this Mode", Toast.LENGTH_SHORT).show();
+                                            }
 
-                                }
+                                            break;
+                                        }
+                                    } catch (NullPointerException e) {
+
+                                    }
                             }
 
 
-                            case R.id.action_music:{}
+                            case R.id.action_info:{
+                                ShowBlipInfo(selected);
+                            }
 
                         }
                         return true;
@@ -516,7 +536,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onMapLongClick(LatLng point) {
-                AddBlip(point);
+
+                if (showmyplacesmode==0) {
+                    AddBlip(point);
+                }
+                else{
+                    Toast.makeText(MainActivity.this, "Cannot Add Blip in this Mode", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -541,78 +567,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public boolean onMarkerClick(Marker marker) {
 
-                if(marker.getSnippet().contains("123marcius")) {
-
-                     //If Normal Marker is clicked
-                    mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
-                        View v;
-                        @Override
-                        public View getInfoWindow(final Marker marker) {
-
-                            v = getLayoutInflater().inflate(R.layout.custom_info_window, null);
-                            badge = v.findViewById(R.id.badge);
-                            //Split Information int array
-                            try {
-                                dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-                            } catch (NullPointerException e) {
-
-                            }
-
-
-
-                            if (dataarray[2] != null) {
-                                Picasso.with(getApplicationContext())
-                                        .load(dataarray[2])
-                                        .error(R.mipmap.error)
-                                        .placeholder(R.mipmap.placeholderimage)
-                                        .into(badge, new MarkerCallback(marker));
-
-                            }
-
-
-                            TextView title = v.findViewById(R.id.title);
-                            title.setText(marker.getTitle());
-
-
-                            return v;
-
-
-                        }
-
-
-                        @Override
-                        public View getInfoContents(Marker marker) {
-                            return null;
-                        }
-                    });
-                }
-
-                else{
-                    //If Live GPS Marker is clicked
-                    mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
-                        View vgps;
-                        @Override
-                        public View getInfoWindow(final Marker marker) {
-                            vgps = getLayoutInflater().inflate(R.layout.gpscustom_info_window, null);
-
-                            //Split Information int array
-
-
-
-                            TextView title = vgps.findViewById(R.id.title);
-                            title.setText(marker.getTitle());
-
-                            return vgps;
-
-                        }
-
-                        @Override
-                        public View getInfoContents(Marker marker) {
-                            return null;
-                        }
-                    });
-
-                }
+                onMarkerClickAction(marker);
                 bottomnavheight =bottomNavigationView.getHeight();
                 mMap.setPadding(0, 0, 0, bottomnavheight );
                 Animation bottomUp = AnimationUtils.loadAnimation(getApplicationContext(),
@@ -650,7 +605,182 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
+
+    public void onMarkerClickAction(Marker marker)
+    { attendinglist.clear();
+        if(marker.getSnippet().contains("123marcius")) {
+
+            //If Normal Marker is clicked
+            mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+                View v;
+                @Override
+                public View getInfoWindow(final Marker marker) {
+
+                    v = getLayoutInflater().inflate(R.layout.custom_info_window, null);
+                    badge = v.findViewById(R.id.badge);
+                    //Split Information int array
+                    try {
+                        dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                    } catch (NullPointerException e) {
+
+                    }
+
+
+
+                    if (dataarray[2] != null) {
+                        Picasso.with(getApplicationContext())
+                                .load(dataarray[2])
+                                .error(R.mipmap.error)
+                                .placeholder(R.mipmap.placeholderimage)
+                                .into(badge, new MarkerCallback(marker));
+
+                    }
+
+
+                    TextView title = v.findViewById(R.id.title);
+                    title.setText(marker.getTitle());
+
+
+                    return v;
+
+
+                }
+
+
+                @Override
+                public View getInfoContents(Marker marker) {
+                    return null;
+                }
+            });
+        }
+
+        else{
+            //If Live GPS Marker is clicked
+            mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+                View vgps;
+                @Override
+                public View getInfoWindow(final Marker marker) {
+                    vgps = getLayoutInflater().inflate(R.layout.gpscustom_info_window, null);
+
+                    //Split Information int array
+
+
+
+                    TextView title = vgps.findViewById(R.id.title);
+                    title.setText(marker.getTitle());
+
+                    return vgps;
+
+                }
+
+                @Override
+                public View getInfoContents(Marker marker) {
+                    return null;
+                }
+            });
+
+        }
+    }
+
+    public Blips getselectedblipdata(){
+        if (dataarray[6].equals("Private")) {
+            Blipsref.child("private")
+                    .child(key)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {////////////////////////////
+                            Double latitude = dataSnapshot.child("latitude").getValue(Double.class);
+                            Double longitude = dataSnapshot.child("longitude").getValue(Double.class);
+                            String newBlipName = dataSnapshot.child("BlipName").getValue(String.class);
+                            String creator = dataSnapshot.child("Creator").getValue(String.class);
+                            String Details = dataSnapshot.child("Details").getValue(String.class);
+                            String blipIcon = dataSnapshot.child("Icon").getValue(String.class);
+                            String imgURL = dataSnapshot.child("imageURL").getValue(String.class);
+                            String DateCreated = dataSnapshot.child("DateCreated").getValue(String.class);
+                            String StartTime= dataSnapshot.child("StartTime").getValue(String.class);
+                            String EndTime = dataSnapshot.child("EndTime").getValue(String.class);
+                            String allowedfriends= dataSnapshot.child("allowedfriends").getValue(String.class);
+                            Boolean isSuperPrivate = dataSnapshot.child("isSuperPrivate").getValue(Boolean.class);
+                            String PublicPrivate = dataSnapshot.child("PublicPrivate").getValue(String.class);
+                            String Category= dataSnapshot.child("Category").getValue(String.class);
+
+                            blipsattended = new Blips(latitude,
+                                    longitude,
+                                    newBlipName,
+                                    creator,
+                                    Details,
+                                    blipIcon,
+                                    DateCreated,
+                                    StartTime,
+                                    EndTime,
+                                    imgURL,
+                                    allowedfriends,
+                                    isSuperPrivate,
+                                    PublicPrivate,
+                                    Category,
+                                    attendinglist);
+
+
+
+                        }/////////////////////
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }});
+        } else if(dataarray[6].equals("Public")){
+            Toast.makeText(this, key, Toast.LENGTH_SHORT).show();
+            Blipsref.child("public")
+                    .child(key)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            Double latitude = dataSnapshot.child("latitude").getValue(Double.class);
+                            Double longitude = dataSnapshot.child("longitude").getValue(Double.class);
+                            String newBlipName = dataSnapshot.child("BlipName").getValue(String.class);
+                            String creator = dataSnapshot.child("Creator").getValue(String.class);
+                            String Details = dataSnapshot.child("Details").getValue(String.class);
+                            String blipIcon = dataSnapshot.child("Icon").getValue(String.class);
+                            String imgURL = dataSnapshot.child("imageURL").getValue(String.class);
+                            String DateCreated = dataSnapshot.child("DateCreated").getValue(String.class);
+                            String StartTime= dataSnapshot.child("StartTime").getValue(String.class);
+                            String EndTime = dataSnapshot.child("EndTime").getValue(String.class);
+                            String allowedfriends= dataSnapshot.child("allowedfriends").getValue(String.class);
+                            Boolean isSuperPrivate = dataSnapshot.child("isSuperPrivate").getValue(Boolean.class);
+                            String PublicPrivate = dataSnapshot.child("PublicPrivate").getValue(String.class);
+                            String Category= dataSnapshot.child("Category").getValue(String.class);
+
+                           blipsattended = new Blips(latitude,
+                                    longitude,
+                                    newBlipName,
+                                    creator,
+                                    Details,
+                                    blipIcon,
+                                    DateCreated,
+                                    StartTime,
+                                    EndTime,
+                                    imgURL,
+                                    allowedfriends,
+                                    isSuperPrivate,
+                                    PublicPrivate,
+                                    Category,
+                                    attendinglist);
+
+
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }});
+
+        }
+
+        return blipsattended;
+    }
+
     public void ShowBlipInfo(final Marker marker)  {
+
 
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
         View mBlipInfoView = getLayoutInflater().inflate(R.layout.blip_info_page, null);
@@ -665,15 +795,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         TextView BlipInfoDetails = mBlipInfoView.findViewById(R.id.BlipInfoDetails);
         TextView BlipInfoCreatedIn = mBlipInfoView.findViewById(R.id.BlipInfoCreatedIn);
         goingbutton = mBlipInfoView.findViewById(R.id.goingbutton);
-
-
-
-
-
+        Button finishevent = mBlipInfoView.findViewById(R.id.finisheventbutton);
+        mBuilder.setView(mBlipInfoView);
+       final  AlertDialog dialog = mBuilder.create();
         dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
 
+        if(showmyplacesmode!=0){
+            goingbutton.setVisibility(GONE);
 
+        }
+        if(dataarray[0].equals(userName)){
+            finishevent.setVisibility(VISIBLE);
+        }
 
+        try {
             if (dataarray[6].equals("Private")) {
                 Blipsref.child("private")
                         .child(key)
@@ -681,7 +816,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
-                                Toast.makeText(MainActivity.this, "Triggered", Toast.LENGTH_SHORT).show();
+                                for (DataSnapshot datacollected : dataSnapshot.getChildren()) {
+                                   attendinglist.add( datacollected.getKey());
+                                }
+
                                 if(dataSnapshot.hasChild(userName)){
                                     goingStatus=true;
                                     goingbutton.setText("Going");
@@ -703,7 +841,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
-                                Toast.makeText(MainActivity.this, "Triggered", Toast.LENGTH_SHORT).show();
+
+
+                                for (DataSnapshot datacollected : dataSnapshot.getChildren()) {
+                                    attendinglist.add( datacollected.getKey());
+                                }
                                 if(dataSnapshot.hasChild(userName)){
                                     goingStatus=true;
                                     goingbutton.setText("Going");
@@ -721,11 +863,109 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             }});
 
             }
+        } catch (Exception e) {
+
+            goingbutton.setText("Not Going");
+            goingStatus=false;
+        }
 
 
 
+        BlipInfoTitle.setText(marker.getTitle());
+        BlipInfoCategoryandHost.setText(dataarray[6]+"  "+dataarray[7]+"  " +"Hosted by "+dataarray[0]);
+
+        if (dataarray[2] != null) {
+            RequestOptions options = new RequestOptions()
+                    .error(R.mipmap.background1)
+                    .placeholder(R.mipmap.background1);
+
+            Glide.with(getActivity())
+                    .load(dataarray[2])
+                    .apply(options)
+                    .into(BlipInfoImage);
+
+        }
+
+        BlipInfoImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showImage(marker);
+            }
+        });
+        final Blips data = new Blips(marker.getPosition().latitude,
+                marker.getPosition().longitude,
+                marker.getTitle(),
+                dataarray[0],
+                dataarray[1],
+                dataarray[8],
+                dataarray[3],
+                dataarray[4],
+                dataarray[5],
+                dataarray[2],
+                null,
+                false,
+                dataarray[6],
+                dataarray[7],
+                attendinglist);
+
+        goingbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(dataarray[6].equals("Public")){
+                    if(goingStatus==true){
+                        BlipsPublic.child(key).child("AttendingList").child(userName).setValue(null);
+                        Users.child(userName).child("BlipsPlanned").child(key).setValue(null);
+                        goingbutton.setText("Not Going");
+                        goingStatus=false;
+                    }
+                    else{
+                        BlipsPublic.child(key).child("AttendingList").child(userName).setValue(1);
+                        Users.child(userName).child("BlipsPlanned").child(key).setValue(data);
+                        goingbutton.setText("Going");
+                        goingStatus=true;
+                    }
+
+                }
+
+                if(dataarray[6].equals("Private")){
+                    if(goingStatus==true){
+                        BlipsPrivate.child(key).child("AttendingList").child(userName).setValue(null);
+                        Users.child(userName).child("BlipsPlanned").child(key).setValue(null);
+                        goingbutton.setText("Not Going");
+                        goingStatus=false;
+                    }
+                    else{
+                        BlipsPrivate.child(key).child("AttendingList").child(userName).setValue(1);
+                        Users.child(userName).child("BlipsPlanned").child(key).setValue(data);
+                        goingbutton.setText("Going");
+                        goingStatus=true;
+                    }
+
+                }
 
 
+            }
+        });
+
+
+
+        finishevent.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                for (String x : attendinglist)
+                {   Users.child(x).child("BlipsAttended").child(key).setValue(data);
+                    System.out.println(x);
+                }
+                  dialog.cancel();
+
+
+            }});
+
+
+                //TIME SETTING
+        BlipInfoDetails.setText(dataarray[1]);
+        BlipInfoCreatedIn.setText(dataarray[3]);
         String[] startdatetime = new String[0];
         String[] startyearmonthday = new String[0];
 
@@ -754,7 +994,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             String[] enddatetime = new String[0];
             String[] endyearmonthday = new String[0];
 
-           enddatetime = dataarray[5].split(" ");
+            enddatetime = dataarray[5].split(" ");
             String enddate= enddatetime[0];
             endyearmonthday = enddate.split("-");
             String eyear = endyearmonthday[0];
@@ -770,79 +1010,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             String endampm= enddatetime[2];
             BlipInfoEndTime.setText("Ends at "+ehour+":"+emin+" "+endampm+" "+ eamonth +" "+eday+","+eyear);
-      }
-      else{
+        }
+        else{
             BlipInfoEndTime.setVisibility(View.INVISIBLE);
         }
 
 
-        BlipInfoTitle.setText(marker.getTitle());
-        BlipInfoCategoryandHost.setText(dataarray[6]+"  "+dataarray[7]+"  " +"Hosted by "+dataarray[0]);
-
-        if (dataarray[2] != null) {
-            RequestOptions options = new RequestOptions()
-                    .error(R.mipmap.background1)
-                    .placeholder(R.mipmap.background1);
-
-            Glide.with(getActivity())
-                    .load(dataarray[2])
-                    .apply(options)
-                    .into(BlipInfoImage);
-
-        }
-        BlipInfoImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showImage(marker);
-            }
-        });
-
-
-
-        goingbutton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(dataarray[6].equals("Public")){
-                    if(goingStatus==true){
-                        BlipsPublic.child(key).child("AttendingList").child(userName).setValue(null);
-                        goingbutton.setText("Not Going");
-                        goingStatus=false;
-                    }
-                    else{
-                        BlipsPublic.child(key).child("AttendingList").child(userName).setValue(1);
-                        goingbutton.setText("Going");
-                        goingStatus=true;
-                    }
-
-                }
-
-                else if(dataarray[6].equals("Private")){
-                    if(goingStatus==true){
-                        BlipsPrivate.child(key).child("AttendingList").child(userName).setValue(null);
-                        goingbutton.setText("Not Going");
-                        goingStatus=false;
-                    }
-                    else{
-                        BlipsPrivate.child(key).child("AttendingList").child(userName).setValue(1);
-                        goingbutton.setText("Going");
-                        goingStatus=true;
-                    }
-
-                }
-
-
-            }
-        });
-
-        BlipInfoDetails.setText(dataarray[1]);
-        BlipInfoCreatedIn.setText(dataarray[3]);
-
-        mBuilder.setView(mBlipInfoView);
-        final AlertDialog dialog = mBuilder.create();
         dialog.show();
 
 
+
     }
+
     public class MarkerCallback implements Callback {
         Marker marker=null;
 
@@ -863,6 +1042,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
     }
+
     public void showImage(Marker marker){
         View  imagefull = getLayoutInflater().inflate(R.layout.fullscreen_image, null);
         ImageView fullscreenimage = imagefull.findViewById(R.id.fullscreenimage);
@@ -950,7 +1130,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void PlaceMarker(final Blips blipsadded) {
-        if (showmyplacesmode==false) {//If user is not viewing his places, do as normal
+        if (showmyplacesmode==0) {//If user is not viewing his places, do as normal
 
                     LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
                     // Put inormation into a single string with comma seperators
@@ -961,7 +1141,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             blipsadded.StartTime+"123marcius"+
                             blipsadded.EndTime+"123marcius"+
                             blipsadded.PublicPrivate +"123marcius"+
-                            blipsadded.Category +"123marcius";
+                            blipsadded.Category +"123marcius"+
+                            blipsadded.Icon +"123marcius"  ;
                     myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
                             .position(newBlipCoordinates)
                             .title(blipsadded.BlipName)
@@ -970,20 +1151,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     markerlist2.put(Integer.toString(markerkey), myMarker);
                     dropPinEffect(myMarker);
-        } else {//If user is still viewing
+        } else {//If user is still viewing dont place only add blip
 
-            LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
-            // Put inormation into a single string with comma seperators
-            Description = blipsadded.Creator+"123marcius"+ blipsadded.Details +"123marcius"+blipsadded.imageURL
-                    +"123marcius"+blipsadded.DateCreated+"123marcius"+blipsadded.StartTime+"123marcius"+blipsadded.EndTime;
 
-            myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
-                    .position(newBlipCoordinates)
-                    .title(blipsadded.BlipName)
-                    .snippet(Description)
-                    .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
-
-            dropPinEffect(myMarker);
         }
 
     }
@@ -991,40 +1161,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void PlaceMarkernoanimation(final Blips blipsadded) {
 
 
-        if (showmyplacesmode==false) {
             LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
             // Put inormation into a single string with comma seperators
-            Description = blipsadded.Creator+"123marcius"+
-                    blipsadded.Details +"123marcius"+
-                    blipsadded.imageURL +"123marcius"+
-                    blipsadded.DateCreated+"123marcius"+
-                    blipsadded.StartTime+"123marcius"+
-                    blipsadded.EndTime+"123marcius"+
-                    blipsadded.PublicPrivate +"123marcius"+
-                    blipsadded.Category +"123marcius";
+            Description = blipsadded.Creator+"123marcius"+//0
+                    blipsadded.Details +"123marcius"+//1
+                    blipsadded.imageURL +"123marcius"+//2
+                    blipsadded.DateCreated+"123marcius"+//3
+                    blipsadded.StartTime+"123marcius"+//4
+                    blipsadded.EndTime+"123marcius"+//5
+                    blipsadded.PublicPrivate +"123marcius"+//6
+                    blipsadded.Category +"123marcius" +//7
+                    blipsadded.Icon +"123marcius"  ;//8
             myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
 
                     .position(newBlipCoordinates)
                     .title(blipsadded.BlipName)
                     .snippet(Description)
                     .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
-        } else {//If user is still viewing
-
-            LatLng newBlipCoordinates = new LatLng(blipsadded.latitude, blipsadded.longitude);
-            // Put inormation into a single string with comma seperators
-            Description = blipsadded.Creator+"123marcius"+ blipsadded.Details +"123marcius"+blipsadded.imageURL
-                    +"123marcius"+blipsadded.DateCreated+"123marcius"+blipsadded.StartTime+"123marcius"+blipsadded.EndTime;
-
-            myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
-                    .position(newBlipCoordinates)
-                    .title(blipsadded.BlipName)
-                    .snippet(Description)
-                    .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
-
-            dropPinEffect(myMarker);
 
 
-        }
 
 
     }
@@ -1114,9 +1269,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         dateedittext.setText( month + "/" + day + "/" + year);
         BlipStartTime =( hour + ":" + min +" "+ AM_PM);
         BlipStartDate =year+"-"+month+"-"+day;
-
-
-
 
 
 
@@ -1495,7 +1647,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                                     null,
                                                     false,
                                                     "Public",
-                                                    Category);
+                                                    Category,
+                                                    null);
                                             addblippushref.setValue(blips);
                                             Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
@@ -1533,7 +1686,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         null,
                                         false,
                                         "Public",
-                                        Category);
+                                        Category,
+                                        null);
                                 addblippushref.setValue(blips);
                                 Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
@@ -1637,7 +1791,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                                     allowedfriendsmultiline.getText().toString(),
                                                     isSuperPrivate,
                                                     "Private",
-                                                    Category);
+                                                    Category,
+                                                    null);
 
                                             addblippushref.setValue(blips);
                                             Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
@@ -1677,7 +1832,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         allowedfriendsmultiline.getText().toString(),
                                         isSuperPrivate,
                                         "Private",
-                                        Category);
+                                        Category,
+                                        null);
 
                                 addblippushref.setValue(blips);
                                 Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
@@ -1820,6 +1976,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final LatLng coordinatetobedeleted = marker.getPosition();
         selected.remove();
 
+
         BlipsPublic.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
                 new ValueEventListener() {
                     @Override
@@ -1831,7 +1988,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             //We add this because firebase queries sucks
                             if (datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude && creator.toLowerCase().contains(userName.toLowerCase())) {
-
                                 datacollected.getRef().removeValue();
                                 Toast.makeText(MainActivity.this, "Blip Deleted", Toast.LENGTH_SHORT).show();
                             }
@@ -1860,6 +2016,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             if (datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude && creator.toLowerCase().contains(userName.toLowerCase())) {
 
                                 datacollected.getRef().removeValue();
+
                                 Toast.makeText(MainActivity.this, "Blip Deleted", Toast.LENGTH_SHORT).show();
                             }
 
@@ -2325,7 +2482,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                                 null,
                                                 false,
                                                 "Public",
-                                                Category);
+                                                Category,
+                                                null);
                                         addblippushref.setValue(blips);
                                         Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
@@ -2367,7 +2525,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     null,
                                     false,
                                     "Public",
-                                    Category);
+                                    Category,
+                                    null);
                             addblippushref.setValue(blips);
                             Blipsref.child("public").child(blipkey).setValue(blips);//Add to private blips
 
@@ -2467,7 +2626,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                                 null,
                                                 isSuperPrivate,
                                                 "Private",
-                                                Category);
+                                                Category,
+                                                null);
 
                                         addblippushref.setValue(blips);
                                         Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
@@ -2506,7 +2666,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                                             null,
                                                             isSuperPrivate,
                                                             "Private",
-                                                            Category);
+                                                            Category,
+                                                             null);
                             addblippushref.setValue(blips);
                             Blipsref.child("private").child(blipkey).setValue(blips);//Add to private blips
 
@@ -2536,9 +2697,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private void ShowMyBlips() {
+    private void ShowMyBlips(DatabaseReference myref, final HashMap<String,Blips> markerlistselected) {
 
-        UsersEmailBlips.addChildEventListener(new ChildEventListener() {
+      myref.addChildEventListener(new ChildEventListener() {
 
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
@@ -2572,13 +2733,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         allowedfriends,
                         isSuperPrivate,
                         PublicPrivate,
-                        Category);
+                        Category,
+                         null);
 
 
 
 
                 if (publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase())) {
-                    categoryFilterPublic(blipsadded);
+                    categoryFilterPublicnoanimation(blipsadded);
                 }
                 try {
                     if(blipsadded.isSuperPrivate){//If it is super private
@@ -2588,7 +2750,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         ( friendarraylist.contains(blipsadded.Creator) && blipsadded.allowedfriends.contains(userName) ) )      ) //Ot if you are part of allowed friends and is your firend
                         {
 
-                            categoryFilterPrivate(blipsadded);
+                            categoryFilterPrivatenoanimation(blipsadded);
 
                         }
 
@@ -2596,14 +2758,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     else  if ((blipsadded.Creator.toLowerCase().contains(userName.toLowerCase()) || friendarraylist.contains(blipsadded.Creator))) {
 
-                        categoryFilterPrivate(blipsadded);
+                        categoryFilterPrivatenoanimation(blipsadded);
 
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 markerkey++;
-                mymarkerlist.put(Integer.toString(markerkey), blipsadded);
+                markerlistselected.put(Integer.toString(markerkey), blipsadded);
 
 
             }
@@ -2684,7 +2846,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         allowedfriends,
                         isSuperPrivate,
                         PublicPrivate,
-                        Category);
+                        Category,
+                        null);
 
 
 
@@ -2772,7 +2935,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         allowedfriends,
                         isSuperPrivate,
                         PublicPrivate,
-                        Category);
+                        Category,
+                        null);
 
                 try {
                     if(blipsadded.isSuperPrivate){//If it is super private
@@ -2845,7 +3009,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void reload(){
         mMap.clear();
         // Iterate through hashmap
-        if (showmyplacesmode==false) {
+        if (showmyplacesmode==0) {
 
             for (Map.Entry<String, Blips> entry : markerlist.entrySet())
             {
@@ -2883,7 +3047,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
             ShowGPSLocation();
-        } else {
+        }
+        ///zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+        else if (showmyplacesmode==1){
             for (Map.Entry<String, Blips> entry : mymarkerlist.entrySet())
             {
                 Blips value = mymarkerlist.get(entry.getKey());
@@ -2922,7 +3088,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         }
+        //zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+        else if (showmyplacesmode==2){
+            for (Map.Entry<String, Blips> entry : mymarkerlistattending.entrySet())
+            {
+                Blips value = mymarkerlistattending.get(entry.getKey());
 
+
+                if (privatecheckbox.isChecked() && value.Category.toLowerCase().contains("Private".toLowerCase())) {
+                    categoryFilterPrivatenoanimation(value);
+                }
+
+
+                if (publiccheckbox.isChecked() && value.Category.toLowerCase().contains("public".toLowerCase())) {
+                    categoryFilterPublicnoanimation(value);
+                }
+
+            }
+
+
+        }
 
     }
 
@@ -3558,11 +3743,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         } else if (id == R.id.nav_manage) {
             backtonormalview.setVisibility(VISIBLE);
-            showmyplacesmode=true;
+            showmyplacesmode=1;
+            backtonormalview.setText("Currently showing your blips \n Click here to back");
             mMap.clear();
-            ShowMyBlips();
+            ShowMyBlips(UsersEmailBlips,mymarkerlist);
 
-        } else if (id == R.id.nav_share) {
+        } else if (id == R.id.nav_completed) {
+            backtonormalview.setVisibility(VISIBLE);
+            showmyplacesmode=2;
+            backtonormalview.setText("Currently showing your attended blips \n Click here to back");
+            mMap.clear();
+            ShowMyBlips(UsersEmailBlipsAttended,mymarkerlistattending);
+
+
+        } else if (id == R.id.nav_planned) {
+            backtonormalview.setVisibility(VISIBLE);
+            showmyplacesmode=3;
+            backtonormalview.setText("Currently showing your planned blips \n Click here to back");
+            mMap.clear();
+            ShowMyBlips(UsersEmailBlipsPlanned,mymarkerlistplanning);
 
 
         } else if (id == R.id.nav_signout) {
@@ -4052,6 +4251,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                              null,
                              null,
                              profpicdownloadlink,
+                             null,
                              null,
                              null,
                              null,
@@ -4575,7 +4775,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         public void onCancelled(DatabaseError databaseError) {
 
                         }});
-        } catch (Exception e) {
+
             Blipsref.child("private").orderByChild("longitude")
                     .equalTo(longitude)
                     .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -4593,6 +4793,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         public void onCancelled(DatabaseError databaseError) {
 
                         }});
+        } catch (Exception e) {
+
         }
 
 
