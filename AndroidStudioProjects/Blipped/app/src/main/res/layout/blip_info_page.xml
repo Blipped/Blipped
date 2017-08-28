@@ -2,7 +2,7 @@
 <android.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/holo_blue_light"
     android:elevation="16dp"
@@ -19,8 +19,8 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/colorAccent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/background_light"
             android:elevation="1dp"
             android:orientation="vertical"
             android:padding="0dp"
@@ -32,18 +32,30 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="0dp">
+                android:padding="0dp"
+                tools:layout_editor_absoluteX="8dp"
+                tools:layout_editor_absoluteY="81dp">
 
-                <ImageButton
-                    android:id="@+id/BlipInfoPhoto"
+                <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="125dp"
-                    android:adjustViewBounds="true"
-                    android:padding="0dp"
-                    android:scaleType="fitXY"
-                    app:srcCompat="@mipmap/background1"
-                    tools:layout_editor_absoluteX="280dp"
-                    tools:layout_editor_absoluteY="275dp" />
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
+
+                    <ImageButton
+                        android:id="@+id/BlipInfoPhoto"
+                        android:layout_width="match_parent"
+                        android:layout_height="170dp"
+                        android:layout_alignParentStart="true"
+                        android:layout_alignParentTop="true"
+                        android:layout_weight="1"
+                        android:adjustViewBounds="false"
+                        android:padding="0dp"
+                        android:scaleType="fitXY"
+                        app:srcCompat="@mipmap/background1"
+                        tools:layout_editor_absoluteX="8dp"
+                        tools:layout_editor_absoluteY="568dp" />
+
+                </RelativeLayout>
 
             </LinearLayout>
 
@@ -125,57 +137,79 @@
                 android:id="@+id/TimeDateLaout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="15dp">
+                android:orientation="vertical"
+                android:padding="0dp">
 
-                <ImageView
-                    android:id="@+id/clockimage"
-                    android:layout_width="0dp"
+                <android.support.constraint.ConstraintLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="0dp"
-                    android:layout_weight="1"
-                    android:adjustViewBounds="true"
-                    android:padding="0dp"
-                    android:paddingLeft="10dp"
-                    android:scaleType="fitXY"
-                    app:srcCompat="@drawable/ic_clockicon" />
+                    android:layout_weight="5">
 
-                <LinearLayout
-                    android:id="@+id/StartTimeEndTimeLayout"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="5"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/BlipInfoStartTIme"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginLeft="15dp"
-                        android:layout_weight="1"
-                        android:autoText="true"
-                        android:padding="0dp"
-                        android:paddingLeft="0dp"
-                        android:text="Starts at 5 PM - 10 PM" />
-
-                    <TextView
-                        android:id="@+id/BlipInfoEndTime"
+                    <ImageView
+                        android:id="@+id/clockimage"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="15dp"
+                        android:layout_marginLeft="29dp"
+                        android:layout_marginStart="29dp"
+                        android:layout_marginTop="13dp"
                         android:layout_weight="1"
-                        android:autoText="true"
+                        android:adjustViewBounds="true"
                         android:padding="0dp"
-                        android:text="Ends at 5 PM - 10 PM" />
+                        android:paddingLeft="10dp"
+                        android:scaleType="fitXY"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_clockicon" />
 
-                </LinearLayout>
+                    <LinearLayout
+                        android:id="@+id/StartTimeEndTimeLayout"
+                        android:layout_width="199dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="70dp"
+                        android:layout_marginStart="70dp"
+                        android:layout_marginTop="9dp"
+                        android:layout_weight="5"
+                        android:orientation="vertical"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <TextView
+                            android:id="@+id/BlipInfoStartTIme"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="0dp"
+                            android:layout_weight="1"
+                            android:autoText="true"
+                            android:padding="0dp"
+                            android:paddingLeft="0dp"
+                            android:text="Starts at 5 PM - 10 PM" />
+
+                        <TextView
+                            android:id="@+id/BlipInfoEndTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="0dp"
+                            android:layout_weight="1"
+                            android:autoText="true"
+                            android:padding="0dp"
+                            android:text="Ends at 5 PM - 10 PM" />
+
+                    </LinearLayout>
+
+                </android.support.constraint.ConstraintLayout>
 
                 <Button
                     android:id="@+id/goingbutton"
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="3"
-                    android:text="Not Going" />
+                    android:layout_weight="8"
+                    android:text="Not Going"
+                    android:textAlignment="center"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:visibility="visible"
+                    tools:layout_editor_absoluteX="268dp"
+                    tools:layout_editor_absoluteY="323dp" />
 
             </LinearLayout>
 
@@ -194,6 +228,7 @@
                 android:id="@+id/BlipInfoDetails"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:autoLink="web|email|phone|map|all"
                 android:linksClickable="true"
                 android:paddingLeft="15dp"
                 android:paddingRight="15dp"

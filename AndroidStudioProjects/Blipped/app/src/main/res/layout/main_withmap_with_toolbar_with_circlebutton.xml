@@ -18,16 +18,12 @@
             android:layout_height="match_parent"
             android:theme="@style/testtheme">
 
-            <SearchView
-                android:id="@+id/searchView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginStart="0dp"
-                android:queryHint="Search">
 
-            </SearchView>
+
 
         </android.support.v7.widget.Toolbar>
+
+
 
     </android.support.design.widget.AppBarLayout>
 

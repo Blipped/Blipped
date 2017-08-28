@@ -2,8 +2,25 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_search"
+        app:actionViewClass="android.support.v7.widget.SearchView"
+        android:icon="@mipmap/ic_action_search"
+        android:title="@string/action_search"
+        app:showAsAction="ifRoom|collapseActionView" />
+
+    <item
         android:id="@+id/action_settings"
         android:orderInCategory="102"
         android:title="@string/action_settings"
         app:showAsAction="never" />
+
+    <!-- Search Widget -->
+
+    <!-- Check updates -->
+    <item
+        android:id="@+id/action_refresh"
+        android:icon="@mipmap/ic_action_refresh"
+        android:showAsAction="always"
+        android:title="@string/action_check_updates"
+        app:showAsAction="always" />
 </menu>

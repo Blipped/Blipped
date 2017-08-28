@@ -28,15 +28,18 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,7 +63,6 @@ import android.widget.MultiAutoCompleteTextView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
-import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -133,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private final LatLng mDefaultLocation = new LatLng(14.5955772, 120.9880854);
     private static final int DEFAULT_ZOOM = 17;
     LatLng cursor_coordinate;
-    SearchView search;
+    SearchView search ;
     GoogleApiClient mGoogleApiClient;
 
 
@@ -312,39 +314,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 findViewById(R.id.bottom_navigation);
 
 
-        search = (SearchView) findViewById(R.id.searchView);
 
-
-        search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(final String query) {
-                mMap.clear();
-                blipsupdateontextchange(query);
-                return false;
-            }
-
-
-        });
-        search.setOnSearchClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                filterscroll.setVisibility(VISIBLE);
-            }
-        });
-
-        search.setOnCloseListener(new SearchView.OnCloseListener() {
-            @Override
-            public boolean onClose() {
-                filterscroll.setVisibility(GONE);
-                return false;
-            }
-        });
 
 
 
@@ -590,7 +560,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(final Marker marker) {
-                   ShowBlipInfo(marker);
+
+                ShowBlipInfo(marker);
+
             }
         });
 
@@ -781,7 +753,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void ShowBlipInfo(final Marker marker)  {
 
-
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
         View mBlipInfoView = getLayoutInflater().inflate(R.layout.blip_info_page, null);
 
@@ -965,7 +936,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 //TIME SETTING
         BlipInfoDetails.setText(dataarray[1]);
-        BlipInfoCreatedIn.setText(dataarray[3]);
+        BlipInfoCreatedIn.setText("Created on "+dataarray[3] + " At "+getAddress(selected.getPosition().latitude,selected.getPosition().longitude));
         String[] startdatetime = new String[0];
         String[] startyearmonthday = new String[0];
 
@@ -1379,7 +1350,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     @Override
                     public void onDateSet(DatePicker datePicker, int year, int month, int day) {
                         BlipStartDate =year+"-"+month+"-"+day;
-                        Toast.makeText(MainActivity.this, BlipStartDate, Toast.LENGTH_SHORT).show();
+
                        dateedittext.setText( month + "/" + day + "/" + year);
                     }
 
@@ -3050,39 +3021,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         ///zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
         else if (showmyplacesmode==1){
+
             for (Map.Entry<String, Blips> entry : mymarkerlist.entrySet())
             {
                 Blips value = mymarkerlist.get(entry.getKey());
 
-                try {
-                    if(value.isSuperPrivate){//If it is super private
 
-                        if (privatecheckbox.isChecked() &&
-                                (value.Creator.toLowerCase().contains(userName.toLowerCase()) ||//If this blips is yours
-                                        ( friendarraylist.contains(value.Creator) && value.allowedfriends.contains(userName) ) )      ) //Ot if you are part of allowed friends and is your firend
-                        {
+                if (privatecheckbox.isChecked() && value.PublicPrivate.toLowerCase().contains("private".toLowerCase())) {
 
-                            categoryFilterPrivatenoanimation(value);
-
-                        }
-
-                    }
-
-                    else if (privatecheckbox.isChecked() && value.Icon.toLowerCase().contains("private".toLowerCase()) &&  ( friendarraylist.contains(value.Creator)
-                            || value.Creator.toLowerCase().contains(userName.toLowerCase()) )   ) {
-
-                        categoryFilterPrivatenoanimation(value);
-                    }
-
-
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    categoryFilterPrivatenoanimation(value);
                 }
 
 
-                if (publiccheckbox.isChecked() && value.Icon.toLowerCase().contains("public".toLowerCase())) {
+                if (publiccheckbox.isChecked() && value.PublicPrivate.toLowerCase().contains("public".toLowerCase())) {
                     categoryFilterPublicnoanimation(value);
                 }
+
 
             }
 
@@ -3095,12 +3049,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Blips value = mymarkerlistattending.get(entry.getKey());
 
 
-                if (privatecheckbox.isChecked() && value.Category.toLowerCase().contains("Private".toLowerCase())) {
+                if (privatecheckbox.isChecked() && value.PublicPrivate.toLowerCase().contains("Private".toLowerCase())) {
                     categoryFilterPrivatenoanimation(value);
                 }
 
 
-                if (publiccheckbox.isChecked() && value.Category.toLowerCase().contains("public".toLowerCase())) {
+                if (publiccheckbox.isChecked() && value.PublicPrivate.toLowerCase().contains("public".toLowerCase())) {
+                    categoryFilterPublicnoanimation(value);
+                }
+
+            }
+
+
+        }
+        else if (showmyplacesmode==3){
+            for (Map.Entry<String, Blips> entry : mymarkerlistplanning.entrySet())
+            {
+                Blips value = mymarkerlistplanning.get(entry.getKey());
+
+
+                if (privatecheckbox.isChecked() && value.PublicPrivate.toLowerCase().contains("Private".toLowerCase())) {
+                    categoryFilterPrivatenoanimation(value);
+                }
+
+
+                if (publiccheckbox.isChecked() && value.PublicPrivate.toLowerCase().contains("public".toLowerCase())) {
                     categoryFilterPublicnoanimation(value);
                 }
 
@@ -3493,6 +3466,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 reload();
 
 
+
                 //handle click
             }
         });
@@ -3698,8 +3672,49 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.setting_top_right, menu);
-        return true;
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.setting_top_right, menu);
+        search = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        MenuItem searchmenuItem = menu.findItem(R.id.action_search);
+
+
+
+
+        search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(final String query) {
+                mMap.clear();
+                blipsupdateontextchange(query);
+                return false;
+            }
+
+
+        });
+
+
+        MenuItem menuItem = menu.findItem(R.id.action_search);
+        MenuItemCompat.setOnActionExpandListener(menuItem, new MenuItemCompat.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                filterscroll.setVisibility(GONE);
+                return true;  // Return true to collapse action view
+            }
+
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                filterscroll.setVisibility(VISIBLE);
+                return true;  // Return true to expand action view
+            }
+        });
+
+
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -3712,6 +3727,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        if (id == R.id.action_refresh) {
+            Toast.makeText(this, "Refresh", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        if (id == R.id.action_search) {
+            Toast.makeText(this, "Search", Toast.LENGTH_SHORT).show();
             return true;
         }
 
@@ -4359,6 +4382,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
+
                 try {
                     LatLng x = new LatLng(  dataSnapshot.child("latitude").getValue(Double.class),  dataSnapshot.child("longitude").getValue(Double.class));
                    removegpsmarkerfromhashmap(x,dataSnapshot.child("Creator").getValue(String.class));
@@ -4387,19 +4411,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             for (Map.Entry<String, Marker> entry : gpslist.entrySet())
             {
                 Marker value = gpslist.get(entry.getKey());
-
-
                 //Check if updated child is your friend
-
                 //If friend then
                 if(friendarraylist.contains(creatorx)) {
                     value.remove();//update the marker
                     gpslist.remove(entry.getKey()); //remove old data of friend in list using key
-                       reload();
-
+                    reload();
 
                 }
-
 
             }
 
@@ -4726,19 +4745,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
        });
    }
 
-    public void getAddress(double lat, double lng) {
+    public String getAddress(double lat, double lng) {
+        String add = null;
         Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
         try {
             List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
             Address obj = addresses.get(0);
-            String add = obj.getAddressLine(0);
-            add = add + "\n" + obj.getCountryName();
-            add = add + "\n" + obj.getCountryCode();
-            add = add + "\n" + obj.getAdminArea();
-            add = add + "\n" + obj.getPostalCode();
-            add = add + "\n" + obj.getSubAdminArea();
-            add = add + "\n" + obj.getLocality();
-            add = add + "\n" + obj.getSubThoroughfare();
+           add = obj.getAddressLine(0);
+          //  add = add + "\n" + obj.getCountryName();
+          //  add = add + "\n" + obj.getCountryCode();
+          //  add = add + "\n" + obj.getAdminArea();
+          //  add = add + "\n" + obj.getPostalCode();
+          //  add = add + "\n" + obj.getSubAdminArea();
+          //  add = add + "\n" + obj.getLocality();
+          //  add = add + "\n" + obj.getSubThoroughfare();
 
             Log.v("IGA", "Address" + add);
             // Toast.makeText(this, "Address=>" + add,
@@ -4750,6 +4770,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             e.printStackTrace();
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+        return add;
     }
 
     public String getkey(Marker marker){
