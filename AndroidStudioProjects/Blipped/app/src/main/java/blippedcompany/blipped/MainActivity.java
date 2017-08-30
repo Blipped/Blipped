@@ -102,6 +102,9 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.google.maps.android.clustering.Cluster;
+import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
@@ -237,6 +240,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     HashMap<String,Blips> mymarkerlistattending=new HashMap<>();
     HashMap<String,Blips> mymarkerlistplanning=new HashMap<>();
     HashMap<String,Marker>gpslist=new HashMap<>();
+    Geocoder geocoder;
 
     String friendname;
 
@@ -283,7 +287,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Button goingbutton;
     Blips blipsattended;
 
-
+    ClusterManager<MyItem> mClusterManager;//Clustering
 
 
     @Override
@@ -392,11 +396,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onMapReady(GoogleMap googleMap) throws NullPointerException {
+        geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());//Geocoder for name
+
 
         TextView userNameText = (TextView) findViewById(R.id.currentUserTxt);
         userNameText.setText("Welcome " + userID.getEmail());
-
         getFriendsList();
+
         ImageButton editprofilepic = (ImageButton) findViewById(R.id.editprofilepicbutton);
         profilepic = (ImageView) findViewById(R.id.profilepic);
         loadprofilepic();
@@ -419,13 +425,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
+
+
+
         locationListen();
         mMap = googleMap;
         mMap.setTrafficEnabled(true);
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.getUiSettings().setIndoorLevelPickerEnabled(true);
-        googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_style));
+        googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
 
         showGPSToggle = (Switch) findViewById(R.id.showgpstoggle);
 
@@ -445,10 +454,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
         checkboxlisteners();
-
-        ShowBlipsPublic();
-        ShowBlipsPrivate();
-        ShowGPSLocation();
+        setUpClusterer();
+        ShowBlipsPublic();//Activate listener
+        ShowBlipsPrivate();//Activate listener
+        ShowGPSLocation();//Activte GPS listener
 
 
 
@@ -547,6 +556,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 bottomNavigationView.setVisibility(VISIBLE);
                 key=null;
                 selected = marker;
+
                 getkey(marker);
 
 
@@ -575,6 +585,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
+
+    }
+
+    private void setUpClusterer() {
+        // Position the map.
+        // Initialize the manager with the context and the map.
+        // (Activity extends context, so we can pass 'this' in the constructor.)
+        mClusterManager = new ClusterManager<MyItem>(this, getMap());
+
+        // Point the map's listeners at the listeners implemented by the cluster
+        // manager.
+        getMap().setOnCameraIdleListener(mClusterManager);
+        getMap().setOnMarkerClickListener(mClusterManager);
+        mClusterManager.setRenderer(new OwnIconRendered(getApplicationContext(), getMap(), mClusterManager));
+
+        // Add cluster items (markers) to the cluster manager.
 
     }
 
@@ -633,11 +659,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 @Override
                 public View getInfoWindow(final Marker marker) {
                     vgps = getLayoutInflater().inflate(R.layout.gpscustom_info_window, null);
-
-                    //Split Information int array
-
-
-
                     TextView title = vgps.findViewById(R.id.title);
                     title.setText(marker.getTitle());
 
@@ -993,6 +1014,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    public GoogleMap getMap() {
+        return mMap;
+    }
+
     public class MarkerCallback implements Callback {
         Marker marker=null;
 
@@ -1114,14 +1139,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             blipsadded.PublicPrivate +"123marcius"+
                             blipsadded.Category +"123marcius"+
                             blipsadded.Icon +"123marcius"  ;
-                    myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
-                            .position(newBlipCoordinates)
-                            .title(blipsadded.BlipName)
-                            .snippet(Description)
-                            .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
 
+            MarkerOptions markeroptions = new MarkerOptions()
+                    .position(newBlipCoordinates)
+                    .title(blipsadded.BlipName)
+                    .snippet(Description)
+                    .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName())));
+
+
+
+
+                    MyItem offsetItem = new MyItem(newBlipCoordinates,
+                                                   blipsadded.BlipName,
+                                                    Description,
+                                                  markeroptions.getIcon());
+
+
+                    mClusterManager.addItem(offsetItem);
+
+                    myMarker =   mMap.addMarker(markeroptions);
                     markerlist2.put(Integer.toString(markerkey), myMarker);
                     dropPinEffect(myMarker);
+                    myMarker.remove();
+
+
         } else {//If user is still viewing dont place only add blip
 
 
@@ -1143,17 +1184,53 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     blipsadded.PublicPrivate +"123marcius"+//6
                     blipsadded.Category +"123marcius" +//7
                     blipsadded.Icon +"123marcius"  ;//8
-            myMarker =   mMap.addMarker(new MarkerOptions() // Set Marker
+        MarkerOptions markeroptions = new MarkerOptions()
+                .position(newBlipCoordinates)
+                .title(blipsadded.BlipName)
+                .snippet(Description)
+                .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName())));
+        myMarker =   mMap.addMarker(markeroptions);
+        markerlist2.put(Integer.toString(markerkey), myMarker);
+        myMarker.remove();
 
-                    .position(newBlipCoordinates)
-                    .title(blipsadded.BlipName)
-                    .snippet(Description)
-                    .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(blipsadded.Icon, "mipmap", getPackageName()))));
 
+
+        MyItem offsetItem = new MyItem(newBlipCoordinates,
+                blipsadded.BlipName,
+                Description,
+                markeroptions.getIcon());
+
+        mClusterManager.setRenderer(new OwnIconRendered(getApplicationContext(), getMap(), mClusterManager));//set my own renderer
+        mClusterManager.addItem(offsetItem);//Add to cluster manager
 
 
 
     }
+
+    public class OwnIconRendered extends DefaultClusterRenderer<MyItem> {
+
+        public OwnIconRendered(Context context, GoogleMap map,
+                               ClusterManager<MyItem> clusterManager) {
+            super(context, map, clusterManager);
+        }
+
+        @Override
+        protected void onBeforeClusterItemRendered(MyItem item, MarkerOptions markerOptions) {
+            markerOptions.icon(item.getIcon());
+            markerOptions.snippet(item.getSnippet());
+            markerOptions.title(item.getTitle());
+            super.onBeforeClusterItemRendered(item, markerOptions);
+        }
+
+        @Override
+        protected void onBeforeClusterRendered(Cluster<MyItem> cluster, MarkerOptions markerOptions) {
+            super.onBeforeClusterRendered(cluster, markerOptions);
+            markerOptions.anchor(0.5f, 0.5f);
+        }
+
+
+    }
+
 
     public void takePicture() {
 
@@ -2979,6 +3056,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void reload(){
         mMap.clear();
+        mClusterManager.clearItems();
         // Iterate through hashmap
         if (showmyplacesmode==0) {
 
@@ -3726,15 +3804,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
+
             return true;
         }
         if (id == R.id.action_refresh) {
-            Toast.makeText(this, "Refresh", Toast.LENGTH_SHORT).show();
+            reload();
             return true;
         }
         if (id == R.id.action_search) {
-            Toast.makeText(this, "Search", Toast.LENGTH_SHORT).show();
+
             return true;
         }
 
@@ -4747,7 +4825,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public String getAddress(double lat, double lng) {
         String add = null;
-        Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+
         try {
             List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
             Address obj = addresses.get(0);

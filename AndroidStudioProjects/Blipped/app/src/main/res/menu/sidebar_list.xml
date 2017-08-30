@@ -4,7 +4,7 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_addfriend"
-            android:icon="@android:drawable/ic_menu_add"
+            android:icon="@drawable/ic_action_add"
             android:title="Add Friend" />
         <item
             android:id="@+id/nav_notifications"
@@ -17,17 +17,17 @@
 
         <item android:title="My Locations">
              <menu>
-                <item
-                    android:id="@+id/nav_manage"
-                    android:icon="@android:drawable/ic_menu_myplaces"
-                    android:title="My Events" />
+                 <item
+                     android:id="@+id/nav_manage"
+                     android:icon="@drawable/ic_action_map"
+                     android:title="My Events" />
                 <item
                     android:id="@+id/nav_completed"
-                    android:icon="@drawable/ic_menu_share"
+                    android:icon="@android:drawable/ic_menu_myplaces"
                     android:title="Attended Events" />
                  <item
                      android:id="@+id/nav_planned"
-                     android:icon="@drawable/ic_menu_share"
+                     android:icon="@drawable/ic_action_places"
                      android:title="Planned Events" />
 
             </menu>
