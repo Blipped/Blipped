@@ -211,6 +211,15 @@
                     tools:layout_editor_absoluteX="268dp"
                     tools:layout_editor_absoluteY="323dp" />
 
+                <Button
+                    android:id="@+id/sharebutton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="5"
+                    android:background="@drawable/com_facebook_button_background"
+                    android:text="Share"
+                    android:textColor="@color/cardview_light_background" />
+
             </LinearLayout>
 
             <TextView

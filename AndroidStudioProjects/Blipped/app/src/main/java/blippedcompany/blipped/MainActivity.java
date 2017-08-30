@@ -73,6 +73,12 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.facebook.CallbackManager;
+import com.facebook.share.model.ShareLinkContent;
+import com.facebook.share.model.ShareOpenGraphAction;
+import com.facebook.share.model.ShareOpenGraphContent;
+import com.facebook.share.model.ShareOpenGraphObject;
+import com.facebook.share.widget.ShareDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -289,6 +295,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     ClusterManager<MyItem> mClusterManager;//Clustering
 
+    CallbackManager callbackManager;
+    ShareDialog shareDialog;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -318,7 +327,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 findViewById(R.id.bottom_navigation);
 
 
-
+        callbackManager = CallbackManager.Factory.create();
+        shareDialog = new ShareDialog(this);
 
 
 
@@ -430,11 +440,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         locationListen();
         mMap = googleMap;
-        mMap.setTrafficEnabled(true);
+        mMap.setTrafficEnabled(false);
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.getUiSettings().setIndoorLevelPickerEnabled(true);
         googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
+
 
         showGPSToggle = (Switch) findViewById(R.id.showgpstoggle);
 
@@ -458,6 +469,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ShowBlipsPublic();//Activate listener
         ShowBlipsPrivate();//Activate listener
         ShowGPSLocation();//Activte GPS listener
+        reload();
 
 
 
@@ -788,6 +800,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         TextView BlipInfoCreatedIn = mBlipInfoView.findViewById(R.id.BlipInfoCreatedIn);
         goingbutton = mBlipInfoView.findViewById(R.id.goingbutton);
         Button finishevent = mBlipInfoView.findViewById(R.id.finisheventbutton);
+        Button sharebutton = mBlipInfoView.findViewById(R.id.sharebutton);
         mBuilder.setView(mBlipInfoView);
        final  AlertDialog dialog = mBuilder.create();
         dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
@@ -882,6 +895,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View view) {
                 showImage(marker);
+            }
+        });
+        sharebutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+               Share(marker.getPosition(),dataarray[1]);
             }
         });
         final Blips data = new Blips(marker.getPosition().latitude,
@@ -2015,7 +2034,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 break;
         }
-
+        super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
 
 
     }
@@ -2746,7 +2766,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void ShowMyBlips(DatabaseReference myref, final HashMap<String,Blips> markerlistselected) {
-
+        markerlistselected.clear();
+        mClusterManager.clearItems();
       myref.addChildEventListener(new ChildEventListener() {
 
             @Override
@@ -3055,6 +3076,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void reload(){
+
         mMap.clear();
         mClusterManager.clearItems();
         // Iterate through hashmap
@@ -3490,6 +3512,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void blipsupdateontextchange(final String query) {
         mMap.clear();
+        mClusterManager.clearItems();
         Toast.makeText(this, query, Toast.LENGTH_SHORT).show();
         // Iterate through hashmap
         for (Map.Entry<String, Blips> entry : markerlist.entrySet())
@@ -3847,6 +3870,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             showmyplacesmode=1;
             backtonormalview.setText("Currently showing your blips \n Click here to back");
             mMap.clear();
+            mymarkerlist.clear();
             ShowMyBlips(UsersEmailBlips,mymarkerlist);
 
         } else if (id == R.id.nav_completed) {
@@ -3854,6 +3878,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             showmyplacesmode=2;
             backtonormalview.setText("Currently showing your attended blips \n Click here to back");
             mMap.clear();
+            mymarkerlistattending.clear();
             ShowMyBlips(UsersEmailBlipsAttended,mymarkerlistattending);
 
 
@@ -3862,6 +3887,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             showmyplacesmode=3;
             backtonormalview.setText("Currently showing your planned blips \n Click here to back");
             mMap.clear();
+            mymarkerlistplanning.clear();
             ShowMyBlips(UsersEmailBlipsPlanned,mymarkerlistplanning);
 
 
@@ -4902,6 +4928,39 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     return key;
+    }
+
+    public  void Share(LatLng location, String s){
+        if (ShareDialog.canShow(ShareLinkContent.class)) {
+
+
+
+
+            ShareOpenGraphObject object = new ShareOpenGraphObject.Builder()
+                    .putString("og:type", "place")
+                    .putString("og:url", "https://s-static.ak.fbcdn.net/images/devsite/attachment_blank.png")
+                    .putString("og:title", "Sample Course")
+                    .putString("og:image", "https://s-static.ak.fbcdn.net/images/devsite/attachment_blank.png")
+                    .putString("place:location:latitude", Double.toString(location.latitude))
+                    .putString("place:location:longitude", Double.toString(location.longitude))
+                    .build();
+            ShareOpenGraphAction action = new ShareOpenGraphAction.Builder()
+                    .setActionType("place.id")
+                    .putObject("place", object)
+                    .build();
+            ShareOpenGraphContent contentx = new ShareOpenGraphContent.Builder()
+                    .setPreviewPropertyName("place")
+                    .setAction(action)
+                    .build();
+
+            ShareLinkContent linkContent = new ShareLinkContent.Builder()
+                    .setContentUrl(Uri.parse("http://maps.google.com/?q="+location.latitude+","+location.longitude))
+                    .build();
+
+            shareDialog.show(linkContent);
+
+
+        }
     }
 
 }

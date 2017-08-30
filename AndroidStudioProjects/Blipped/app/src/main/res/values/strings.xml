@@ -36,4 +36,6 @@
     <string name="action_search">Search</string>
     <string name="action_check_updates">Refresh</string>
     <string name="search_hint">Search here...</string>
+    <string name="facebook_app_id" translatable="false">114634642574362</string>
+
 </resources>
