@@ -13,10 +13,11 @@
 
     <TextView
         android:id="@+id/currentUserTxt"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="284dp"
+        android:layout_height="17dp"
         android:layout_marginBottom="15dp"
         android:layout_marginStart="19dp"
+        android:autoText="true"
         android:text="Hello User"
         android:textColor="@android:color/background_dark"
         app:layout_constraintBottom_toBottomOf="parent"

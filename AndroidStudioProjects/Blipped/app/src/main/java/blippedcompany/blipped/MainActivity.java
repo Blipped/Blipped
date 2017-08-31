@@ -10,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
@@ -117,7 +116,6 @@ import com.squareup.picasso.Picasso;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.ParseException;
@@ -126,7 +124,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -146,6 +143,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     LatLng cursor_coordinate;
     SearchView search ;
     GoogleApiClient mGoogleApiClient;
+    String locationgeocoder;
 
 
 
@@ -246,7 +244,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     HashMap<String,Blips> mymarkerlistattending=new HashMap<>();
     HashMap<String,Blips> mymarkerlistplanning=new HashMap<>();
     HashMap<String,Marker>gpslist=new HashMap<>();
-    Geocoder geocoder;
+
 
     String friendname;
 
@@ -406,7 +404,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onMapReady(GoogleMap googleMap) throws NullPointerException {
-        geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());//Geocoder for name
+
 
 
         TextView userNameText = (TextView) findViewById(R.id.currentUserTxt);
@@ -444,6 +442,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.getUiSettings().setIndoorLevelPickerEnabled(true);
+
         googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
 
 
@@ -568,6 +567,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 bottomNavigationView.setVisibility(VISIBLE);
                 key=null;
                 selected = marker;
+
+                new AsyncGeocoder().execute(new AsyncGeocoderObject(
+                        new Geocoder(MainActivity.this), // the geocoder object to get address
+                        selected.getPosition(), // location object,
+                        locationgeocoder // the textview to set address on
+                ));
 
                 getkey(marker);
 
@@ -976,7 +981,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 //TIME SETTING
         BlipInfoDetails.setText(dataarray[1]);
-        BlipInfoCreatedIn.setText("Created on "+dataarray[3] + " At "+getAddress(selected.getPosition().latitude,selected.getPosition().longitude));
+        BlipInfoCreatedIn.setText("Created on "+dataarray[3] + " At "+locationgeocoder);
         String[] startdatetime = new String[0];
         String[] startyearmonthday = new String[0];
 
@@ -4848,34 +4853,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
            }
        });
    }
-
-    public String getAddress(double lat, double lng) {
-        String add = null;
-
-        try {
-            List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
-            Address obj = addresses.get(0);
-           add = obj.getAddressLine(0);
-          //  add = add + "\n" + obj.getCountryName();
-          //  add = add + "\n" + obj.getCountryCode();
-          //  add = add + "\n" + obj.getAdminArea();
-          //  add = add + "\n" + obj.getPostalCode();
-          //  add = add + "\n" + obj.getSubAdminArea();
-          //  add = add + "\n" + obj.getLocality();
-          //  add = add + "\n" + obj.getSubThoroughfare();
-
-            Log.v("IGA", "Address" + add);
-            // Toast.makeText(this, "Address=>" + add,
-            // Toast.LENGTH_SHORT).show();
-
-            // TennisAppActivity.showDialog(add);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-        return add;
-    }
 
     public String getkey(Marker marker){
 
