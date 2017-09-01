@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     //Firebase Authentication
     FirebaseAuth mAuth = FirebaseAuth.getInstance();
     FirebaseUser userID = mAuth.getCurrentUser();
-    final String userName = removecom(userID.getEmail());
+    final String userName =  ReplacePeriodiWithComma(userID.getEmail());
 
     //Firebase Database
     FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -222,8 +222,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     RadioButton publicradio;
     RadioButton privateradio;
     RadioButton SuperPrivateradio;
-    String[] CustomBlips = {"Arts", "Transportation", "Business",
-            "Community", "Family & Education", "Fashion", "Media", "Food", "Health", "Holiday", "Music", "Sports", "Travel"};
+    String[] CustomBlips = {"Arts",
+            "Transportation",
+            "Business",
+            "Community",
+            "Family & Education",
+            "Fashion",
+            "Media",
+            "Food",
+            "Health",
+            "Holiday",
+            "Music",
+            "Sports",
+            "Travel"};
     String blipIcon;
     String PublicPrivate;
     String Category;
@@ -300,7 +311,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        liveGPSEmail.onDisconnect().setValue(null);
+
         setContentView(R.layout.sidebar);
         friendarraylist = new ArrayList<String>();
         friendrequestlist = new ArrayList<String>();
@@ -404,23 +415,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onMapReady(GoogleMap googleMap) throws NullPointerException {
-
-
-
-        TextView userNameText = (TextView) findViewById(R.id.currentUserTxt);
-        userNameText.setText("Welcome " + userID.getEmail());
+        liveGPSEmail.onDisconnect().setValue(null);
         getFriendsList();
-
         ImageButton editprofilepic = (ImageButton) findViewById(R.id.editprofilepicbutton);
         profilepic = (ImageView) findViewById(R.id.profilepic);
         loadprofilepic();
 
-        editprofilepic.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                editprofpic();
-            }
-        });
+
 
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -443,8 +444,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.getUiSettings().setIndoorLevelPickerEnabled(true);
 
-        googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.auber_style));
-
+        googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_style));
+        TextView userNameText = (TextView) findViewById(R.id.currentUserTxt);
+        userNameText.setText("Welcome " + userID.getEmail());
 
         showGPSToggle = (Switch) findViewById(R.id.showgpstoggle);
 
@@ -469,6 +471,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ShowBlipsPrivate();//Activate listener
         ShowGPSLocation();//Activte GPS listener
         reload();
+
+        editprofilepic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                editprofpic();
+            }
+        });
 
 
 
@@ -880,9 +889,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-
         BlipInfoTitle.setText(marker.getTitle());
-        BlipInfoCategoryandHost.setText(dataarray[6]+"  "+dataarray[7]+"  " +"Hosted by "+dataarray[0]);
+        BlipInfoCategoryandHost.setText(dataarray[6]+"  "+dataarray[7]+"  " +"Hosted by "+ ReplaceCommaWithPeriod(dataarray[0]));
 
         if (dataarray[2] != null) {
             RequestOptions options = new RequestOptions()
@@ -1293,8 +1301,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button takePhoto =  mBlipAddView.findViewById(R.id.takePhoto);
         imgView = mBlipAddView.findViewById(R.id.imgView);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_dropdown_item_1line, friendarraylist);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, friendarraylist);
         final MultiAutoCompleteTextView allowedfriendsmultiline = mBlipAddView.findViewById(R.id.allowfriendsedittext);
 
         allowedfriendsmultiline.setAdapter(adapter);
@@ -1860,7 +1867,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                                     BlipStartDate + " " + BlipStartTime,
                                                     BlipEndDate + " " + BlipEndTime,
                                                     imageURLLink,
-                                                    allowedfriendsmultiline.getText().toString(),
+                                                    ReplacePeriodiWithComma(allowedfriendsmultiline.getText().toString()),
                                                     isSuperPrivate,
                                                     "Private",
                                                     Category,
@@ -1901,7 +1908,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         BlipStartDate + " " + BlipStartTime,
                                         BlipEndDate + " " + BlipEndTime,
                                         null,
-                                        allowedfriendsmultiline.getText().toString(),
+                                        ReplacePeriodiWithComma(allowedfriendsmultiline.getText().toString()),
                                         isSuperPrivate,
                                         "Private",
                                         Category,
@@ -2057,7 +2064,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         for (DataSnapshot datacollected : dataSnapshot.getChildren()) {
 
-                            String creator = datacollected.child("Creator").getValue(String.class);
+                            String creator =  ReplaceCommaWithPeriod(datacollected.child("Creator").getValue(String.class));
 
                             //We add this because firebase queries sucks
                             if (datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude && creator.toLowerCase().contains(userName.toLowerCase())) {
@@ -2084,7 +2091,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                         for (DataSnapshot datacollected : dataSnapshot.getChildren()) {
-                            String creator = datacollected.child("Creator").getValue(String.class);
+                            String creator =  ReplaceCommaWithPeriod(datacollected.child("Creator").getValue(String.class));
 
                             if (datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude && creator.toLowerCase().contains(userName.toLowerCase())) {
 
@@ -2384,7 +2391,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         for (DataSnapshot datacollected : dataSnapshot.getChildren()) {
 
-                            String creator = datacollected.child("Creator").getValue(String.class);
+                            String creator =  ReplaceCommaWithPeriod(datacollected.child("Creator").getValue(String.class));
 
                             //We add this because firebase queries sucks
                             if (datacollected.child("longitude").getValue(Double.class) == coordinatetobeupdated.longitude && creator.toLowerCase().contains(userName.toLowerCase())) {
@@ -2422,7 +2429,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                         for (DataSnapshot datacollected : dataSnapshot.getChildren()) {
-                            String creator = datacollected.child("Creator").getValue(String.class);
+                            String creator =  ReplaceCommaWithPeriod(datacollected.child("Creator").getValue(String.class));
 
                             if (datacollected.child("longitude").getValue(Double.class) == coordinatetobeupdated.longitude && creator.toLowerCase().contains(userName.toLowerCase())) {
 
@@ -2797,7 +2804,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Blips blipsadded = new Blips(latitude,
                         longitude,
                         newBlipName,
-                        creator,
+                        ReplaceCommaWithPeriod(creator),
                         Details,
                         blipIcon,
                         DateCreated,
@@ -2910,7 +2917,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Blips blipsadded = new Blips(latitude,
                         longitude,
                         newBlipName,
-                        creator,
+                        ReplaceCommaWithPeriod(creator),
                         Details,
                         blipIcon,
                         DateCreated,
@@ -2999,7 +3006,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Blips blipsadded = new Blips(latitude,
                         longitude,
                         newBlipName,
-                        creator,
+                        ReplaceCommaWithPeriod(creator),
                         Details,
                         blipIcon,
                         DateCreated,
@@ -3414,7 +3421,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 if(!friendarraylist.contains( friendname)){
 
-                    friendarraylist.add( friendname);
+                    friendarraylist.add( ReplaceCommaWithPeriod(friendname));
 
                     DatabaseReference UsersxEmailxprofilepic = database.getReference("users").child(friendname).child("profilepic");
 
@@ -3424,8 +3431,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             //Get Download link for profile pic
                             String profilepiclink =   dataSnapshot.child("MyProfilePic").getValue(String.class);
                             friendprofilepicarraylist.add(profilepiclink);
-
-
 
                         }
 
@@ -3506,11 +3511,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private static String ReplacePeriodiWithComma(String str) {
 
-
         if (str == null) {
             return null;
         } else {
             return    str.replace(".", ",");
+        }
+
+    }
+    private static String ReplaceCommaWithPeriod(String str) {
+
+        if (str == null) {
+            return null;
+        } else {
+            return    str.replace(",", ".");
         }
 
     }
@@ -3762,14 +3775,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-
+            mAuth.signOut();
             super.onBackPressed();
             liveGPSEmail.setValue(null);
             locationManager.removeUpdates(locationListener);
-            locationListener = null;
 
-            mAuth.signOut();
-            MainActivity.this.finish();
+
+             finish();
             Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
 
         }
@@ -4095,7 +4107,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             //Handle TextView and display string from your list
             final TextView listItemText = view.findViewById(R.id.list_item_string);
-            listItemText.setText(list.get(position));
+            listItemText.setText(ReplaceCommaWithPeriod(list.get(position)));
 
             ImageButton friendrequestviewprofile = view.findViewById(R.id.friendrequestviewprofile);
             try {
@@ -4173,7 +4185,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         AddFriend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                friendrequestemail = removecom(friendemailEt.getText().toString());
+                friendrequestemail = ReplacePeriodiWithComma(friendemailEt.getText().toString());
                 if (validateAddFriend()) {
 
                     Users.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -4371,8 +4383,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                if(showGPSToggle.isChecked()){
-
-
                      Blips gpsblips = new Blips(location.getLatitude(),
                            location.getLongitude(),
                            userName,
@@ -4398,7 +4408,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                    liveGPSEmail.setValue(null);
                }
-
 
             }
 
@@ -4436,11 +4445,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onChildAdded(final DataSnapshot dataSnapshot, String s) {
 
-                    String creator = dataSnapshot.child("Creator").getValue(String.class);
+                String creator =ReplaceCommaWithPeriod(dataSnapshot.child("Creator").getValue(String.class)) ;
                     final String imagedownloadlink = dataSnapshot.child("imageURL").getValue(String.class);
-                    if(friendarraylist.contains(creator)) {
+                    if(friendarraylist.contains(ReplaceCommaWithPeriod(creator))) {
 
-                           Bitmap mybitmap = null;
+
                         final LatLng x = new LatLng(  dataSnapshot.child("latitude").getValue(Double.class),  dataSnapshot.child("longitude").getValue(Double.class));
 
 
@@ -4516,6 +4525,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         try {
+            creatorx=ReplaceCommaWithPeriod(creatorx);
             // Iterate through hashmap
             for (Map.Entry<String, Marker> entry : gpslist.entrySet())
             {
@@ -4542,7 +4552,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     private void updategpsmarkerfromhashmap(LatLng updatedcoordinate, String creatorx){
 
-        try {
+        try { creatorx=ReplaceCommaWithPeriod(creatorx);
             // Iterate through hashmap
             for (Map.Entry<String, Marker> entry : gpslist.entrySet())
             {
@@ -4631,7 +4641,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Button deleteBtn = null;
             try {
                 final TextView namestext = view.findViewById(R.id.list_item_string1);
-                namestext.setText(names.get(position)+".com");
+                namestext.setText(ReplaceCommaWithPeriod(names.get(position)));
 
                 ImageButton friendlistviewprofile = view.findViewById(R.id.friendlistviewprofile);
 

@@ -28,19 +28,19 @@
 
     <TextView
         android:id="@+id/list_item_string"
-        android:layout_width="125dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="80dp"
+        android:layout_marginStart="80dp"
+        android:layout_marginTop="2dp"
         android:layout_weight="1"
         android:paddingLeft="8dp"
         android:text="Empty"
         android:textSize="12sp"
         android:textStyle="bold"
-        android:layout_marginLeft="80dp"
         app:layout_constraintLeft_toLeftOf="parent"
-        tools:layout_constraintTop_creator="1"
-        android:layout_marginStart="80dp"
-        android:layout_marginTop="2dp"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_constraintTop_creator="1" />
 
     <Button
         android:id="@+id/add_btn"

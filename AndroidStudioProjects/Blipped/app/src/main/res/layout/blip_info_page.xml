@@ -125,7 +125,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Public     Hosted by Blipped"
-                        android:textColor="?attr/actionModeSplitBackground"
+                        android:textColor="@android:color/black"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
@@ -203,6 +203,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="8"
+                    android:background="@color/com_facebook_button_login_silver_background_color"
                     android:text="Not Going"
                     android:textAlignment="center"
                     android:textSize="12sp"
