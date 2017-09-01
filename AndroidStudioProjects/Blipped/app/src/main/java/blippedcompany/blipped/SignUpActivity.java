@@ -13,24 +13,33 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.RadioButton;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class SignUpActivity extends AppCompatActivity {
 
-    private EditText inputEmail, inputPassword;
+    private EditText inputEmail, inputPassword,age;
     private Button btnSignIn, btnSignUp, btnResetPassword;
     private ProgressBar progressBar;
     private FirebaseAuth auth;
+    private RadioButton male,female;
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    //initialize lat and lng values
+    final DatabaseReference Users = database.getReference("users");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
+        //Firebase Database
+
 
         //Get Firebase auth instance
         auth = FirebaseAuth.getInstance();
@@ -41,6 +50,9 @@ public class SignUpActivity extends AppCompatActivity {
         inputPassword = (EditText) findViewById(R.id.password);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         btnResetPassword = (Button) findViewById(R.id.btn_reset_password);
+        age =(EditText)findViewById(R.id.age);
+        male=(RadioButton)findViewById(R.id.male);
+        female=(RadioButton)findViewById(R.id.female) ;
 
         btnResetPassword.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -95,6 +107,16 @@ public class SignUpActivity extends AppCompatActivity {
                                             Toast.LENGTH_SHORT).show();
                                 } else {
                                     startActivity(new Intent(SignUpActivity.this, MainActivity.class));
+                                    String email= auth.getCurrentUser().getEmail();
+                                    MainActivity replace = new MainActivity();
+                                    Users.child( replace.ReplacePeriodiWithComma(email)).child("Age").setValue(age.getText().toString());
+                                    if(male.isChecked()){
+                                        Users.child( replace.ReplacePeriodiWithComma(email)).child("Gender").setValue("Male");
+                                    }
+                                    if(female.isChecked()){
+                                        Users.child( replace.ReplacePeriodiWithComma(email)).child("Gender").setValue("Female");
+                                    }
+
                                     finish();
                                 }
                             }

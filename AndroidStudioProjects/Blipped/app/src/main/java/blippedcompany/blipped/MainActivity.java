@@ -3509,7 +3509,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private static String ReplacePeriodiWithComma(String str) {
+    public static String ReplacePeriodiWithComma(String str) {
 
         if (str == null) {
             return null;
@@ -3518,7 +3518,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
     }
-    private static String ReplaceCommaWithPeriod(String str) {
+    public static String ReplaceCommaWithPeriod(String str) {
 
         if (str == null) {
             return null;

@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
+    android:padding="0dp"
     tools:context="blippedcompany.blipped.LoginActivity">
 
     <LinearLayout
@@ -17,14 +18,6 @@
         android:orientation="vertical"
         android:padding="@dimen/activity_horizontal_margin">
 
-
-        <ImageView
-            android:layout_width="@dimen/logo_w_h"
-            android:layout_height="@dimen/logo_w_h"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="30dp"
-            android:src="@mipmap/ic_logo"
-            app:srcCompat="@mipmap/ic_logo" />
 
         <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
@@ -60,6 +53,59 @@
                 android:imeActionId="@+id/login"
                 android:imeOptions="actionUnspecified"
                 android:inputType="textPassword"
+                android:maxLines="1"
+                android:shadowColor="@android:color/white"
+                android:singleLine="true"
+                android:textColor="@android:color/white"
+                android:textColorHighlight="@android:color/white"
+                android:textColorHint="@android:color/white"
+                android:textColorLink="@android:color/white" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <TextView
+            android:id="@+id/gendertitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="  Gender"
+            android:textColor="@color/colorAccent"
+            android:textSize="18sp" />
+
+        <LinearLayout
+            android:id="@+id/Gender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/male"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:checked="true"
+                android:text="Male" />
+
+            <RadioButton
+                android:id="@+id/female"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Female" />
+        </LinearLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColorHint="@android:color/white">
+
+            <EditText
+                android:id="@+id/age"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:focusableInTouchMode="true"
+                android:hint="Age"
+                android:imeOptions="actionUnspecified"
+                android:inputType="number"
                 android:maxLines="1"
                 android:shadowColor="@android:color/white"
                 android:singleLine="true"
