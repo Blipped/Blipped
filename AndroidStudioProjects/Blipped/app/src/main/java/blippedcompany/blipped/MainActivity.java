@@ -528,37 +528,51 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         switch (item.getItemId()) {
                             case R.id.action_delete: {
                                     try {
-                                        if (selected.getSnippet().contains(userName)) {
-                                            if (showmyplacesmode==0) {
-                                               DeleteBlip(selected);
-                                            }
-                                            else{
-                                                Toast.makeText(MainActivity.this, "Cannot Delete Blip in this Mode", Toast.LENGTH_SHORT).show();
-                                            }
 
-                                            bottomNavigationView.setVisibility(GONE);
-                                            break;
+
+                                        dataarray = selected.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                                        String temp = ReplacePeriodiWithComma(dataarray[0]);
+
+                                        if (temp.contains(userName)) {
+
+                                                    if (showmyplacesmode==0) {
+                                                       DeleteBlip(selected);
+                                                    }
+                                                    else{
+                                                        Toast.makeText(MainActivity.this, "Cannot Delete Blip in this Mode", Toast.LENGTH_SHORT).show();
+                                                    }
+
+                                                   bottomNavigationView.setVisibility(GONE);
+
                                         }
+
                                     } catch (NullPointerException e) {
                                         Toast.makeText(MainActivity.this, "No marker selected", Toast.LENGTH_SHORT).show();
                                     }
+                                break;
                             }
 
                             case R.id.action_edit: {
                                     try {
-                                        if (selected.getSnippet().contains(userName)) {
+                                        dataarray = selected.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                                        String temp = ReplacePeriodiWithComma(dataarray[0]);
+
+                                        if (temp.contains(userName)) {
+
                                             if (showmyplacesmode==0) {
+
                                                EditBlip(selected);
                                             }
                                             else{
                                                 Toast.makeText(MainActivity.this, "Cannot Edit Blip in this Mode", Toast.LENGTH_SHORT).show();
                                             }
 
-                                            break;
+
                                         }
                                     } catch (NullPointerException e) {
 
                                     }
+                                    break;
                             }
 
 
@@ -3283,86 +3297,86 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void categoryFilterPrivate(Blips blipsadded) {
 
-        if (checkboxArts.isChecked() && blipsadded.Icon.toLowerCase().contains("art".toLowerCase())) {
+        if (checkboxArts.isChecked() && blipsadded.Category.toLowerCase().contains("art".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxBusiness.isChecked() && blipsadded.Icon.toLowerCase().contains("business".toLowerCase())) {
+        if (checkboxBusiness.isChecked() && blipsadded.Category.toLowerCase().contains("business".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxCommunity.isChecked() && blipsadded.Icon.toLowerCase().contains("community".toLowerCase())) {
+        if (checkboxCommunity.isChecked() && blipsadded.Category.toLowerCase().contains("community".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxFamily.isChecked() && blipsadded.Icon.toLowerCase().contains("family".toLowerCase())) {
+        if (checkboxFamily.isChecked() && blipsadded.Category.toLowerCase().contains("family".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxFashion.isChecked() && blipsadded.Icon.toLowerCase().contains("fashion".toLowerCase())) {
+        if (checkboxFashion.isChecked() && blipsadded.Category.toLowerCase().contains("fashion".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxFood.isChecked() && blipsadded.Icon.toLowerCase().contains("food".toLowerCase())) {
+        if (checkboxFood.isChecked() && blipsadded.Category.toLowerCase().contains("food".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxHealth.isChecked() && blipsadded.Icon.toLowerCase().contains("health".toLowerCase())) {
+        if (checkboxHealth.isChecked() && blipsadded.Category.toLowerCase().contains("health".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxHoliday.isChecked() && blipsadded.Icon.toLowerCase().contains("holiday".toLowerCase())) {
+        if (checkboxHoliday.isChecked() && blipsadded.Category.toLowerCase().contains("holiday".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxMedia.isChecked() && blipsadded.Icon.toLowerCase().contains("media".toLowerCase())) {
+        if (checkboxMedia.isChecked() && blipsadded.Category.toLowerCase().contains("media".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxTransportation.isChecked() && blipsadded.Icon.toLowerCase().contains("auto".toLowerCase())) {
+        if (checkboxTransportation.isChecked() && blipsadded.Category.toLowerCase().contains("auto".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxTravel.isChecked() && blipsadded.Icon.toLowerCase().contains("travel".toLowerCase())) {
+        if (checkboxTravel.isChecked() && blipsadded.Category.contains("travel".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxSports.isChecked() && blipsadded.Icon.toLowerCase().contains("sports".toLowerCase())) {
+        if (checkboxSports.isChecked() && blipsadded.Category.toLowerCase().contains("sports".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxMusic.isChecked() && blipsadded.Icon.toLowerCase().contains("music".toLowerCase())) {
+        if (checkboxMusic.isChecked() && blipsadded.Category.toLowerCase().contains("music".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
 
     }
 
     public void categoryFilterPublic(Blips blipsadded) {
-        if (checkboxArts.isChecked() && blipsadded.Icon.toLowerCase().contains("art".toLowerCase())) {
+        if (checkboxArts.isChecked() && blipsadded.Category.toLowerCase().contains("art".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxBusiness.isChecked() && blipsadded.Icon.toLowerCase().contains("business".toLowerCase())) {
+        if (checkboxBusiness.isChecked() && blipsadded.Category.toLowerCase().contains("business".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxCommunity.isChecked() && blipsadded.Icon.toLowerCase().contains("community".toLowerCase())) {
+        if (checkboxCommunity.isChecked() && blipsadded.Category.toLowerCase().contains("community".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxFamily.isChecked() && blipsadded.Icon.toLowerCase().contains("family".toLowerCase())) {
+        if (checkboxFamily.isChecked() && blipsadded.Category.toLowerCase().contains("family".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxFashion.isChecked() && blipsadded.Icon.toLowerCase().contains("fashion".toLowerCase())) {
+        if (checkboxFashion.isChecked() &&blipsadded.Category.toLowerCase().contains("fashion".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxFood.isChecked() && blipsadded.Icon.toLowerCase().contains("food".toLowerCase())) {
+        if (checkboxFood.isChecked() && blipsadded.Category.toLowerCase().contains("food".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxHealth.isChecked() && blipsadded.Icon.toLowerCase().contains("health".toLowerCase())) {
+        if (checkboxHealth.isChecked() && blipsadded.Category.toLowerCase().contains("health".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxHoliday.isChecked() && blipsadded.Icon.toLowerCase().contains("holiday".toLowerCase())) {
+        if (checkboxHoliday.isChecked() && blipsadded.Category.toLowerCase().contains("holiday".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxMedia.isChecked() && blipsadded.Icon.toLowerCase().contains("media".toLowerCase())) {
+        if (checkboxMedia.isChecked() && blipsadded.Category.toLowerCase().contains("media".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxTransportation.isChecked() && blipsadded.Icon.toLowerCase().contains("auto".toLowerCase())) {
+        if (checkboxTransportation.isChecked() && blipsadded.Category.toLowerCase().contains("auto".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxTravel.isChecked() && blipsadded.Icon.toLowerCase().contains("travel".toLowerCase())) {
+        if (checkboxTravel.isChecked() && blipsadded.Category.toLowerCase().contains("travel".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxSports.isChecked() && blipsadded.Icon.toLowerCase().contains("sports".toLowerCase())) {
+        if (checkboxSports.isChecked() && blipsadded.Category.toLowerCase().contains("sports".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
-        if (checkboxMusic.isChecked() && blipsadded.Icon.toLowerCase().contains("music".toLowerCase())) {
+        if (checkboxMusic.isChecked() && blipsadded.Category.toLowerCase().contains("music".toLowerCase())) {
             PlaceMarker(blipsadded);
         }
 
@@ -3371,86 +3385,86 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void categoryFilterPrivatenoanimation(Blips blipsadded) {
 
-        if (checkboxArts.isChecked() && blipsadded.Icon.toLowerCase().contains("art".toLowerCase())) {
+        if (checkboxArts.isChecked() &&blipsadded.Category.toLowerCase().contains("art".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxBusiness.isChecked() && blipsadded.Icon.toLowerCase().contains("business".toLowerCase())) {
+        if (checkboxBusiness.isChecked() && blipsadded.Category.toLowerCase().contains("business".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxCommunity.isChecked() && blipsadded.Icon.toLowerCase().contains("community".toLowerCase())) {
+        if (checkboxCommunity.isChecked() && blipsadded.Category.toLowerCase().contains("community".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxFamily.isChecked() && blipsadded.Icon.toLowerCase().contains("family".toLowerCase())) {
+        if (checkboxFamily.isChecked() && blipsadded.Category.toLowerCase().contains("family".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxFashion.isChecked() && blipsadded.Icon.toLowerCase().contains("fashion".toLowerCase())) {
+        if (checkboxFashion.isChecked() && blipsadded.Category.toLowerCase().contains("fashion".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxFood.isChecked() && blipsadded.Icon.toLowerCase().contains("food".toLowerCase())) {
+        if (checkboxFood.isChecked() && blipsadded.Category.toLowerCase().contains("food".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxHealth.isChecked() && blipsadded.Icon.toLowerCase().contains("health".toLowerCase())) {
+        if (checkboxHealth.isChecked() && blipsadded.Category.toLowerCase().contains("health".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxHoliday.isChecked() && blipsadded.Icon.toLowerCase().contains("holiday".toLowerCase())) {
+        if (checkboxHoliday.isChecked() && blipsadded.Category.toLowerCase().contains("holiday".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxMedia.isChecked() && blipsadded.Icon.toLowerCase().contains("media".toLowerCase())) {
+        if (checkboxMedia.isChecked() && blipsadded.Category.toLowerCase().contains("media".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxTransportation.isChecked() && blipsadded.Icon.toLowerCase().contains("auto".toLowerCase())) {
+        if (checkboxTransportation.isChecked() && blipsadded.Category.toLowerCase().contains("auto".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxTravel.isChecked() && blipsadded.Icon.toLowerCase().contains("travel".toLowerCase())) {
+        if (checkboxTravel.isChecked() && blipsadded.Category.toLowerCase().contains("travel".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxSports.isChecked() && blipsadded.Icon.toLowerCase().contains("sports".toLowerCase())) {
+        if (checkboxSports.isChecked() && blipsadded.Category.toLowerCase().contains("sports".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxMusic.isChecked() && blipsadded.Icon.toLowerCase().contains("music".toLowerCase())) {
+        if (checkboxMusic.isChecked() && blipsadded.Category.toLowerCase().contains("music".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
 
     }
 
     public void categoryFilterPublicnoanimation(Blips blipsadded) {
-        if (checkboxArts.isChecked() && blipsadded.Icon.toLowerCase().contains("art".toLowerCase())) {
+        if (checkboxArts.isChecked() && blipsadded.Category.toLowerCase().contains("art".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxBusiness.isChecked() && blipsadded.Icon.toLowerCase().contains("business".toLowerCase())) {
+        if (checkboxBusiness.isChecked() && blipsadded.Category.toLowerCase().contains("business".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxCommunity.isChecked() && blipsadded.Icon.toLowerCase().contains("community".toLowerCase())) {
+        if (checkboxCommunity.isChecked() && blipsadded.Category.toLowerCase().contains("community".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxFamily.isChecked() && blipsadded.Icon.toLowerCase().contains("family".toLowerCase())) {
+        if (checkboxFamily.isChecked() && blipsadded.Category.toLowerCase().contains("family".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxFashion.isChecked() && blipsadded.Icon.toLowerCase().contains("fashion".toLowerCase())) {
+        if (checkboxFashion.isChecked() && blipsadded.Category.toLowerCase().contains("fashion".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxFood.isChecked() && blipsadded.Icon.toLowerCase().contains("food".toLowerCase())) {
+        if (checkboxFood.isChecked() && blipsadded.Category.toLowerCase().contains("food".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxHealth.isChecked() && blipsadded.Icon.toLowerCase().contains("health".toLowerCase())) {
+        if (checkboxHealth.isChecked() && blipsadded.Category.toLowerCase().contains("health".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxHoliday.isChecked() && blipsadded.Icon.toLowerCase().contains("holiday".toLowerCase())) {
+        if (checkboxHoliday.isChecked() && blipsadded.Category.toLowerCase().contains("holiday".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxMedia.isChecked() && blipsadded.Icon.toLowerCase().contains("media".toLowerCase())) {
+        if (checkboxMedia.isChecked() && blipsadded.Category.toLowerCase().contains("media".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxTransportation.isChecked() && blipsadded.Icon.toLowerCase().contains("auto".toLowerCase())) {
+        if (checkboxTransportation.isChecked() && blipsadded.Category.toLowerCase().contains("auto".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxTravel.isChecked() && blipsadded.Icon.toLowerCase().contains("travel".toLowerCase())) {
+        if (checkboxTravel.isChecked() && blipsadded.Category.toLowerCase().contains("travel".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxSports.isChecked() && blipsadded.Icon.toLowerCase().contains("sports".toLowerCase())) {
+        if (checkboxSports.isChecked() && blipsadded.Category.toLowerCase().contains("sports".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
-        if (checkboxMusic.isChecked() && blipsadded.Icon.toLowerCase().contains("music".toLowerCase())) {
+        if (checkboxMusic.isChecked() && blipsadded.Category.toLowerCase().contains("music".toLowerCase())) {
             PlaceMarkernoanimation(blipsadded);
         }
 
@@ -3975,143 +3989,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public Context getActivity() {
-
         return MainActivity.this;
-    }
-
-    private class MyCustomAdapterPublic extends ArrayAdapter<String> {
-
-        MyCustomAdapterPublic(Context context, int textViewResourceId,
-                              String[] objects) {
-            super(context, textViewResourceId, objects);
-
-        }
-
-        @Override
-        public View getDropDownView(int position, View convertView,
-                                    @NonNull ViewGroup parent) {
-
-            return getCustomView(position, parent);
-        }
-
-        @NonNull
-        @Override
-        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
-
-            return getCustomView(position, parent);
-        }
-
-        View getCustomView(int position, ViewGroup parent) {
-
-//return super.getView(position, convertView, parent);
-
-            LayoutInflater inflater = getLayoutInflater();
-            View row = inflater.inflate(R.layout.row, parent, false);
-            TextView label = row.findViewById(R.id.weekofday);
-            label.setText(CustomBlips[position]);
-
-            ImageView icon = row.findViewById(R.id.icon);
-
-
-            if (Objects.equals(CustomBlips[position], "Arts")) {
-                icon.setImageResource(R.mipmap.public_art);
-            } else if (Objects.equals(CustomBlips[position], "Transportation")) {
-                icon.setImageResource(R.mipmap.public_autoboatsair);
-            } else if (Objects.equals(CustomBlips[position], "Business")) {
-                icon.setImageResource(R.mipmap.public_business);
-            } else if (Objects.equals(CustomBlips[position], "Community")) {
-                icon.setImageResource(R.mipmap.public_community);
-            } else if (Objects.equals(CustomBlips[position], "Family & Education")) {
-                icon.setImageResource(R.mipmap.public_family);
-            } else if (Objects.equals(CustomBlips[position], "Fashion")) {
-                icon.setImageResource(R.mipmap.public_fashion);
-            } else if (Objects.equals(CustomBlips[position], "Media")) {
-                icon.setImageResource(R.mipmap.public_filmandmedia);
-            } else if (Objects.equals(CustomBlips[position], "Food")) {
-                icon.setImageResource(R.mipmap.public_foodanddrinks);
-            } else if (Objects.equals(CustomBlips[position], "Health")) {
-                icon.setImageResource(R.mipmap.public_health);
-            } else if (Objects.equals(CustomBlips[position], "Holiday")) {
-                icon.setImageResource(R.mipmap.public_holidaysandcelebrations);
-            } else if (Objects.equals(CustomBlips[position], "Music")) {
-                icon.setImageResource(R.mipmap.public_music);
-            } else if (Objects.equals(CustomBlips[position], "Sports")) {
-                icon.setImageResource(R.mipmap.public_sportsandfitness);
-            } else if (Objects.equals(CustomBlips[position], "Travel")) {
-                icon.setImageResource(R.mipmap.public_travelandoutdoor);
-            } else {
-                icon.setImageResource(R.mipmap.ic_launcher_round);
-            }
-
-            return row;
-        }
-    }
-
-    private class MyCustomAdapterPrivate extends ArrayAdapter<String> {
-
-        MyCustomAdapterPrivate(Context context, int textViewResourceId,
-                               String[] objects) {
-            super(context, textViewResourceId, objects);
-
-        }
-
-        @Override
-        public View getDropDownView(int position, View convertView,
-                                    @NonNull ViewGroup parent) {
-
-            return getCustomView(position, parent);
-        }
-
-        @NonNull
-        @Override
-        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
-
-            return getCustomView(position, parent);
-        }
-
-        View getCustomView(int position, ViewGroup parent) {
-
-
-            LayoutInflater inflater = getLayoutInflater();
-            View row = inflater.inflate(R.layout.row, parent, false);
-            TextView label = row.findViewById(R.id.weekofday);
-            label.setText(CustomBlips[position]);
-
-            ImageView icon = row.findViewById(R.id.icon);
-
-
-            if (Objects.equals(CustomBlips[position], "Arts")) {
-                icon.setImageResource(R.mipmap.private_art);
-            } else if (Objects.equals(CustomBlips[position], "Transportation")) {
-                icon.setImageResource(R.mipmap.private_autoboatsair);
-            } else if (Objects.equals(CustomBlips[position], "Business")) {
-                icon.setImageResource(R.mipmap.private_business);
-            } else if (Objects.equals(CustomBlips[position], "Community")) {
-                icon.setImageResource(R.mipmap.private_community);
-            } else if (Objects.equals(CustomBlips[position], "Family & Education")) {
-                icon.setImageResource(R.mipmap.private_family);
-            } else if (Objects.equals(CustomBlips[position], "Fashion")) {
-                icon.setImageResource(R.mipmap.private_fashion);
-            } else if (Objects.equals(CustomBlips[position], "Media")) {
-                icon.setImageResource(R.mipmap.private_filmandmedia);
-            } else if (Objects.equals(CustomBlips[position], "Food")) {
-                icon.setImageResource(R.mipmap.private_foodanddrinks);
-            } else if (Objects.equals(CustomBlips[position], "Health")) {
-                icon.setImageResource(R.mipmap.private_health);
-            } else if (Objects.equals(CustomBlips[position], "Holiday")) {
-                icon.setImageResource(R.mipmap.private_holidaysandcelebrations);
-            } else if (Objects.equals(CustomBlips[position], "Music")) {
-                icon.setImageResource(R.mipmap.private_music);
-            } else if (Objects.equals(CustomBlips[position], "Sports")) {
-                icon.setImageResource(R.mipmap.private_sportsandfitness);
-            } else if (Objects.equals(CustomBlips[position], "Travel")) {
-                icon.setImageResource(R.mipmap.private_travelandoutdoor);
-            } else {
-                icon.setImageResource(R.mipmap.ic_launcher_round);
-            }
-
-            return row;
-        }
     }
 
     private class FriendRequestsAdapter extends BaseAdapter implements ListAdapter {
@@ -4924,7 +4802,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
 
                                 key = childSnapshot.getKey();
-                                Toast.makeText(MainActivity.this, "public", Toast.LENGTH_SHORT).show();
+
                             }
 
 

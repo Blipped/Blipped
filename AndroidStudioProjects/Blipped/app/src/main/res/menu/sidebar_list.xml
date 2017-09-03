@@ -4,30 +4,30 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_addfriend"
-            android:icon="@drawable/ic_action_add"
+            android:icon="@mipmap/addfriends"
             android:title="Add Friend" />
         <item
             android:id="@+id/nav_notifications"
-            android:icon="@android:drawable/ic_dialog_email"
+            android:icon="@mipmap/friendrequest"
             android:title="Friend Requests" />
         <item
             android:id="@+id/nav_friendlist"
-            android:icon="@android:drawable/ic_menu_my_calendar"
+            android:icon="@mipmap/friendlist"
             android:title="Friend List" />
 
         <item android:title="My Locations">
              <menu>
                  <item
                      android:id="@+id/nav_manage"
-                     android:icon="@drawable/ic_action_map"
+                     android:icon="@mipmap/myevents"
                      android:title="My Events" />
                 <item
                     android:id="@+id/nav_completed"
-                    android:icon="@android:drawable/ic_menu_myplaces"
+                    android:icon="@mipmap/attendedevents"
                     android:title="Attended Events" />
                  <item
                      android:id="@+id/nav_planned"
-                     android:icon="@drawable/ic_action_places"
+                     android:icon="@mipmap/plannedevents"
                      android:title="Planned Events" />
 
             </menu>
@@ -35,7 +35,7 @@
 
         <item
             android:id="@+id/nav_signout"
-            android:icon="@drawable/places_ic_clear"
+            android:icon="@mipmap/signout"
             android:title="Sign Out" />
 
     </group>

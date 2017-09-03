@@ -2,8 +2,10 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 26
-    buildToolsVersion "26.0.0"
+    buildToolsVersion "25.0.0"
+
     defaultConfig {
+        multiDexEnabled true
         applicationId "blippedcompany.blipped"
         minSdkVersion 19
         targetSdkVersion 26
@@ -11,6 +13,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -26,7 +29,7 @@ dependencies {
     })
 
 
-
+    compile 'com.android.support:multidex:1.0.0'
     compile 'com.android.support:appcompat-v7:26.+'
     compile 'com.android.support:design:26.+'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
@@ -48,6 +51,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.0.0'
     compile 'com.afollestad.material-dialogs:core:0.9.4.7'
+    compile 'com.google.android.gms:play-services-ads:10.0.1'
 }
 
 
