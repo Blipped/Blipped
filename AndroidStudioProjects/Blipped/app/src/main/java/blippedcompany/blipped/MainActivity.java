@@ -393,6 +393,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //Navigation View
         navigationView = (NavigationView) findViewById(R.id.nav_view);//Layout
         navigationView.setNavigationItemSelectedListener(this);
+        navigationView.setItemIconTintList(null);
         nv = navigationView.getMenu();
         item_notifications = nv.findItem(R.id.nav_notifications);
 
@@ -704,11 +705,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                         if (dataarray[2] != null) {
-                            Picasso.with(getApplicationContext())
+
+
+                           Picasso.with(getApplicationContext())
                                     .load(dataarray[2])
-                                    .error(R.mipmap.error)
-                                    .placeholder(R.mipmap.placeholderimage)
-                                    .into(badge, new MarkerCallback(marker));
+                                   .error(R.mipmap.error)
+                                   .placeholder(R.mipmap.placeholderimage)
+                                  .into(badge, new MarkerCallback(marker));
 
                         }
 
