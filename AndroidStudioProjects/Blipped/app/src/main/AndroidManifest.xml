@@ -37,7 +37,7 @@
 
         <activity
             android:name=".LoginActivity"
-            android:label="Login">
+            android:label="Blipped">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -48,6 +48,9 @@
             android:name=".SignUpActivity"
             android:label="Register">
 
+        </activity>
+        <activity
+            android:name=".AccountSettings">
         </activity>
 
         <activity

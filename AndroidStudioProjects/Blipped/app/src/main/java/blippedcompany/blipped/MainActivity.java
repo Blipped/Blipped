@@ -74,9 +74,6 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.facebook.CallbackManager;
 import com.facebook.share.model.ShareLinkContent;
-import com.facebook.share.model.ShareOpenGraphAction;
-import com.facebook.share.model.ShareOpenGraphContent;
-import com.facebook.share.model.ShareOpenGraphObject;
 import com.facebook.share.widget.ShareDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -307,6 +304,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     CallbackManager callbackManager;
     ShareDialog shareDialog;
 
+    Button accountsettingsbutton;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -324,6 +323,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         backtonormalview = (TextView) findViewById(R.id.backtonormalmodebutton);
         filterscroll = (ScrollView) findViewById(R.id.filterscroll);
+
+
+
         backtonormalview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -418,10 +420,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         liveGPSEmail.onDisconnect().setValue(null);
         getFriendsList();
         ImageButton editprofilepic = (ImageButton) findViewById(R.id.editprofilepicbutton);
+        accountsettingsbutton  = (Button) findViewById(R.id.accountsettings);
         profilepic = (ImageView) findViewById(R.id.profilepic);
         loadprofilepic();
 
-
+        accountsettingsbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                accountsettings();
+            }
+        });
 
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -4930,24 +4938,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-            ShareOpenGraphObject object = new ShareOpenGraphObject.Builder()
-                    .putString("og:type", "place")
-                    .putString("og:url", "https://s-static.ak.fbcdn.net/images/devsite/attachment_blank.png")
-                    .putString("og:title", "Sample Course")
-                    .putString("og:image", "https://s-static.ak.fbcdn.net/images/devsite/attachment_blank.png")
-                    .putString("place:location:latitude", Double.toString(location.latitude))
-                    .putString("place:location:longitude", Double.toString(location.longitude))
-                    .build();
-            ShareOpenGraphAction action = new ShareOpenGraphAction.Builder()
-                    .setActionType("place.id")
-                    .putObject("place", object)
-                    .build();
-            ShareOpenGraphContent contentx = new ShareOpenGraphContent.Builder()
-                    .setPreviewPropertyName("place")
-                    .setAction(action)
-                    .build();
-
-            ShareLinkContent linkContent = new ShareLinkContent.Builder()
+            ShareLinkContent linkContent = new ShareLinkContent.Builder().setContentDescription("Hello")
                     .setContentUrl(Uri.parse("http://maps.google.com/?q="+location.latitude+","+location.longitude))
                     .build();
 
@@ -4955,6 +4946,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         }
+    }
+
+    public void accountsettings(){
+
+        startActivity(new Intent(MainActivity.this, AccountSettings.class));
+
     }
 
 }
