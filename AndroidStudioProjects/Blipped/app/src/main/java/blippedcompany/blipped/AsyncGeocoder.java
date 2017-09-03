@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class AsyncGeocoder extends AsyncTask<AsyncGeocoderObject, Void, List<Address>> {
 
-    private String locationstring;
+    public String locationstring;
 
     @Override
     protected List<Address> doInBackground(AsyncGeocoderObject... asyncGeocoderObjects) {
@@ -35,6 +35,7 @@ public class AsyncGeocoder extends AsyncTask<AsyncGeocoderObject, Void, List<Add
         if (addresses != null)
             address = addresses.get(0).getLocality() + ", " + addresses.get(0).getCountryName();
         else address = "Service unavailable.";
+
         locationstring=address;
     }
 }

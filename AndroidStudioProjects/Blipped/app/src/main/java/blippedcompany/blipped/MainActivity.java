@@ -577,11 +577,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 key=null;
                 selected = marker;
 
-                new AsyncGeocoder().execute(new AsyncGeocoderObject(
-                        new Geocoder(MainActivity.this), // the geocoder object to get address
-                        selected.getPosition(), // location object,
-                        locationgeocoder // the textview to set address on
-                ));
+
 
                 getkey(marker);
 
@@ -631,73 +627,78 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void onMarkerClickAction(Marker marker)
-    { attendinglist.clear();
-        if(marker.getSnippet().contains("123marcius")) {
+    {
+        try {
+            attendinglist.clear();
+            if(marker.getSnippet().contains("123marcius")) {
 
-            //If Normal Marker is clicked
-            mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
-                View v;
-                @Override
-                public View getInfoWindow(final Marker marker) {
+                //If Normal Marker is clicked
+                mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+                    View v;
+                    @Override
+                    public View getInfoWindow(final Marker marker) {
 
-                    v = getLayoutInflater().inflate(R.layout.custom_info_window, null);
-                    badge = v.findViewById(R.id.badge);
-                    //Split Information int array
-                    try {
-                        dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-                    } catch (NullPointerException e) {
+                        v = getLayoutInflater().inflate(R.layout.custom_info_window, null);
+                        badge = v.findViewById(R.id.badge);
+                        //Split Information int array
+                        try {
+                            dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                        } catch (NullPointerException e) {
+
+                        }
+
+
+
+                        if (dataarray[2] != null) {
+                            Picasso.with(getApplicationContext())
+                                    .load(dataarray[2])
+                                    .error(R.mipmap.error)
+                                    .placeholder(R.mipmap.placeholderimage)
+                                    .into(badge, new MarkerCallback(marker));
+
+                        }
+
+
+                        TextView title = v.findViewById(R.id.title);
+                        title.setText(marker.getTitle());
+
+
+                        return v;
+
 
                     }
 
 
+                    @Override
+                    public View getInfoContents(Marker marker) {
+                        return null;
+                    }
+                });
+            }
 
-                    if (dataarray[2] != null) {
-                        Picasso.with(getApplicationContext())
-                                .load(dataarray[2])
-                                .error(R.mipmap.error)
-                                .placeholder(R.mipmap.placeholderimage)
-                                .into(badge, new MarkerCallback(marker));
+            else{
+                //If Live GPS Marker is clicked
+                mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+                    View vgps;
+                    @Override
+                    public View getInfoWindow(final Marker marker) {
+                        vgps = getLayoutInflater().inflate(R.layout.gpscustom_info_window, null);
+                        TextView title = vgps.findViewById(R.id.title);
+                        title.setText(marker.getTitle());
+
+                        return vgps;
 
                     }
 
+                    @Override
+                    public View getInfoContents(Marker marker) {
+                        return null;
+                    }
+                });
 
-                    TextView title = v.findViewById(R.id.title);
-                    title.setText(marker.getTitle());
-
-
-                    return v;
-
-
-                }
-
-
-                @Override
-                public View getInfoContents(Marker marker) {
-                    return null;
-                }
-            });
-        }
-
-        else{
-            //If Live GPS Marker is clicked
-            mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
-                View vgps;
-                @Override
-                public View getInfoWindow(final Marker marker) {
-                    vgps = getLayoutInflater().inflate(R.layout.gpscustom_info_window, null);
-                    TextView title = vgps.findViewById(R.id.title);
-                    title.setText(marker.getTitle());
-
-                    return vgps;
-
-                }
-
-                @Override
-                public View getInfoContents(Marker marker) {
-                    return null;
-                }
-            });
-
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -818,6 +819,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mBuilder.setView(mBlipInfoView);
        final  AlertDialog dialog = mBuilder.create();
         dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+
+        new AsyncGeocoder().execute(new AsyncGeocoderObject(
+                new Geocoder(MainActivity.this), // the geocoder object to get address
+                selected.getPosition(), // location object,
+                locationgeocoder // the textview to set address on
+        ));
 
         if(showmyplacesmode!=0){
             goingbutton.setVisibility(GONE);
