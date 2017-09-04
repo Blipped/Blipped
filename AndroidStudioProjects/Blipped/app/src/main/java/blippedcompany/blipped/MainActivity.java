@@ -115,6 +115,8 @@ import com.squareup.picasso.Picasso;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.ParseException;
@@ -305,8 +307,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     CallbackManager callbackManager;
     ShareDialog shareDialog;
+    String collect="http://econym.org.uk/gmap/example_plotpoints.htm?";
+    StringBuilder sb;
 
-    Button accountsettingsbutton;
+
 
 
     @Override
@@ -423,16 +427,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         liveGPSEmail.onDisconnect().setValue(null);
         getFriendsList();
         ImageButton editprofilepic = (ImageButton) findViewById(R.id.editprofilepicbutton);
-        accountsettingsbutton  = (Button) findViewById(R.id.accountsettings);
+
         profilepic = (ImageView) findViewById(R.id.profilepic);
         loadprofilepic();
 
-        accountsettingsbutton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                accountsettings();
-            }
-        });
+
 
         showGPSToggle = (Switch) findViewById(R.id.showgpstoggle);
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -701,7 +700,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         } catch (NullPointerException e) {
 
                         }
-
 
 
                         if (dataarray[2] != null) {
@@ -3963,7 +3961,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ShowMyBlips(UsersEmailBlipsAttended,mymarkerlistattending);
 
 
-        } else if (id == R.id.nav_planned) {
+        } else if (id == R.id.nav_accountsettings) {
+                accountsettings();
+
+
+        }
+        else if (id == R.id.nav_planned) {
             backtonormalview.setVisibility(VISIBLE);
             showmyplacesmode=3;
             backtonormalview.setText("Currently showing your planned blips \n Click here to back");
@@ -3983,6 +3986,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             finish();
             Intent nextscreen = new Intent(this, LoginActivity.class);
             startActivity(nextscreen);
+
+        } else if (id == R.id.nav_share) {
+
+             String y="";
+            for (Map.Entry<String, Blips> entry : mymarkerlistattending.entrySet())
+            {
+                Blips value = mymarkerlistattending.get(entry.getKey());
+                y= y + "&q="+value.BlipName+"@"+value.latitude+","+value.longitude;
+            }
+
+            try {
+                ShareAll(appendUri("http://econym.org.uk/gmap/example_plotpoints.htm?",y));
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+
 
         }
 
@@ -4846,13 +4865,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public  void Share(LatLng location, String s){
+
         if (ShareDialog.canShow(ShareLinkContent.class)) {
 
+            ShareLinkContent linkContent = new ShareLinkContent.Builder().setContentTitle("Title").setContentDescription("Hello")
+                    .setContentUrl(Uri.parse("http://maps.google.com/?"+"&q="+selected.getTitle()+"@"+location.latitude+","+location.longitude))
+                    .build();
+
+            shareDialog.show(linkContent);
 
 
+        }
+    }
+    public  void ShareAll(URI x) {
+        if (ShareDialog.canShow(ShareLinkContent.class)) {
 
-            ShareLinkContent linkContent = new ShareLinkContent.Builder().setContentDescription("Hello")
-                    .setContentUrl(Uri.parse("http://maps.google.com/?q="+location.latitude+","+location.longitude))
+            ShareLinkContent linkContent = new ShareLinkContent.Builder()
+                    .setQuote(x.toString())
+                    .setContentUrl(Uri.parse(x.toString()))
                     .build();
 
             shareDialog.show(linkContent);
@@ -4866,6 +4896,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         startActivity(new Intent(MainActivity.this, AccountSettings.class));
 
     }
+
+    public static URI appendUri(String uri, String appendQuery) throws URISyntaxException {
+        URI oldUri = new URI(uri);
+
+        String newQuery = oldUri.getQuery();
+        if (newQuery == null) {
+            newQuery = appendQuery;
+        } else {
+            newQuery += "&" + appendQuery;
+        }
+
+        URI newUri = new URI(oldUri.getScheme(), oldUri.getAuthority(),
+                oldUri.getPath(), newQuery, oldUri.getFragment());
+
+        return newUri;
+    }
+
+
 
 }
 

@@ -14,6 +14,10 @@
             android:id="@+id/nav_friendlist"
             android:icon="@mipmap/friendlist"
             android:title="Friend List" />
+        <item
+            android:id="@+id/nav_accountsettings"
+            android:icon="@android:drawable/ic_menu_manage"
+            android:title="Account Settings" />
 
         <item android:title="My Locations">
              <menu>
@@ -29,6 +33,11 @@
                      android:id="@+id/nav_planned"
                      android:icon="@mipmap/plannedevents"
                      android:title="Planned Events" />
+
+                 <item
+                     android:id="@+id/nav_share"
+                     android:icon="@mipmap/plannedevents"
+                     android:title="Share your Completed Events" />
 
             </menu>
         </item>
