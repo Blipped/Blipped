@@ -4,6 +4,7 @@ import android.animation.ValueAnimator;
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -115,6 +116,8 @@ import com.squareup.picasso.Picasso;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
@@ -3988,20 +3991,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(nextscreen);
 
         } else if (id == R.id.nav_share) {
-
-             String y="";
-            for (Map.Entry<String, Blips> entry : mymarkerlistattending.entrySet())
-            {
-                Blips value = mymarkerlistattending.get(entry.getKey());
-                y= y + "&q="+value.BlipName+"@"+value.latitude+","+value.longitude;
-            }
-
-            try {
-                ShareAll(appendUri("http://econym.org.uk/gmap/example_plotpoints.htm?",y));
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
-
+            CaptureMapScreen();
 
         }
 
@@ -4877,19 +4867,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         }
     }
-    public  void ShareAll(URI x) {
-        if (ShareDialog.canShow(ShareLinkContent.class)) {
 
-            ShareLinkContent linkContent = new ShareLinkContent.Builder()
-                    .setQuote(x.toString())
-                    .setContentUrl(Uri.parse(x.toString()))
-                    .build();
-
-            shareDialog.show(linkContent);
-
-
-        }
-    }
 
     public void accountsettings(){
 
@@ -4913,7 +4891,73 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return newUri;
     }
 
+    public void CaptureMapScreen()
+    {
+        GoogleMap.SnapshotReadyCallback callback = new GoogleMap.SnapshotReadyCallback()
+        {
 
+            @Override
+            public void onSnapshotReady(Bitmap snapshot)
+            {
+                // TODO Auto-generated method stub
+                Bitmap bitmap = snapshot;
+
+                OutputStream fout = null;
+
+                String filePath = System.currentTimeMillis() + ".jpeg";
+
+                try
+                {
+                    fout = openFileOutput(filePath, MODE_WORLD_READABLE);
+
+                    // Write the string to the file
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fout);
+                    fout.flush();
+                    fout.close();
+                }
+                catch (FileNotFoundException e)
+                {
+                    // TODO Auto-generated catch block
+                    Log.d("ImageCapture", "FileNotFoundException");
+                    Log.d("ImageCapture", e.getMessage());
+                    filePath = "";
+                }
+                catch (IOException e)
+                {
+                    // TODO Auto-generated catch block
+                    Log.d("ImageCapture", "IOException");
+                    Log.d("ImageCapture", e.getMessage());
+                    filePath = "";
+                }
+
+                openShareImageDialog(filePath);
+            }
+        };
+
+        mMap.snapshot(callback);
+    }
+
+    public void openShareImageDialog(String filePath)
+    {
+        File file = this.getFileStreamPath(filePath);
+
+        if(!filePath.equals(""))
+        {
+            final ContentValues values = new ContentValues(2);
+            values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+            values.put(MediaStore.Images.Media.DATA, file.getAbsolutePath());
+            final Uri contentUriFile = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+            final Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+            intent.setType("image/jpeg");
+            intent.putExtra(android.content.Intent.EXTRA_STREAM, contentUriFile);
+            startActivity(Intent.createChooser(intent, "Share Map Screenshot"));
+        }
+        else
+        {
+            Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
+        }
+    }
 
 }
 

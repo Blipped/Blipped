@@ -36,8 +36,8 @@
 
                  <item
                      android:id="@+id/nav_share"
-                     android:icon="@mipmap/plannedevents"
-                     android:title="Share your Completed Events" />
+                     android:icon="@drawable/ic_menu_camera"
+                     android:title="Take Map Screenshot" />
 
             </menu>
         </item>
