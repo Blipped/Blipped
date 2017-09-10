@@ -47,6 +47,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.Interpolator;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -513,7 +514,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ShowBlipsPublic();//Activate listener
         ShowBlipsPrivate();//Activate listener
         ShowGPSLocation();//Activte GPS listener
-        reload();
+        try
+        {
+            Thread.sleep(1000);
+            reload();
+        }
+        catch(InterruptedException ex)
+        {
+            Thread.currentThread().interrupt();
+        }
+
 
         editprofilepic.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -958,14 +968,159 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         BlipInfoCategoryandHost.setText(dataarray[6]+"  "+dataarray[7]+"  " +"Hosted by "+ ReplaceCommaWithPeriod(dataarray[0]));
 
         if (dataarray[2] != null) {
-            RequestOptions options = new RequestOptions()
-                    .error(R.mipmap.background1)
-                    .placeholder(R.mipmap.background1);
+            RequestOptions options = null;
+            switch(dataarray[7]){
+                case "Arts":{
 
-            Glide.with(getActivity())
-                    .load(dataarray[2])
-                    .apply(options)
-                    .into(BlipInfoImage);
+                   options = new RequestOptions()
+                            .error(R.mipmap.artbanner)
+                            .placeholder(R.mipmap.artbanner);
+
+
+                    Glide.with(getActivity())
+                            .load(dataarray[2])
+                            .apply(options)
+                            .into(BlipInfoImage);
+                    break;
+                }
+                case "Transportation":{
+
+                   options = new RequestOptions()
+                            .error(R.mipmap.autobanner)
+                            .placeholder(R.mipmap.autobanner);
+
+                    Glide.with(getActivity())
+                            .load(dataarray[2])
+                            .apply(options)
+                            .into(BlipInfoImage);
+                    break;
+                }
+                case "Business":{
+
+                  options = new RequestOptions()
+                            .error(R.mipmap.businessfinal)
+                            .placeholder(R.mipmap.businessfinal);
+
+                    Glide.with(getActivity())
+                            .load(dataarray[2])
+                            .apply(options)
+                            .into(BlipInfoImage);
+                    break;
+                }
+                case "Community":{
+
+                options = new RequestOptions()
+                            .error(R.mipmap.community)
+                            .placeholder(R.mipmap.community);
+
+                    Glide.with(getActivity())
+                            .load(dataarray[2])
+                            .apply(options)
+                            .into(BlipInfoImage);
+                    break;
+                }
+                case "Family & Education":{
+
+                  options = new RequestOptions()
+                            .error(R.mipmap.family)
+                            .placeholder(R.mipmap.family);
+
+                    Glide.with(getActivity())
+                            .load(dataarray[2])
+                            .apply(options)
+                            .into(BlipInfoImage);
+                    break;
+                }
+                case "Fashion":{
+
+                    options = new RequestOptions()
+                            .error(R.mipmap.fashion)
+                            .placeholder(R.mipmap.fashion);
+
+                    Glide.with(getActivity())
+                            .load(dataarray[2])
+                            .apply(options)
+                            .into(BlipInfoImage);
+                    break;
+                }
+                case "Media":{
+
+                   options = new RequestOptions()
+                            .error(R.mipmap.mediaandfilm)
+                            .placeholder(R.mipmap.mediaandfilm);
+
+                    Glide.with(getActivity())
+                            .load(dataarray[2])
+                            .apply(options)
+                            .into(BlipInfoImage);
+                    break;
+                }
+                case "Travel":{
+
+                 options = new RequestOptions()
+                            .error(R.mipmap.travel)
+                            .placeholder(R.mipmap.travel);
+
+                    Glide.with(getActivity())
+                            .load(dataarray[2])
+                            .apply(options)
+                            .into(BlipInfoImage);
+                    break;
+                }
+                case "Food":{
+
+                   options = new RequestOptions()
+                            .error(R.mipmap.foodanddrinks)
+                            .placeholder(R.mipmap.foodanddrinks);
+
+                    Glide.with(getActivity())
+                            .load(dataarray[2])
+                            .apply(options)
+                            .into(BlipInfoImage);
+                    break;
+                }
+                case "Health":{
+
+                    options = new RequestOptions()
+                            .error(R.mipmap.medicine)
+                            .placeholder(R.mipmap.medicine);
+
+                    Glide.with(getActivity())
+                            .load(dataarray[2])
+                            .apply(options)
+                            .into(BlipInfoImage);
+                    break;
+                }
+                case "Music":{
+
+                    options = new RequestOptions()
+                            .error(R.mipmap.music)
+                            .placeholder(R.mipmap.music);
+
+                    Glide.with(getActivity())
+                            .load(dataarray[2])
+                            .apply(options)
+                            .into(BlipInfoImage);
+                    break;
+                }
+                case "Sports":{
+
+                    options = new RequestOptions()
+                            .error(R.mipmap.sports)
+                            .placeholder(R.mipmap.sports);
+
+                    Glide.with(getActivity())
+                            .load(dataarray[2])
+                            .apply(options)
+                            .into(BlipInfoImage);
+                    break;
+                }
+
+
+            }
+
+
+
 
         }
 
@@ -1366,6 +1521,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button takePhoto =  mBlipAddView.findViewById(R.id.takePhoto);
         imgView = mBlipAddView.findViewById(R.id.imgView);
 
+
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, friendarraylist);
         final MultiAutoCompleteTextView allowedfriendsmultiline = mBlipAddView.findViewById(R.id.allowfriendsedittext);
 
@@ -1656,7 +1812,177 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
+        mySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                RequestOptions options;
+                switch(position){
+                    case 0:{
 
+                        options = new RequestOptions()
+                                .error(R.mipmap.artbanner);
+
+
+
+                        Glide.with(getActivity())
+                                .load(R.mipmap.artbanner)
+                                .apply(options)
+                                .into(imgView);
+                        break;
+                    }
+                    case 1:{
+
+                        options = new RequestOptions()
+                                .error(R.mipmap.autobanner);
+
+
+                        Glide.with(getActivity())
+                                .load(R.mipmap.autobanner)
+                                .apply(options)
+                                .into(imgView);
+                        break;
+                    }
+                    case 2:{
+
+                        options = new RequestOptions()
+                                .error(R.mipmap.businessfinal);
+
+
+                        Glide.with(getActivity())
+                                .load(R.mipmap.businessfinal)
+                                .apply(options)
+                                .into(imgView);
+                        break;
+                    }
+                    case 3:{
+
+                        options = new RequestOptions()
+                                .error(R.mipmap.community);
+
+
+                        Glide.with(getActivity())
+                                .load(R.mipmap.community)
+                                .apply(options)
+                                .into(imgView);
+                        break;
+                    }
+                    case 4:{
+
+                        options = new RequestOptions()
+                                .error(R.mipmap.family);
+
+
+                        Glide.with(getActivity())
+                                .load(R.mipmap.family)
+                                .apply(options)
+                                .into(imgView);
+                        break;
+                    }
+                    case 5:{
+
+                        options = new RequestOptions()
+                                .error(R.mipmap.fashion);
+
+                        Glide.with(getActivity())
+                                .load(R.mipmap.fashion)
+                                .apply(options)
+                                .into(imgView);
+                        break;
+                    }
+                    case 6:{
+
+                        options = new RequestOptions()
+                                .error(R.mipmap.mediaandfilm);
+
+
+                        Glide.with(getActivity())
+                                .load(R.mipmap.mediaandfilm)
+                                .apply(options)
+                                .into(imgView);
+                        break;
+                    }
+                    case 7:{
+
+                        options = new RequestOptions()
+                                .error(R.mipmap.foodanddrinks);
+
+
+                        Glide.with(getActivity())
+                                .load(R.mipmap.foodanddrinks)
+                                .apply(options)
+                                .into(imgView);
+                        break;
+                    }
+                    case 8:{
+
+                        options = new RequestOptions()
+                                .error(R.mipmap.medicine);
+
+
+                        Glide.with(getActivity())
+                                .load(R.mipmap.medicine)
+                                .apply(options)
+                                .into(imgView);
+                        break;
+                    }
+                    case 9:{
+
+                        options = new RequestOptions()
+                                .error(R.mipmap.celebration);
+
+                        Glide.with(getActivity())
+                                .load(R.mipmap.celebration)
+                                .apply(options)
+                                .into(imgView);
+                        break;
+                    }
+                    case 10:{
+
+                        options = new RequestOptions()
+                                .error(R.mipmap.music);
+
+                        Glide.with(getActivity())
+                                .load(R.mipmap.music)
+                                .apply(options)
+                                .into(imgView);
+                        break;
+                    }
+                    case 11:{
+
+                        options = new RequestOptions()
+                                .error(R.mipmap.sports);
+
+
+                        Glide.with(getActivity())
+                                .load(R.mipmap.sports)
+                                .apply(options)
+                                .into(imgView);
+                        break;
+                    }
+                    case 12:{
+
+                        options = new RequestOptions()
+                                .error(R.mipmap.travel);
+
+
+                        Glide.with(getActivity())
+                                .load(R.mipmap.travel)
+                                .apply(options)
+                                .into(imgView);
+                        break;
+                    }
+
+
+                }
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // your code here
+            }
+
+        });
 
         mBuilder.setView(mBlipAddView);
         final AlertDialog dialog = mBuilder.create();
@@ -1717,7 +2043,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 Category="Business";
                             } else if (Objects.equals(dropboxvalue, "Community")) {
                                 blipIcon = "public_community";
-                                Category="Business";
+                                Category="Community";
                             } else if (Objects.equals(dropboxvalue, "Family & Education")) {
                                 blipIcon = "public_family";
                                 Category="Family & Education";
@@ -1863,7 +2189,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 Category="Business";
                             } else if (Objects.equals(dropboxvalue, "Community")) {
                                 blipIcon = "private_community";
-                                Category="Business";
+                                Category="Community";
                             } else if (Objects.equals(dropboxvalue, "Family & Education")) {
                                 blipIcon = "private_family";
                                 Category="Family & Education";

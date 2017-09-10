@@ -345,6 +345,7 @@
                         android:layout_alignTop="@+id/privateRadio"
                         android:layout_marginEnd="21dp"
                         android:layout_weight="1"
+                        android:checked="false"
                         android:text="Public"
                         android:textSize="14sp"
                         tools:layout_editor_absoluteX="89dp"
