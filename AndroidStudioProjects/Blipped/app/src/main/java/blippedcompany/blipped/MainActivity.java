@@ -47,6 +47,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.Interpolator;
+import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
@@ -197,6 +198,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     String BlipEndDate ;
     Date BlipStartDateTime ;
     Date BlipEndDateTime ;
+
+    Boolean surveyTaken = false;
 
     DateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm aa", Locale.ENGLISH);
     Boolean isSuperPrivate = false;
@@ -350,6 +353,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         callbackManager = CallbackManager.Factory.create();
         shareDialog = new ShareDialog(this);
+
+        surveyCheck();
 
 
 
@@ -4305,20 +4310,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         } else if (id == R.id.nav_signout) {
-            liveGPSEmail.child("longitude").setValue(null);
-            liveGPSEmail.child("latitude").setValue(null);
-            liveGPSEmail.child("Creator").setValue(null);
-            liveGPSEmail.setValue(null);
-            mAuth.signOut();
-            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
+            if (surveyTaken) {
+                signout();
+            }
+            else {
+                Survey();
+            }
 
-            finish();
-            Intent nextscreen = new Intent(this, LoginActivity.class);
-            startActivity(nextscreen);
 
         } else if (id == R.id.nav_share) {
             CaptureMapScreen();
-
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -5283,6 +5284,92 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         {
             Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
         }
+    }
+    public void LoadSurveyActivity(View v) {
+
+        String url = "https://www.surveymonkey.com/r/9CMWJQN";
+
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW,
+                Uri.parse(url));
+        startActivity(browserIntent);
+
+    }
+
+    public void Survey() {
+
+        AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
+
+        View mShowSurveyPrompt = getLayoutInflater().inflate(R.layout.survey_prompt, null);
+        Button takesurveybtn = mShowSurveyPrompt.findViewById(R.id.take_survey_btn);
+        Button rejectsurveybtn = mShowSurveyPrompt.findViewById(R.id.reject_survey_btn);
+
+        mBuilder.setView(mShowSurveyPrompt);
+        final AlertDialog dialog = mBuilder.create();
+
+        dialog.show();
+
+        takesurveybtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LoadSurveyActivity(null);
+                dialog.dismiss();
+                Users.child(userName).child("surveyTaken").child("true").setValue(1);
+                surveyTaken = true;
+            }
+        });
+
+
+        rejectsurveybtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+                signout();
+            }
+        });
+    }
+
+    public void signout() {
+        liveGPSEmail.child("longitude").setValue(null);
+        liveGPSEmail.child("latitude").setValue(null);
+        liveGPSEmail.child("Creator").setValue(null);
+        liveGPSEmail.setValue(null);
+        mAuth.signOut();
+        Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
+
+        finish();
+        Intent nextscreen = new Intent(this, LoginActivity.class);
+        startActivity(nextscreen);
+    }
+
+    public void surveyCheck() {
+
+        Users.addListenerForSingleValueEvent(new ValueEventListener() {
+
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+
+                if (dataSnapshot.hasChild(userName)) {
+
+                    if (dataSnapshot.child(userName).child("surveyTaken").hasChild("true")) {
+
+                        surveyTaken = true;
+
+                    } else {
+
+                        surveyTaken = false;
+
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
     }
 
 }
