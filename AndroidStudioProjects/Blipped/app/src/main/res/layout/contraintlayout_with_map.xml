@@ -20,7 +20,7 @@
         map:layout_constraintLeft_toLeftOf="parent"
         map:layout_constraintRight_toRightOf="parent"
         map:layout_constraintTop_toTopOf="parent"
-        map:layout_constraintVertical_bias="1.0"
+        map:layout_constraintVertical_bias="0.0"
         tools:context="blippedcompany.blipped.MapsActivity"
         tools:layout="@layout/activity_maps"
         tools:layout_constraintBottom_creator="1"
@@ -277,5 +277,35 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:layout_constraintLeft_creator="1"
         tools:layout_constraintRight_creator="1" />
+
+    <RadioGroup
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation='horizontal'
+        tools:layout_editor_absoluteX="52dp"
+        tools:layout_editor_absoluteY="31dp">
+
+        <RadioButton
+            android:id="@+id/radioToday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:checked="true"
+            android:text="Today" />
+
+        <RadioButton
+            android:id="@+id/radioThisWeek"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="This Week" />
+
+        <RadioButton
+            android:id="@+id/radioThisMonth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="This Month" />
+    </RadioGroup>
 
 </android.support.constraint.ConstraintLayout>
