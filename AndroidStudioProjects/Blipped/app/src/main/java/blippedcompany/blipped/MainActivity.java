@@ -4171,15 +4171,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            mAuth.signOut();
-            super.onBackPressed();
-            liveGPSEmail.setValue(null);
-            locationManager.removeUpdates(locationListener);
+            if (surveyTaken) {
+                mAuth.signOut();
+                super.onBackPressed();
+                liveGPSEmail.setValue(null);
+                locationManager.removeUpdates(locationListener);
 
 
-             finish();
-            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
-
+                finish();
+                Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
+            }
+            else {
+                Survey();
+            }
         }
     }
 
