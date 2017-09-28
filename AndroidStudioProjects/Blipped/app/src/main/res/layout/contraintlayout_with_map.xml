@@ -20,7 +20,7 @@
         map:layout_constraintLeft_toLeftOf="parent"
         map:layout_constraintRight_toRightOf="parent"
         map:layout_constraintTop_toTopOf="parent"
-        map:layout_constraintVertical_bias="1.0"
+        map:layout_constraintVertical_bias="0.0"
         tools:context="blippedcompany.blipped.MapsActivity"
         tools:layout="@layout/activity_maps"
         tools:layout_constraintBottom_creator="1"
@@ -31,9 +31,8 @@
 
     <ScrollView
         android:id="@+id/filterscroll"
-        android:layout_width="162dp"
-        android:layout_height="128dp"
-        android:layout_marginTop="0dp"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
         android:animateLayoutChanges="true"
         android:animationCache="false"
         android:background="@android:color/black"
@@ -277,5 +276,44 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:layout_constraintLeft_creator="1"
         tools:layout_constraintRight_creator="1" />
+
+    <RadioGroup
+        android:id="@+id/radiotimefilter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation='horizontal'
+        tools:layout_constraintRight_creator="1"
+        tools:layout_constraintLeft_creator="1"
+        tools:layout_constraintBottom_creator="1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginBottom="56dp"
+        app:layout_constraintLeft_toLeftOf="parent">
+
+        <RadioButton
+            android:id="@+id/radioToday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:checked="true"
+            android:text="Today"
+            android:textColor="@color/btn_login_bg" />
+
+        <RadioButton
+            android:id="@+id/radioThisWeek"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="This Week"
+            android:textColor="@color/btn_login_bg" />
+
+        <RadioButton
+            android:id="@+id/radioThisMonth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="This Month"
+            android:textColor="@color/btn_login_bg" />
+    </RadioGroup>
 
 </android.support.constraint.ConstraintLayout>

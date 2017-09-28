@@ -47,7 +47,6 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.Interpolator;
-import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
@@ -230,6 +229,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     RadioButton publicradio;
     RadioButton privateradio;
     RadioButton SuperPrivateradio;
+    RadioButton today;
+    RadioButton thisweek;
+    RadioButton thismonth;
     String[] CustomBlips = {"Arts",
             "Transportation",
             "Business",
@@ -468,6 +470,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         userNameText.setText("Welcome " + userID.getEmail());
 
 
+        today = (RadioButton) findViewById(R.id.radioToday);
+        thisweek = (RadioButton) findViewById(R.id.radioThisWeek);
+        thismonth = (RadioButton) findViewById(R.id.radioThisMonth);
+
+
 
         showGPSToggle.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -553,9 +560,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                                         if (temp.contains(userName)) {
 
-                                                    if (showmyplacesmode==0) {
-                                                       DeleteBlip(selected);
+                                                    if (showmyplacesmode==1 || showmyplacesmode==0) {
+                                                        DeleteBlip(selected);
+                                                        DeleteBlipOwn(selected);
                                                     }
+
                                                     else{
                                                         Toast.makeText(MainActivity.this, "Cannot Delete Blip in this Mode", Toast.LENGTH_SHORT).show();
                                                     }
@@ -1551,7 +1560,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         Calendar mcurrentDate = Calendar.getInstance();
         int day = mcurrentDate.get(Calendar.DAY_OF_MONTH);
-        int month = mcurrentDate.get(Calendar.MONTH);
+        int month = mcurrentDate.get(Calendar.MONTH)+1;
         int year = mcurrentDate.get(Calendar.YEAR);
         int hour = mcurrentDate.get(Calendar.HOUR_OF_DAY);
         int minute = mcurrentDate.get(Calendar.MINUTE);
@@ -1569,7 +1578,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         {min = "0" + minute ;}
         else
         {min = String.valueOf(minute);}
-
         timeedittext.setText( hour + ":" + min +" "+ AM_PM);
         dateedittext.setText( month + "/" + day + "/" + year);
         BlipStartTime =( hour + ":" + min +" "+ AM_PM);
@@ -1586,7 +1594,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 Calendar mcurrentDate = Calendar.getInstance();
                 int day = mcurrentDate.get(Calendar.DAY_OF_MONTH);
-                int month = mcurrentDate.get(Calendar.MONTH);
+                int month = mcurrentDate.get(Calendar.MONTH)+1;
                 int year = mcurrentDate.get(Calendar.YEAR);
                 int hour = mcurrentDate.get(Calendar.HOUR_OF_DAY);
                 int minute = mcurrentDate.get(Calendar.MINUTE);
@@ -1683,6 +1691,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mDatePicker = new DatePickerDialog(MainActivity.this, new DatePickerDialog.OnDateSetListener() {
                     @Override
                     public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                        month=month+1;
                         BlipStartDate =year+"-"+month+"-"+day;
 
                        dateedittext.setText( month + "/" + day + "/" + year);
@@ -1750,7 +1759,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 // TODO Auto-generated method stub
                 Calendar mcurrentDate = Calendar.getInstance();
                 int day = mcurrentDate.get(Calendar.DAY_OF_MONTH);
-                int month = mcurrentDate.get(Calendar.MONTH);
+                int month = mcurrentDate.get(Calendar.MONTH)+1;
                 int year = mcurrentDate.get(Calendar.YEAR);
 
                 DatePickerDialog mDatePicker;
@@ -1758,6 +1767,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     @Override
                     public void onDateSet(DatePicker datePicker, int year, int month, int day) {
                         Toast.makeText(MainActivity.this, "Time setted", Toast.LENGTH_SHORT).show();
+                        month=month+1;
                         BlipEndDate =year+"-"+month+"-"+day;
                         dateedittextEnd.setText( month + "/" + day + "/" + year);
                     }
@@ -2340,7 +2350,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public String getCurrentDateTime(){
         Calendar mcurrentDate = Calendar.getInstance();
         int day = mcurrentDate.get(Calendar.DAY_OF_MONTH);
-        int month = mcurrentDate.get(Calendar.MONTH);
+        int month = mcurrentDate.get(Calendar.MONTH)+1;
         int year = mcurrentDate.get(Calendar.YEAR);
         int hour = mcurrentDate.get(Calendar.HOUR_OF_DAY);
         int minute = mcurrentDate.get(Calendar.MINUTE);
@@ -2450,7 +2460,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void DeleteBlip(final Marker marker) {
         final LatLng coordinatetobedeleted = marker.getPosition();
-        selected.remove();
 
 
         BlipsPublic.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
@@ -2463,9 +2472,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             String creator =  ReplaceCommaWithPeriod(datacollected.child("Creator").getValue(String.class));
 
                             //We add this because firebase queries sucks
-                            if (datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude && creator.toLowerCase().contains(userName.toLowerCase())) {
+                            if (datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude ) {
                                 datacollected.getRef().removeValue();
                                 Toast.makeText(MainActivity.this, "Blip Deleted", Toast.LENGTH_SHORT).show();
+                                selected.remove();
+
                             }
 
 
@@ -2508,7 +2519,42 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 });
 
     }
+    public void DeleteBlipOwn(final Marker marker) {
+        final LatLng coordinatetobedeleted = marker.getPosition();
 
+
+        UsersEmailBlips.orderByChild("latitude").equalTo(coordinatetobedeleted.latitude).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                        for (DataSnapshot datacollected : dataSnapshot.getChildren()) {
+
+                            String creator =  ReplaceCommaWithPeriod(datacollected.child("Creator").getValue(String.class));
+
+                            //We add this because firebase queries sucks
+                            if (datacollected.child("longitude").getValue(Double.class) == coordinatetobedeleted.longitude ) {
+                                datacollected.getRef().removeValue();
+                                Toast.makeText(MainActivity.this, "Blip Deleted", Toast.LENGTH_SHORT).show();
+                                selected.remove();
+
+                            }
+
+
+                        }
+                    }
+
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.w("TodoApp", "getUser:onCancelled", databaseError.toException());
+                    }
+                });
+
+
+
+
+    }
     public void EditBlip(final Marker marker) {
 
         final LatLng coordinatetobeupdated = marker.getPosition();
@@ -2575,9 +2621,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 else
                 {min = String.valueOf(minute);}
                 timeedittextEnd.setText( hour+1 + ":" + min +" "+ AM_PM);
-                dateedittextEnd.setText( month + "/" + day + "/" + year);
+                dateedittextEnd.setText( month+1 + "/" + day + "/" + year);
                 BlipEndTime =( hour + ":" + min +" "+ AM_PM);
-                BlipEndDate =year+"-"+month+"-"+day;
+                BlipEndDate =year+"-"+month+1+"-"+day;
 
 
             }
@@ -2654,8 +2700,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     @Override
                     public void onDateSet(DatePicker datePicker, int year, int month, int day) {
                         BlipStartDate =year+"-"+month+"-"+day;
-                        Toast.makeText(MainActivity.this, BlipStartDate, Toast.LENGTH_SHORT).show();
-                        dateedittext.setText( month + "/" + day + "/" + year);
+                        dateedittext.setText( month+1 + "/" + day + "/" + year);
                     }
 
                 }, year,month,day);
@@ -2732,6 +2777,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     public void onDateSet(DatePicker datePicker, int year, int month, int day) {
                         Toast.makeText(MainActivity.this, "Time setted", Toast.LENGTH_SHORT).show();
                         BlipEndDate =year+"-"+month+"-"+day;
+                        month=month+1;
                         dateedittextEnd.setText( month + "/" + day + "/" + year);
                     }
                 }, year,month,day);
@@ -3326,10 +3372,75 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         Category,
                         null);
 
+                Date currentTime=null;
+                Date EndTimeFilter=null;
+
+
+
+
+
 
 
                     if (publiccheckbox.isChecked() && blipIcon.toLowerCase().contains("public".toLowerCase())) {
-                        categoryFilterPublic(blipsadded);
+                       //After Passing checkbox filter
+                        Date currentDate; // Current Date
+                        int currentYear=0;
+                        int currentMonth=0;
+                        int currentDay = 0;
+                        Date blipDate; // Blip Start Time
+                        int blipYear=0;
+                        int blipMonth=0;
+                        int blipDay=0;
+                        int currentweek=0;
+                        int blipweek=0;
+
+
+                        try {
+                            currentDate = format.parse(getCurrentDateTime());//Set current date to DateOBJ
+                            Calendar calCurrent = Calendar.getInstance();
+                            calCurrent.setTime(currentDate);
+
+                             currentYear = calCurrent.get(calCurrent.YEAR);
+                             currentMonth = calCurrent.get(calCurrent.MONTH);
+                             currentDay = calCurrent.get(calCurrent.DAY_OF_MONTH);
+                             currentweek = calCurrent.get(calCurrent.WEEK_OF_YEAR);
+
+
+                            blipDate = format.parse(StartTime);//Set blip start date to DateOBJ
+                            Calendar calBlip = Calendar.getInstance();
+                            calBlip.setTime(blipDate);
+                             blipYear = calBlip.get(calBlip.YEAR);
+                             blipMonth = calBlip.get(calBlip.MONTH);
+                             blipDay = calBlip.get(calBlip.DAY_OF_MONTH);
+                             blipweek = calBlip.get(calBlip.WEEK_OF_YEAR);
+
+
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+
+
+                        //Today's Events
+                        if (today.isChecked() && currentDay==blipDay && currentMonth==blipMonth && currentYear==blipYear)
+                        {
+                            categoryFilterPublic(blipsadded);
+                        }
+
+                        //This week
+                        if (thisweek.isChecked()&& currentweek ==blipweek && currentYear==blipYear)
+                        {
+                            categoryFilterPublic(blipsadded);
+                        }
+
+                        //This Month
+                        if (thismonth.isChecked() && currentMonth==blipMonth && currentYear==blipYear)
+                        {
+                            categoryFilterPublic(blipsadded);
+                        }
+
+
+
+
                     }
 
                      markerkey++;
@@ -3521,7 +3632,66 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                 if (publiccheckbox.isChecked() && value.Icon.toLowerCase().contains("public".toLowerCase())) {
-                    categoryFilterPublicnoanimation(value);
+
+
+                    Date currentDate; // Current Date
+                    int currentYear=0;
+                    int currentMonth=0;
+                    int currentDay = 0;
+                    Date blipDate; // Blip Start Time
+                    int blipYear=0;
+                    int blipMonth=0;
+                    int blipDay=0;
+                    int currentweek=0;
+                    int blipweek=0;
+
+
+                    try {
+                        currentDate = format.parse(getCurrentDateTime());//Set current date to DateOBJ
+                        Calendar calCurrent = Calendar.getInstance();
+                        calCurrent.setTime(currentDate);
+
+                        currentYear = calCurrent.get(calCurrent.YEAR);
+                        currentMonth = calCurrent.get(calCurrent.MONTH);
+                        currentDay = calCurrent.get(calCurrent.DAY_OF_MONTH);
+                        currentweek = calCurrent.get(calCurrent.WEEK_OF_YEAR);
+
+
+                        blipDate = format.parse(value.StartTime);//Set blip start date to DateOBJ
+                        Calendar calBlip = Calendar.getInstance();
+                        calBlip.setTime(blipDate);
+                        blipYear = calBlip.get(calBlip.YEAR);
+                        blipMonth = calBlip.get(calBlip.MONTH);
+                        blipDay = calBlip.get(calBlip.DAY_OF_MONTH);
+                        blipweek = calBlip.get(calBlip.WEEK_OF_YEAR);
+
+
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+
+
+
+                    //Today's Events
+                    if (today.isChecked() && currentDay==blipDay && currentMonth==blipMonth && currentYear==blipYear)
+                    {
+                        categoryFilterPublicnoanimation(value);
+                    }
+
+                    //This week
+                    if (thisweek.isChecked()&& currentweek==blipweek && currentYear==blipYear)
+                    {
+                        categoryFilterPublicnoanimation(value);
+                    }
+
+                    //This Month
+                    if (thismonth.isChecked() && currentMonth==blipMonth && currentYear==blipYear)
+                    {
+                        categoryFilterPublicnoanimation(value);
+                    }
+
+
+
                 }
 
             }
@@ -3542,6 +3712,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                 if (publiccheckbox.isChecked() && value.PublicPrivate.toLowerCase().contains("public".toLowerCase())) {
+
                     categoryFilterPublicnoanimation(value);
                 }
 
@@ -3975,6 +4146,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void checkboxlisteners() {
+
+
+        today.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                reload();
+                //handle click
+            }
+        });
+        thisweek.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                reload();
+                //handle click
+            }
+        });
+        thismonth.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                reload();
+                //handle click
+            }
+        });
+
         publiccheckbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -4171,12 +4366,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
+
             if (surveyTaken) {
                 mAuth.signOut();
                 super.onBackPressed();
                 liveGPSEmail.setValue(null);
                 locationManager.removeUpdates(locationListener);
-
 
                 finish();
                 Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
