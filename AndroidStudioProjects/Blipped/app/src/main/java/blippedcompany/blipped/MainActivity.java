@@ -4146,6 +4146,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void checkboxlisteners() {
+
+
+        today.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                reload();
+                //handle click
+            }
+        });
+        thisweek.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                reload();
+                //handle click
+            }
+        });
+        thismonth.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                reload();
+                //handle click
+            }
+        });
+
         publiccheckbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
