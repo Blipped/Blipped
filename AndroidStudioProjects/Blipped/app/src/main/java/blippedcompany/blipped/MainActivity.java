@@ -33,6 +33,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -79,10 +80,16 @@ import com.bumptech.glide.request.transition.Transition;
 import com.facebook.CallbackManager;
 import com.facebook.share.model.ShareLinkContent;
 import com.facebook.share.widget.ShareDialog;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.Places;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -138,8 +145,7 @@ import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
     //Google Map Initialize
     private GoogleMap mMap;
     private CameraPosition mCameraPosition;
@@ -318,6 +324,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ShareDialog shareDialog;
     String collect="http://econym.org.uk/gmap/example_plotpoints.htm?";
     StringBuilder sb;
+    private AdView mAdView;
+
+    CardView findaplace;
 
 
 
@@ -335,10 +344,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         DeclareThings();
         ShowFriendRequestCount();
-
+        mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
         backtonormalview = (TextView) findViewById(R.id.backtonormalmodebutton);
         filterscroll = (ScrollView) findViewById(R.id.filterscroll);
-
+        findaplace = (CardView) findViewById(R.id.findplace);
 
 
         backtonormalview.setOnClickListener(new View.OnClickListener() {
@@ -435,9 +446,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onMapReady(GoogleMap googleMap) throws NullPointerException {
+
+
         liveGPSEmail.onDisconnect().setValue(null);
         getFriendsList();
-        ImageButton editprofilepic = (ImageButton) findViewById(R.id.editprofilepicbutton);
+
 
         profilepic = (ImageView) findViewById(R.id.profilepic);
         loadprofilepic();
@@ -467,7 +480,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_style));
         TextView userNameText = (TextView) findViewById(R.id.currentUserTxt);
-        userNameText.setText("Welcome " + userID.getEmail());
+        try {
+            userNameText.setText("Welcome " + userID.getEmail());
+        } catch (Exception e) {
+
+        }
 
 
         today = (RadioButton) findViewById(R.id.radioToday);
@@ -515,12 +532,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-
-
-
-
-
-
         checkboxlisteners();
         setUpClusterer();
         ShowBlipsPublic();//Activate listener
@@ -537,13 +548,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-        editprofilepic.setOnClickListener(new View.OnClickListener() {
+
+            profilepic.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    editprofpic();
+                }
+            });
+
+
+
+        PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
+                getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
-            public void onClick(View view) {
-                editprofpic();
+            public void onPlaceSelected(Place place) {
+                // TODO: Get info about the selected place.
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 16));
+                findaplace.setVisibility(GONE);
+            }
+
+            @Override
+            public void onError(Status status) {
+                // TODO: Handle the error.
+                Log.i(TAG, "An error occurred: " + status);
             }
         });
-
 
 
         bottomNavigationView.setOnNavigationItemSelectedListener(
@@ -554,15 +585,36 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             case R.id.action_delete: {
                                     try {
 
-
                                         dataarray = selected.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
                                         String temp = ReplacePeriodiWithComma(dataarray[0]);
 
                                         if (temp.contains(userName)) {
 
                                                     if (showmyplacesmode==1 || showmyplacesmode==0) {
-                                                        DeleteBlip(selected);
-                                                        DeleteBlipOwn(selected);
+
+                                                        MaterialDialog.Builder builder = new MaterialDialog.Builder(MainActivity.this)
+                                                                .theme(Theme.DARK)
+                                                                .title("Confirm")
+                                                                .content("Confirm delete? Note:Only your friends can see your locations")
+                                                                .positiveText("Yes")
+                                                                .negativeText("No")
+                                                                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                                                    @Override
+                                                                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                                                        DeleteBlip(selected);
+                                                                        DeleteBlipOwn(selected);
+
+                                                                    }
+                                                                })
+
+                                                                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                                                                    @Override
+                                                                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+
+                                                                    }
+                                                                });
+                                                        MaterialDialog dialog = builder.build();
+                                                        dialog.show();
                                                     }
 
                                                     else{
@@ -617,11 +669,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onMapLongClick(LatLng point) {
 
-                if (showmyplacesmode==0) {
+                if (showmyplacesmode==0 && mAuth.getCurrentUser().isEmailVerified()) {
                     AddBlip(point);
                 }
                 else{
-                    Toast.makeText(MainActivity.this, "Cannot Add Blip in this Mode", Toast.LENGTH_SHORT).show();
+
+                    Toast.makeText(MainActivity.this, "Exit current mode or verify email!", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -635,6 +688,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     mMap.setPadding(0, 0, 0, 0);
                     bottomNavigationView.startAnimation(bottomDown);
                     bottomNavigationView.setVisibility(GONE);
+                    findaplace.setVisibility(GONE);
                 } else {
                     // Either gone or invisible
                 }
@@ -734,7 +788,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                            Picasso.with(getApplicationContext())
                                     .load(dataarray[2])
-                                   .error(R.mipmap.error)
+                                   .error(R.mipmap.placeholderimage)
                                    .placeholder(R.mipmap.placeholderimage)
                                   .into(badge, new MarkerCallback(marker));
 
@@ -900,7 +954,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button sharebutton = mBlipInfoView.findViewById(R.id.sharebutton);
         mBuilder.setView(mBlipInfoView);
        final  AlertDialog dialog = mBuilder.create();
-        dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+
+        try {
+            dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         new AsyncGeocoder().execute(new AsyncGeocoderObject(
                 new Geocoder(MainActivity.this), // the geocoder object to get address
@@ -1284,6 +1343,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return mMap;
     }
 
+
+
+
     public class MarkerCallback implements Callback {
         Marker marker=null;
 
@@ -1316,7 +1378,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             dataarray = marker.getSnippet().split("123marcius(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
             RequestOptions options = new RequestOptions()
-                    .error(R.mipmap.error)
+                    .error(R.mipmap.placeholderimage)
                     .placeholder(R.mipmap.placeholderimage);
 
             Glide.with(getActivity())
@@ -1382,10 +1444,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     new LatLng(mLastKnownLocation.getLatitude(),
                             mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
         } else {
-            Log.d(TAG, "Current location is null. Using defaults.");
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
-            mMap.getUiSettings().setMyLocationButtonEnabled(true);
-            mMap.setMyLocationEnabled(true);
+            try {
+                Log.d(TAG, "Current location is null. Using defaults.");
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
+                mMap.getUiSettings().setMyLocationButtonEnabled(true);
+                mMap.setMyLocationEnabled(true);
+            } catch (Exception e) {
+
+            }
         }
 
 
@@ -3336,7 +3402,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void ShowBlipsPublic() {
 
        BlipsPublic.addChildEventListener(new ChildEventListener() {
-
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
 
@@ -4366,14 +4431,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            mAuth.signOut();
-            super.onBackPressed();
-            liveGPSEmail.setValue(null);
-            locationManager.removeUpdates(locationListener);
 
-             finish();
-            Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
+            if (surveyTaken) {
+                mAuth.signOut();
+                super.onBackPressed();
+                liveGPSEmail.setValue(null);
+                locationManager.removeUpdates(locationListener);
 
+                finish();
+                Toast.makeText(MainActivity.this, "Signed out", Toast.LENGTH_SHORT).show();
+            }
+            else {
+                Survey();
+            }
         }
     }
 
@@ -4434,7 +4504,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-
+            Toast.makeText(this, "To add blip, long press any point on the map", Toast.LENGTH_SHORT).show();
             return true;
         }
         if (id == R.id.action_refresh) {
@@ -4491,6 +4561,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         } else if (id == R.id.nav_accountsettings) {
                 accountsettings();
+
+
+        }
+        else if (id == R.id.nav_findplace) {
+            findaplace.setVisibility(VISIBLE);
 
 
         }
@@ -4572,7 +4647,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 RequestOptions options = new RequestOptions()
                         .circleCrop()
-                        .error(R.mipmap.error)
+                        .error(R.mipmap.placeholderimage)
                         .placeholder(R.mipmap.placeholderimage);
                 Context context = getApplicationContext();
 
@@ -4913,7 +4988,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             RequestOptions options = new RequestOptions()
                                     .circleCrop()
-                                    .error(R.mipmap.error)
+                                    .error(R.mipmap.placeholderimage)
                                     .placeholder(R.mipmap.placeholderimage);
                              Context context = getApplicationContext();
 
@@ -4934,8 +5009,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                                     });
-
-
 
 
 
@@ -5105,7 +5178,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 RequestOptions options = new RequestOptions()
                         .circleCrop()
-                        .error(R.mipmap.error)
+                        .error(R.mipmap.placeholderimage)
                         .placeholder(R.mipmap.placeholderimage);
                 Context context = getApplicationContext();
 
@@ -5131,10 +5204,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     names.remove(position); //or some other task
                     notifyDataSetChanged();
                     DeleteFriend(friendtobedeleted);
-                    Users.child(userName).child("Friends").child(friendtobedeleted).setValue(null);// Add to user's blips
-                    Users.child(friendtobedeleted).child("Friends").child(userName).setValue(null);
-
-
+                    Users.child(userName).child("Friends").child( ReplacePeriodiWithComma(friendtobedeleted)).setValue(null);// Add to user's blips
+                    Users.child(ReplacePeriodiWithComma(friendtobedeleted)).child("Friends").child(userName).setValue(null);
 
                 }
             });
@@ -5149,7 +5220,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void DeleteFriend(String friendtobedeleted) {
 
 
-        UsersEmailFriends.orderByChild(friendtobedeleted).equalTo(1).addListenerForSingleValueEvent(
+        UsersEmailFriends.orderByChild(ReplacePeriodiWithComma(friendtobedeleted)).equalTo(1).addListenerForSingleValueEvent(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -5262,7 +5333,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                                    RequestOptions options = new RequestOptions()
-                                           .error(R.mipmap.error)
+                                           .error(R.mipmap.placeholderimage)
                                            .placeholder(R.mipmap.placeholderimage);
 
                                    Glide.with(getActivity())
@@ -5305,7 +5376,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                RequestOptions options = new RequestOptions()
                        .circleCrop()
-                       .error(R.mipmap.error)
+                       .error(R.mipmap.placeholderimage)
                        .placeholder(R.mipmap.placeholderimage);
                Context context = getApplicationContext();
 
@@ -5565,6 +5636,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
     }
+
+
+    ///Test Area
+
+
+
+
 
 }
 

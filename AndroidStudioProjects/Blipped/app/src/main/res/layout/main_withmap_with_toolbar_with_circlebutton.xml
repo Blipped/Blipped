@@ -46,8 +46,9 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
+            android:visibility="visible"
             ads:adSize="BANNER"
-            ads:adUnitId="ca-app-pub-3940256099942544/6300978111"></com.google.android.gms.ads.AdView>
+            ads:adUnitId="ca-app-pub-3725692395530562/1497835302"></com.google.android.gms.ads.AdView>
 
     </LinearLayout>
 
@@ -60,7 +61,7 @@
         android:layout_marginBottom="47dp"
         android:layout_weight="1"
         android:animateLayoutChanges="true"
-        android:visibility="gone"
+        android:visibility="visible"
 
 
         app:elevation="10dp"

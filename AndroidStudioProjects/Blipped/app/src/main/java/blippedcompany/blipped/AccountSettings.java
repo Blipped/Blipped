@@ -21,7 +21,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 public class AccountSettings extends AppCompatActivity {
 
-    private Button btnChangeEmail, btnChangePassword, btnSendResetEmail, btnRemoveUser,
+    private Button btnChangeEmail, btnChangePassword, btnSendResetEmail, btnRemoveUser,btnResend,
             changeEmail, changePassword, sendEmail, remove, signOut;
 
     private EditText oldEmail, newEmail, password, newPassword;
@@ -57,6 +57,7 @@ public class AccountSettings extends AppCompatActivity {
         btnChangePassword = (Button) findViewById(R.id.change_password_button);
         btnSendResetEmail = (Button) findViewById(R.id.sending_pass_reset_button);
         btnRemoveUser = (Button) findViewById(R.id.remove_user_button);
+        btnResend = (Button) findViewById(R.id.resend);
         changeEmail = (Button) findViewById(R.id.changeEmail);
         changePassword = (Button) findViewById(R.id.changePass);
         sendEmail = (Button) findViewById(R.id.send);
@@ -207,6 +208,13 @@ public class AccountSettings extends AppCompatActivity {
             }
         });
 
+        btnResend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendVerificationEmail();
+            }
+        });
+
         btnRemoveUser.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -263,5 +271,30 @@ public class AccountSettings extends AppCompatActivity {
         if (authListener != null) {
             auth.removeAuthStateListener(authListener);
         }
+    }
+
+    private void sendVerificationEmail()
+    {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        user.sendEmailVerification()
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(AccountSettings.this, "Verification Sent", Toast.LENGTH_SHORT).show();
+
+                        }
+                        else
+                        {
+                            // email not sent, so display message and restart the activity or do whatever you wish to do
+                            //restart this activity
+                            overridePendingTransition(0, 0);
+                            finish();
+                            overridePendingTransition(0, 0);
+                            startActivity(getIntent());
+                        }
+                    }
+                });
     }
 }

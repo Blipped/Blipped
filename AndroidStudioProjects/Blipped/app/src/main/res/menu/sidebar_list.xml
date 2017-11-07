@@ -3,6 +3,10 @@
 
     <group android:checkableBehavior="single">
         <item
+            android:id="@+id/nav_findplace"
+            android:icon="@mipmap/ic_action_search"
+            android:title="Find places" />
+        <item
             android:id="@+id/nav_addfriend"
             android:icon="@mipmap/addfriends"
             android:title="Add Friend" />
@@ -18,6 +22,7 @@
             android:id="@+id/nav_accountsettings"
             android:icon="@android:drawable/ic_menu_manage"
             android:title="Account Settings" />
+
 
         <item android:title="My Locations">
              <menu>
@@ -38,6 +43,8 @@
                      android:id="@+id/nav_share"
                      android:icon="@drawable/ic_menu_camera"
                      android:title="Take Map Screenshot" />
+
+
 
             </menu>
         </item>

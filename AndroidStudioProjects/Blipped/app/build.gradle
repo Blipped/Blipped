@@ -9,9 +9,10 @@ android {
         applicationId "blippedcompany.blipped"
         minSdkVersion 19
         targetSdkVersion 26
-        versionCode 1
-        versionName "1.0"
+        versionCode 11
+        versionName "1.8"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {
@@ -20,6 +21,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+
 }
 
 dependencies {
@@ -64,12 +67,12 @@ apply plugin: 'com.google.gms.google-services'
 
 
 configurations.all {
-    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-        def requested = details.requested
-        if (requested.group == 'com.android.support') {
+  resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+       def requested = details.requested
+       if (requested.group == 'com.android.support') {
             if (!requested.name.startsWith("multidex")) {
-                details.useVersion '25.3.0'
+               details.useVersion '25.3.0'
             }
-        }
-    }
+       }
+  }
 }

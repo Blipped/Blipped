@@ -20,6 +20,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -53,7 +54,6 @@ public class SignUpActivity extends AppCompatActivity {
         age =(EditText)findViewById(R.id.age);
         male=(RadioButton)findViewById(R.id.male);
         female=(RadioButton)findViewById(R.id.female) ;
-
         btnResetPassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -75,6 +75,7 @@ public class SignUpActivity extends AppCompatActivity {
 
                 String email = inputEmail.getText().toString().trim();
                 String password = inputPassword.getText().toString().trim();
+                int inputage = Integer.parseInt(age.getText().toString().trim());
 
                 if (TextUtils.isEmpty(email)) {
                     Toast.makeText(getApplicationContext(), "Enter email address!", Toast.LENGTH_SHORT).show();
@@ -91,23 +92,30 @@ public class SignUpActivity extends AppCompatActivity {
                     return;
                 }
 
+                if (18>inputage || inputage>120) {
+                    Toast.makeText(getApplicationContext(), "Age must be between 18 and 120", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 progressBar.setVisibility(View.VISIBLE);
                 //create user
                 auth.createUserWithEmailAndPassword(email, password)
                         .addOnCompleteListener(SignUpActivity.this, new OnCompleteListener<AuthResult>() {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
-                                Toast.makeText(SignUpActivity.this, "createUserWithEmail:onComplete:" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(SignUpActivity.this, "Register Successful", Toast.LENGTH_SHORT).show();
                                 progressBar.setVisibility(View.GONE);
                                 // If sign in fails, display a message to the user. If sign in succeeds
                                 // the auth state listener will be notified and logic to handle the
                                 // signed in user can be handled in the listener.
                                 if (!task.isSuccessful()) {
-                                    Toast.makeText(SignUpActivity.this, "Authentication failed." + task.getException(),
+                                    Toast.makeText(SignUpActivity.this, "Authentication failed.",
                                             Toast.LENGTH_SHORT).show();
                                 } else {
                                     startActivity(new Intent(SignUpActivity.this, MainActivity.class));
                                     String email= auth.getCurrentUser().getEmail();
+
+
                                     MainActivity replace = new MainActivity();
                                     Users.child( replace.ReplacePeriodiWithComma(email)).child("Age").setValue(age.getText().toString());
                                     if(male.isChecked()){
@@ -116,8 +124,12 @@ public class SignUpActivity extends AppCompatActivity {
                                     if(female.isChecked()){
                                         Users.child( replace.ReplacePeriodiWithComma(email)).child("Gender").setValue("Female");
                                     }
-
+                                    FirebaseUser user = auth.getCurrentUser();
+                                    user.sendEmailVerification();
                                     finish();
+                                    //
+
+                                    ///
                                 }
                             }
                         });
